@@ -1,0 +1,16 @@
+{
+  "course_rel": "lazyearn/yale-financial-markets",
+  "course_title": "Financial Markets",
+  "course_descriptor": "Lazyearn track, Yale lecture series",
+  "lecturer_name": "Robert J. Shiller",
+  "deliverable_target": "a faithful, conceptually serious chapter for Financial Markets, plus a per-course compiled PDF book.",
+  "visual_target": "selected lecture frames are only supporting evidence for slide text, equations, diagrams, chalkboard structure, and institutional examples; do not let them override the transcript.",
+  "mathematical_standard": "preserve definitions, mechanisms, institutional detail, and any quantitative reasoning from the lecture, but avoid generic filler or invented textbook exposition.",
+  "style_target": "notes should read like polished companion notes for a serious finance and institutions course, with clear prose, explicit causal structure, and careful distinction between intuition, institutional detail, and analytical claims.",
+  "credit_target": "keep explicit credit to Robert J. Shiller and curation by LazyingArt LLC; reserve the website URL for the generated front-matter credit, not the prose body.",
+  "front_matter_single": "Original lecture by Robert J. Shiller. Transcript-derived notes curated by \\href{https://lazying.art}{LazyingArt LLC}.",
+  "front_matter_plural": "Original lectures by Robert J. Shiller. Transcript-derived course notes curated by \\href{https://lazying.art}{LazyingArt LLC}.",
+  "reference_missing_text": "No directly matching reference PDF is available for this course.",
+  "reference_no_match_text": "Matching course reference PDFs were found, but no strong topical excerpt was automatically matched for this lecture.",
+  "reference_budget_text": "Matching course reference PDFs were found, but no excerpt fit within the current prompt budget."
+}

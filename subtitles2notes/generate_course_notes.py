@@ -12,7 +12,7 @@ import time
 import unicodedata
 from collections import defaultdict
 from collections import Counter
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from string import Template
 from typing import Iterable
@@ -122,6 +122,80 @@ class LectureInfo:
 
 
 @dataclass
+class CourseConfig:
+    course_rel: str | None = None
+    course_title: str | None = None
+    course_descriptor: str | None = None
+    lecturer_name: str = "Leonard Susskind"
+    deliverable_target: str = (
+        "a faithful, mathematically serious chapter for the course, plus a per-course compiled PDF book."
+    )
+    visual_target: str = (
+        "selected lecture frames are only supporting evidence for equations, diagrams, and board layout; "
+        "do not let them override the transcript."
+    )
+    mathematical_standard: str = (
+        "reconstruct cautiously when the lecture is partial, but avoid generic textbook filler that was not motivated by the lecture."
+    )
+    style_target: str = (
+        "notes should read like polished companion notes in a Susskind-like register, as though the mathematical "
+        "argument is being unfolded by the lecturer on the page; allow a natural mix of first-person plural, "
+        "occasional broader third-person or god-view framing, and direct explanatory prose without forcing a rigid persona."
+    )
+    credit_target: str = (
+        "keep explicit credit to Leonard Susskind and curation by LazyingArt LLC; reserve the website URL for the "
+        "generated front-matter credit, not the prose body."
+    )
+    front_matter_single: str = (
+        "Original lecture by Leonard Susskind. Transcript-derived notes curated by \\href{https://lazying.art}{LazyingArt LLC}."
+    )
+    front_matter_plural: str = (
+        "Original lectures by Leonard Susskind. Transcript-derived course notes curated by \\href{https://lazying.art}{LazyingArt LLC}."
+    )
+    reference_pdf_hints: list[str] = field(default_factory=list)
+    reference_missing_text: str = "No directly matching Susskind-authored PDF reference is available for this course."
+    reference_no_match_text: str = (
+        "Matching Susskind-authored PDFs were found, but no strong topical excerpt was automatically matched for this lecture."
+    )
+    reference_budget_text: str = (
+        "Matching Susskind-authored PDFs were found, but no excerpt fit within the current prompt budget."
+    )
+
+
+def load_course_config(path: Path | None) -> CourseConfig:
+    config = CourseConfig()
+    if path is None:
+        return config
+    config_path = path.expanduser().resolve()
+    if not config_path.exists():
+        return config
+    raw = json.loads(config_path.read_text(encoding="utf-8"))
+    for key in (
+        "course_rel",
+        "course_title",
+        "course_descriptor",
+        "lecturer_name",
+        "deliverable_target",
+        "visual_target",
+        "mathematical_standard",
+        "style_target",
+        "credit_target",
+        "front_matter_single",
+        "front_matter_plural",
+        "reference_missing_text",
+        "reference_no_match_text",
+        "reference_budget_text",
+    ):
+        value = raw.get(key)
+        if isinstance(value, str) and value.strip():
+            setattr(config, key, value.strip())
+    hints = raw.get("reference_pdf_hints")
+    if isinstance(hints, list):
+        config.reference_pdf_hints = [str(item).strip() for item in hints if str(item).strip()]
+    return config
+
+
+@dataclass
 class FrameSelection:
     asset_path: Path
     timestamp_seconds: float
@@ -164,16 +238,16 @@ def transcript_text(path: Path) -> str:
     return path.read_text(encoding="utf-8")
 
 
-def build_task_context(lecture: LectureInfo) -> str:
+def build_task_context(lecture: LectureInfo, course_config: CourseConfig) -> str:
     return "\n".join(
         [
-            f"- Final deliverable: a faithful, mathematically serious chapter for {lecture.course_title}, plus a per-course compiled PDF book.",
+            f"- Final deliverable: {course_config.deliverable_target}",
             "- Primary source of truth: the matching lecture transcript; preserve its order, rhythm, motivation, and narrative progression.",
-            "- Visual evidence: selected lecture frames are only supporting evidence for equations, diagrams, and board layout; do not let them override the transcript.",
-            "- Mathematical standard: reconstruct cautiously when the lecture is partial, but avoid generic textbook filler that was not motivated by the lecture.",
-            "- Style target: notes should read like polished companion notes in a Susskind-like register, as though the mathematical argument is being unfolded by the lecturer on the page; allow a natural mix of first-person plural, occasional broader third-person or god-view framing, and direct explanatory prose without forcing a rigid persona.",
+            f"- Visual evidence: {course_config.visual_target}",
+            f"- Analytical standard: {course_config.mathematical_standard}",
+            f"- Style target: {course_config.style_target}",
             "- Structural target: when the lecture naturally raises and resolves a local conceptual obstacle, preserve that rhythm with a standalone `Question & Answer` subsection inside the chapter rather than flattening it away.",
-            "- Credit target: keep explicit credit to Leonard Susskind and curation by LazyingArt LLC; reserve the website URL for the generated front-matter credit, not the prose body.",
+            f"- Credit target: {course_config.credit_target}",
             "- Output discipline: each prompt stage should solve only its local subtask, but keep the full end goal in mind so downstream stages remain coherent.",
         ]
     )
@@ -211,14 +285,14 @@ def lecture_slug_from_number(number: int, stem: str) -> str:
     return fallback or "lecture"
 
 
-def build_course_meta(course_rel: str) -> tuple[str, str]:
+def build_course_meta(course_rel: str, course_config: CourseConfig) -> tuple[str, str]:
     parts = Path(course_rel).parts
     track = humanize_slug(parts[0]) if len(parts) > 0 else "Course"
     subject = humanize_slug(parts[1]) if len(parts) > 1 else "Lecture Notes"
     run = humanize_slug(parts[2]) if len(parts) > 2 else ""
-    course_title = subject
-    course_descriptor = f"{track} track"
-    if run:
+    course_title = course_config.course_title or subject
+    course_descriptor = course_config.course_descriptor or f"{track} track"
+    if run and not course_config.course_descriptor:
         course_descriptor = f"{course_descriptor}, {run}"
     return course_title, course_descriptor
 
@@ -270,6 +344,7 @@ def lecture_complete(output_root: Path, transcript_rel: str) -> bool:
         markdown_root=output_root.parent / "markdown",
         subtitle_root=output_root.parent / "subtitles",
         transcript_rel=transcript_rel,
+        course_config=CourseConfig(),
         source_rel_override=None,
         resolve_video=False,
     )
@@ -313,6 +388,7 @@ def lecture_from_transcript_rel(
     markdown_root: Path,
     subtitle_root: Path,
     transcript_rel: str,
+    course_config: CourseConfig,
     source_rel_override: str | None = None,
     resolve_video: bool = True,
 ) -> LectureInfo:
@@ -324,7 +400,7 @@ def lecture_from_transcript_rel(
     lecture_number = parse_lecture_number(stem)
     lecture_slug = lecture_slug_from_number(lecture_number, stem)
     lecture_title = strip_stem_label(stem)
-    course_title, course_descriptor = build_course_meta(course_rel)
+    course_title, course_descriptor = build_course_meta(course_rel, course_config)
 
     video_path = source_root / source_rel if resolve_video else Path(source_rel)
     subtitle_path = subtitle_root / Path(transcript_rel).with_suffix(".srt")
@@ -422,12 +498,12 @@ def query_terms(lecture: LectureInfo, md_text: str) -> list[str]:
     return ordered[:24]
 
 
-def pdf_reference_candidates(reference_pdf_dir: Path, lecture: LectureInfo) -> list[Path]:
+def pdf_reference_candidates(reference_pdf_dir: Path, lecture: LectureInfo, course_config: CourseConfig) -> list[Path]:
     if not reference_pdf_dir.exists():
         return []
     parts = Path(lecture.course_rel).parts
     subject = parts[1] if len(parts) > 1 else ""
-    hints = REFERENCE_PDF_HINTS.get(subject, [])
+    hints = course_config.reference_pdf_hints or REFERENCE_PDF_HINTS.get(subject, [])
     matches: list[Path] = []
     for pdf in sorted(reference_pdf_dir.glob("*.pdf")):
         if any(hint in pdf.name for hint in hints):
@@ -466,10 +542,11 @@ def collect_reference_excerpt(
     md_text: str,
     reference_pdf_dir: Path,
     runtime_root: Path,
+    course_config: CourseConfig,
 ) -> str:
-    pdfs = pdf_reference_candidates(reference_pdf_dir, lecture)
+    pdfs = pdf_reference_candidates(reference_pdf_dir, lecture, course_config)
     if not pdfs:
-        return "No directly matching Susskind-authored PDF reference is available for this course."
+        return course_config.reference_missing_text
 
     terms = query_terms(lecture, md_text)
     snippets: list[tuple[int, str, str]] = []
@@ -484,7 +561,7 @@ def collect_reference_excerpt(
                 snippets.append((score, pdf.name, paragraph))
 
     if not snippets:
-        return "Matching Susskind-authored PDFs were found, but no strong topical excerpt was automatically matched for this lecture."
+        return course_config.reference_no_match_text
 
     snippets.sort(key=lambda item: (item[0], len(item[2])), reverse=True)
     selected: list[str] = []
@@ -504,7 +581,7 @@ def collect_reference_excerpt(
             break
 
     if not selected:
-        return "Matching Susskind-authored PDFs were found, but no excerpt fit within the current prompt budget."
+        return course_config.reference_budget_text
     return "\n\n".join(selected)
 
 
@@ -763,6 +840,7 @@ def cleanup_existing_lecture_figures(figures_dir: Path, lecture_slug: str) -> No
 def validate_selected_frames_with_codex(
     repo_root: Path,
     lecture: LectureInfo,
+    course_config: CourseConfig,
     runtime_dir: Path,
     model: str,
     reasoning: str,
@@ -773,7 +851,7 @@ def validate_selected_frames_with_codex(
         return []
 
     prompt_text = read_template(repo_root / "scripts" / "prompts" / "lecture_notes" / "figure_validation_prompt.txt").substitute(
-        task_context=build_task_context(lecture),
+        task_context=build_task_context(lecture, course_config),
         course_title=lecture.course_title,
         course_descriptor=lecture.course_descriptor,
         lecture_title=lecture.lecture_title,
@@ -820,6 +898,7 @@ def validate_selected_frames_with_codex(
 def select_frames_with_codex(
     repo_root: Path,
     lecture: LectureInfo,
+    course_config: CourseConfig,
     course_root: Path,
     runtime_dir: Path,
     model: str,
@@ -849,7 +928,7 @@ def select_frames_with_codex(
         )
         selection_path = runtime_dir / f"figure_probe_{window_index:02d}.json"
         prompt_text = read_template(repo_root / "scripts" / "prompts" / "lecture_notes" / "frame_probe_prompt.txt").substitute(
-            task_context=build_task_context(lecture),
+            task_context=build_task_context(lecture, course_config),
             course_title=lecture.course_title,
             course_descriptor=lecture.course_descriptor,
             lecture_title=lecture.lecture_title,
@@ -1159,20 +1238,21 @@ def ensure_common_preamble(course_root: Path, template_path: Path) -> None:
     shutil.copyfile(template_path, destination)
 
 
-def write_lecture_wrapper(lecture: LectureInfo, lecture_dir: Path) -> None:
+def write_lecture_wrapper(lecture: LectureInfo, lecture_dir: Path, course_config: CourseConfig) -> None:
     title_course = normalize_latex_metadata_text(lecture.course_title)
     title_lecture = normalize_latex_metadata_text(lecture.lecture_title)
+    lecturer_name = normalize_latex_metadata_text(course_config.lecturer_name)
     wrapper = f"""\\documentclass[11pt,oneside]{{book}}
 \\input{{../../common_preamble.tex}}
 \\graphicspath{{{{../../figures/}}{{../../assets/}}}}
 \\begin{{document}}
 \\frontmatter
 \\title{{{title_course}: {title_lecture}}}
-\\author{{Leonard Susskind}}
+\\author{{{lecturer_name}}}
 \\date{{Transcript-derived notes curated by \\href{{https://lazying.art}}{{LazyingArt LLC}}}}
 \\maketitle
 \\begin{{center}}
-\\small Original lecture by Leonard Susskind. Transcript-derived notes curated by \\href{{https://lazying.art}}{{LazyingArt LLC}}.
+\\small {course_config.front_matter_single}
 \\end{{center}}
 \\clearpage
 \\mainmatter
@@ -1182,12 +1262,13 @@ def write_lecture_wrapper(lecture: LectureInfo, lecture_dir: Path) -> None:
     (lecture_dir / "lecture.tex").write_text(wrapper, encoding="utf-8")
 
 
-def write_course_book(course_root: Path, lecture_entries: list[LectureInfo]) -> None:
+def write_course_book(course_root: Path, lecture_entries: list[LectureInfo], course_config: CourseConfig) -> None:
     graphics_path = "\\graphicspath{{figures/}{assets/}}\n"
     title_course = normalize_latex_metadata_text(
         lecture_entries[0].course_title if lecture_entries else "Generated Course Notes"
     )
     descriptor = normalize_latex_metadata_text(lecture_entries[0].course_descriptor if lecture_entries else "")
+    lecturer_name = normalize_latex_metadata_text(course_config.lecturer_name)
     inputs = "\n".join(
         f"\\input{{chapters/{lecture.lecture_slug}/content.tex}}" for lecture in lecture_entries
     )
@@ -1196,11 +1277,11 @@ def write_course_book(course_root: Path, lecture_entries: list[LectureInfo]) -> 
 {graphics_path}\\begin{{document}}
 \\frontmatter
 \\title{{{title_course}}}
-\\author{{Leonard Susskind}}
+\\author{{{lecturer_name}}}
 \\date{{{descriptor} \\\\ Transcript-derived notes curated by \\href{{https://lazying.art}}{{LazyingArt LLC}}}}
 \\maketitle
 \\begin{{center}}
-\\small Original lectures by Leonard Susskind. Transcript-derived course notes curated by \\href{{https://lazying.art}}{{LazyingArt LLC}}.
+\\small {course_config.front_matter_plural}
 \\end{{center}}
 \\clearpage
 \\tableofcontents
@@ -1287,8 +1368,16 @@ def generate_one_lecture(
     reasoning: str,
     max_frames: int,
     force: bool,
+    course_config: CourseConfig,
 ) -> None:
-    lecture = lecture_from_transcript_rel(repo_root, source_root, markdown_root, subtitle_root, transcript_rel)
+    lecture = lecture_from_transcript_rel(
+        repo_root,
+        source_root,
+        markdown_root,
+        subtitle_root,
+        transcript_rel,
+        course_config,
+    )
     md_text = transcript_text(lecture.transcript_path)
     lecture_key = f"{lecture.course_rel}/{lecture.lecture_slug}"
 
@@ -1302,6 +1391,7 @@ def generate_one_lecture(
     selections = select_frames_with_codex(
         repo_root=repo_root,
         lecture=lecture,
+        course_config=course_config,
         course_root=course_root,
         runtime_dir=course_runtime,
         model=model,
@@ -1313,6 +1403,7 @@ def generate_one_lecture(
     selections = validate_selected_frames_with_codex(
         repo_root=repo_root,
         lecture=lecture,
+        course_config=course_config,
         runtime_dir=course_runtime,
         model=model,
         reasoning=reasoning,
@@ -1329,14 +1420,14 @@ def generate_one_lecture(
         commit_message=f"Add note assets for {lecture_key}",
         paths=[course_root / "common_preamble.tex", course_root / "figures", lecture_dir / "metadata.json"],
     )
-    book_reference_text = collect_reference_excerpt(lecture, md_text, reference_pdf_dir, runtime_root)
+    book_reference_text = collect_reference_excerpt(lecture, md_text, reference_pdf_dir, runtime_root, course_config)
 
     asset_list_text = build_asset_list_text(selections)
 
     figures_markdown_path = lecture_dir / "figures_markdown.md"
     if assets:
         figures_prompt = read_template(prompt_root / "figures_markdown_prompt.txt").substitute(
-            task_context=build_task_context(lecture),
+            task_context=build_task_context(lecture, course_config),
             course_title=lecture.course_title,
             course_descriptor=lecture.course_descriptor,
             lecture_title=lecture.lecture_title,
@@ -1387,7 +1478,7 @@ def generate_one_lecture(
     )
 
     analysis_prompt = read_template(prompt_root / "analysis_prompt.txt").substitute(
-        task_context=build_task_context(lecture),
+        task_context=build_task_context(lecture, course_config),
         course_title=lecture.course_title,
         course_descriptor=lecture.course_descriptor,
         lecture_title=lecture.lecture_title,
@@ -1419,7 +1510,7 @@ def generate_one_lecture(
     )
 
     visual_prompt = read_template(prompt_root / "visual_notes_prompt.txt").substitute(
-        task_context=build_task_context(lecture),
+        task_context=build_task_context(lecture, course_config),
         course_title=lecture.course_title,
         course_descriptor=lecture.course_descriptor,
         lecture_title=lecture.lecture_title,
@@ -1450,7 +1541,7 @@ def generate_one_lecture(
     )
 
     narrative_prompt = read_template(prompt_root / "narrative_map_prompt.txt").substitute(
-        task_context=build_task_context(lecture),
+        task_context=build_task_context(lecture, course_config),
         course_title=lecture.course_title,
         course_descriptor=lecture.course_descriptor,
         lecture_title=lecture.lecture_title,
@@ -1479,7 +1570,7 @@ def generate_one_lecture(
     )
 
     math_bank_prompt = read_template(prompt_root / "math_bank_prompt.txt").substitute(
-        task_context=build_task_context(lecture),
+        task_context=build_task_context(lecture, course_config),
         course_title=lecture.course_title,
         course_descriptor=lecture.course_descriptor,
         lecture_title=lecture.lecture_title,
@@ -1511,7 +1602,7 @@ def generate_one_lecture(
     )
 
     chapter_prompt = read_template(prompt_root / "chapter_tex_prompt.txt").substitute(
-        task_context=build_task_context(lecture),
+        task_context=build_task_context(lecture, course_config),
         course_title=lecture.course_title,
         course_descriptor=lecture.course_descriptor,
         lecture_title=lecture.lecture_title,
@@ -1548,7 +1639,7 @@ def generate_one_lecture(
     )
 
     refine_prompt = read_template(prompt_root / "refine_chapter_prompt.txt").substitute(
-        task_context=build_task_context(lecture),
+        task_context=build_task_context(lecture, course_config),
         course_title=lecture.course_title,
         course_descriptor=lecture.course_descriptor,
         lecture_title=lecture.lecture_title,
@@ -1584,7 +1675,7 @@ def generate_one_lecture(
         paths=[content_path],
     )
 
-    write_lecture_wrapper(lecture, lecture_dir)
+    write_lecture_wrapper(lecture, lecture_dir, course_config)
     if not compile_tex("lecture.tex", lecture_dir, course_runtime, "lecture_compile"):
         compile_log = compile_log_excerpt(course_runtime, "lecture_compile")
         if apply_local_compile_fixes(content_path, compile_log):
@@ -1599,7 +1690,7 @@ def generate_one_lecture(
 
         if not compile_tex("lecture.tex", lecture_dir, course_runtime, "lecture_compile_local_retry"):
             fix_prompt = read_template(prompt_root / "compile_fix_prompt.txt").substitute(
-                task_context=build_task_context(lecture),
+                task_context=build_task_context(lecture, course_config),
                 course_title=lecture.course_title,
                 lecture_title=lecture.lecture_title,
                 transcript_rel=lecture.transcript_rel,
@@ -1660,7 +1751,7 @@ def generate_one_lecture(
             )
         )
     lecture_entries.sort(key=lambda item: (item.lecture_number, item.lecture_slug))
-    write_course_book(course_root, lecture_entries)
+    write_course_book(course_root, lecture_entries, course_config)
     if not compile_tex("course.tex", course_root, course_runtime, "course_compile"):
         fallback_merge_pdf(course_root)
     cleanup_build_artifacts(course_root)
@@ -1677,7 +1768,13 @@ def generate_one_lecture(
 def parser() -> argparse.ArgumentParser:
     default_repo_root = Path(os.environ.get("NOTES_REPO_ROOT", str(Path.cwd()))).resolve()
     default_source_root = Path("/home/lachlan/ProjectsLFS/YoutubeDownloader/downloads/PLERGeJGfknBTR_nXt5QL88xJF5LhDZBnG")
-    default_reference_pdf_dir = default_repo_root / "susskind-books-and-lecture-notes"
+    default_reference_pdf_dir = Path(
+        os.environ.get(
+            "VIDEO2BOOK_REFERENCE_PDF_DIR",
+            str(default_repo_root / "susskind-books-and-lecture-notes"),
+        )
+    )
+    default_course_config = os.environ.get("VIDEO2BOOK_COURSE_CONFIG")
 
     parsed = argparse.ArgumentParser(description="Generate transcript-derived TeX lecture notes.")
     parsed.add_argument("--repo-root", type=Path, default=default_repo_root)
@@ -1687,6 +1784,7 @@ def parser() -> argparse.ArgumentParser:
     parsed.add_argument("--output-root", type=Path)
     parsed.add_argument("--runtime-root", type=Path)
     parsed.add_argument("--reference-pdf-dir", type=Path, default=default_reference_pdf_dir)
+    parsed.add_argument("--course-config", type=Path, default=Path(default_course_config).expanduser() if default_course_config else None)
     parsed.add_argument("--course", help="Restrict to a specific course rel path, e.g. supplementary/advanced_quantum_mechanics/2013_fall")
     parsed.add_argument("--lecture", help="Transcript rel path under markdown/, e.g. core/classical_mechanics/.../114 - ... .md")
     parsed.add_argument("--print-next", action="store_true")
@@ -1706,6 +1804,7 @@ def main() -> int:
     subtitle_root = (args.subtitle_root or repo_root / "subtitles").resolve()
     output_root = (args.output_root or repo_root / "generated_course_notes").resolve()
     runtime_root = (args.runtime_root or repo_root / ".lecture-notes-work").resolve()
+    course_config = load_course_config(args.course_config)
     prompt_root = MODULE_ROOT / "subtitles2notes" / "prompts" / "lecture_notes"
     template_path = MODULE_ROOT / "subtitles2notes" / "templates" / "lecture_notes_common_preamble.tex"
 
@@ -1741,6 +1840,7 @@ def main() -> int:
         reasoning=args.reasoning,
         max_frames=args.max_frames,
         force=args.force,
+        course_config=course_config,
     )
     return 0
 

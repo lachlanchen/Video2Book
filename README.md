@@ -83,6 +83,10 @@ Start a note-writing queue for one course:
 ./Video2Book/scripts/start_course_notes_tmux.sh --course supplementary/advanced_quantum_mechanics/2013_fall
 ```
 
+Host-specific wrappers can live under `examples/`. For `LazyEarn`, a reusable course wrapper now lives at:
+
+- `examples/lazyearn/yale-financial-markets/`
+
 ## 🎬 Current Default Example
 
 The bundled downloader defaults to the Leonard Susskind physics playlist:

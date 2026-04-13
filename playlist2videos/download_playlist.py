@@ -44,6 +44,10 @@ def parse_args() -> argparse.Namespace:
         help="Override the downloads root. Defaults to <workspace>/downloads.",
     )
     parser.add_argument(
+        "--download-subdir",
+        help="Optional relative subdirectory under the downloads root. Defaults to the playlist id.",
+    )
+    parser.add_argument(
         "--log-root",
         type=Path,
         help="Override the logs root. Defaults to <workspace>/logs.",
@@ -134,7 +138,8 @@ def resolve_ytdlp(explicit_path: Path | None, workspace: Path) -> Path:
 def resolve_paths(args: argparse.Namespace, playlist_id: str) -> tuple[Path, Path, Path]:
     download_root = (args.download_root or (args.workspace / "downloads")).expanduser()
     log_root = (args.log_root or (args.workspace / "logs")).expanduser()
-    download_dir = download_root / playlist_id
+    download_subdir = Path(args.download_subdir) if args.download_subdir else Path(playlist_id)
+    download_dir = download_root / download_subdir
     archive_file = args.archive_file or (log_root / f"playlist_{playlist_id}.archive")
     return download_dir, log_root, archive_file.expanduser()
 
