@@ -109,7 +109,7 @@ decision_file="$monitor_root/monitor.decision.json"
 history_log="$monitor_root/monitor.history.log"
 monitor_session_file="$monitor_root/monitor.session_id"
 monitor_session_doc="$monitor_root/monitor.session.md"
-source_root="/home/lachlan/ProjectsLFS/YoutubeDownloader/downloads/PLERGeJGfknBTR_nXt5QL88xJF5LhDZBnG"
+source_root="${NOTE_SOURCE_ROOT:-${SOURCE_ROOT:-/home/lachlan/ProjectsLFS/YoutubeDownloader/downloads/PLERGeJGfknBTR_nXt5QL88xJF5LhDZBnG}}"
 
 print_header() {
   printf '[%s] %s\n' "$(date --iso-8601=seconds)" "$1" | tee -a "$history_log"

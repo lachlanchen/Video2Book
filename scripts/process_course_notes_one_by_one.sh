@@ -26,7 +26,7 @@ USAGE
 
 module_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 repo_root="${NOTES_REPO_ROOT:-$(pwd)}"
-source_root="/home/lachlan/ProjectsLFS/YoutubeDownloader/downloads/PLERGeJGfknBTR_nXt5QL88xJF5LhDZBnG"
+source_root="${NOTE_SOURCE_ROOT:-${SOURCE_ROOT:-/home/lachlan/ProjectsLFS/YoutubeDownloader/downloads/PLERGeJGfknBTR_nXt5QL88xJF5LhDZBnG}}"
 model="${NOTE_MODEL:-gpt-5.4}"
 reasoning="${NOTE_REASONING:-xhigh}"
 session_scope="${NOTE_CODEX_SESSION_SCOPE:-global}"

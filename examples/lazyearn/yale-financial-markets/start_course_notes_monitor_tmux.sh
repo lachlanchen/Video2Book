@@ -7,6 +7,7 @@ source "$script_dir/../common.sh"
 load_lazyearn_course_env "$script_dir"
 
 export NOTES_REPO_ROOT="$HOST_REPO_ROOT"
+export NOTE_SOURCE_ROOT="$TRANSCRIPTION_SOURCE_ROOT"
 export VIDEO2BOOK_COURSE_CONFIG="$COURSE_CONFIG_PATH"
 export VIDEO2BOOK_REFERENCE_PDF_DIR="${VIDEO2BOOK_REFERENCE_PDF_DIR:-$HOST_REPO_ROOT/references/course-books/$COURSE_SLUG}"
 

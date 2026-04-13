@@ -122,7 +122,18 @@ if [[ "$allow_partial_course" -eq 1 ]]; then
   cmd+=(--allow-partial-course)
 fi
 
-tmux new-session -d -s "$session" -c "$repo_root" "bash -lc 'cd \"$repo_root\" && export NOTES_REPO_ROOT=\"$repo_root\" && NOTE_MONITOR_TMUX_NAME=\"$session\" ${cmd[*]} 2>&1 | tee \"$log_path\"'"
+env_exports="export NOTES_REPO_ROOT=\"$repo_root\"; export NOTE_MONITOR_TMUX_NAME=\"$session\"; "
+if [[ -n "${NOTE_SOURCE_ROOT:-}" ]]; then
+  env_exports+="export NOTE_SOURCE_ROOT=\"${NOTE_SOURCE_ROOT}\"; "
+fi
+if [[ -n "${VIDEO2BOOK_COURSE_CONFIG:-}" ]]; then
+  env_exports+="export VIDEO2BOOK_COURSE_CONFIG=\"${VIDEO2BOOK_COURSE_CONFIG}\"; "
+fi
+if [[ -n "${VIDEO2BOOK_REFERENCE_PDF_DIR:-}" ]]; then
+  env_exports+="export VIDEO2BOOK_REFERENCE_PDF_DIR=\"${VIDEO2BOOK_REFERENCE_PDF_DIR}\"; "
+fi
+
+tmux new-session -d -s "$session" -c "$repo_root" "bash -lc 'cd \"$repo_root\" && ${env_exports}${cmd[*]} 2>&1 | tee \"$log_path\"'"
 tmux rename-window -t "$session:0" "monitor"
 tmux set-option -t "$session" -g mouse on
 
