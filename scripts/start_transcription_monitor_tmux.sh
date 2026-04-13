@@ -18,6 +18,12 @@ fi
 log_file="transcription_logs/${session_name}_$(date +%Y%m%d_%H%M%S).log"
 tmux_command="export TRANSCRIPTION_REPO_ROOT='$repo_root'; "
 tmux_command+="export SOURCE_ROOT='${SOURCE_ROOT:-/home/lachlan/ProjectsLFS/YoutubeDownloader/downloads/PLERGeJGfknBTR_nXt5QL88xJF5LhDZBnG}'; "
+if [[ -n "${SOURCE_SUBDIR:-}" ]]; then
+  tmux_command+="export SOURCE_SUBDIR='${SOURCE_SUBDIR}'; "
+fi
+if [[ -n "${TRANSCRIPTION_GIT_PATHS:-}" ]]; then
+  tmux_command+="export TRANSCRIPTION_GIT_PATHS='${TRANSCRIPTION_GIT_PATHS}'; "
+fi
 tmux_command+="cd '$repo_root' && bash '$module_root/scripts/monitor_transcription.sh' '$worker_session_name' 2>&1 | tee '$log_file'"
 
 tmux new-session -d -s "$session_name" "$tmux_command"

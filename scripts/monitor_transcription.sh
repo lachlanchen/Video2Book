@@ -7,6 +7,7 @@ session_name="${1:-susskind-transcribe}"
 check_interval="${TRANSCRIPTION_MONITOR_INTERVAL_SECONDS:-1800}"
 stale_seconds="${TRANSCRIPTION_MONITOR_STALE_SECONDS:-2700}"
 source_root="${SOURCE_ROOT:-/home/lachlan/ProjectsLFS/YoutubeDownloader/downloads/PLERGeJGfknBTR_nXt5QL88xJF5LhDZBnG}"
+source_subdir="${SOURCE_SUBDIR:-}"
 log_dir="$repo_root/transcription_logs"
 
 mkdir -p "$log_dir"
@@ -21,14 +22,21 @@ latest_worker_log() {
 }
 
 pending_video() {
-  python3 "$module_root/videos2subtitles/transcribe_video.py" \
-    --repo-root "$repo_root" \
-    --source-root "$source_root" \
+  cmd=(
+    python3
+    "$module_root/videos2subtitles/transcribe_video.py"
+    --repo-root "$repo_root"
+    --source-root "$source_root"
     --print-next
+  )
+  if [[ -n "$source_subdir" ]]; then
+    cmd+=(--source-subdir "$source_subdir")
+  fi
+  "${cmd[@]}"
 }
 
 restart_worker() {
-  TRANSCRIPTION_REPO_ROOT="$repo_root" SOURCE_ROOT="$source_root" \
+  TRANSCRIPTION_REPO_ROOT="$repo_root" SOURCE_ROOT="$source_root" SOURCE_SUBDIR="$source_subdir" TRANSCRIPTION_GIT_PATHS="${TRANSCRIPTION_GIT_PATHS:-}" \
     bash "$module_root/scripts/start_transcription_tmux.sh" "$session_name"
 }
 

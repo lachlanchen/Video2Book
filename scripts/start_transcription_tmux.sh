@@ -19,7 +19,13 @@ fi
 log_file="transcription_logs/${session_name}_$(date +%Y%m%d_%H%M%S).log"
 tmux_command="export TRANSCRIPTION_REPO_ROOT='$repo_root'; "
 tmux_command+="export SOURCE_ROOT='${SOURCE_ROOT:-/home/lachlan/ProjectsLFS/YoutubeDownloader/downloads/PLERGeJGfknBTR_nXt5QL88xJF5LhDZBnG}'; "
+if [[ -n "${SOURCE_SUBDIR:-}" ]]; then
+  tmux_command+="export SOURCE_SUBDIR='${SOURCE_SUBDIR}'; "
+fi
 tmux_command+="export TRANSCRIBE_MODEL='$transcribe_model'; "
+if [[ -n "${TRANSCRIPTION_GIT_PATHS:-}" ]]; then
+  tmux_command+="export TRANSCRIPTION_GIT_PATHS='${TRANSCRIPTION_GIT_PATHS}'; "
+fi
 if [[ -n "$min_free_gpu_mib" ]]; then
   tmux_command+="export MIN_FREE_GPU_MIB='$min_free_gpu_mib'; "
 fi

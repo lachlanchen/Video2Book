@@ -126,6 +126,15 @@ env_exports="export NOTES_REPO_ROOT=\"$repo_root\"; export NOTE_MONITOR_TMUX_NAM
 if [[ -n "${NOTE_SOURCE_ROOT:-}" ]]; then
   env_exports+="export NOTE_SOURCE_ROOT=\"${NOTE_SOURCE_ROOT}\"; "
 fi
+if [[ -n "${NOTE_TMUX_SESSION_NAME:-}" ]]; then
+  env_exports+="export NOTE_TMUX_SESSION_NAME=\"${NOTE_TMUX_SESSION_NAME}\"; "
+fi
+if [[ -n "${NOTE_CODEX_SESSION_FILE:-}" ]]; then
+  env_exports+="export NOTE_CODEX_SESSION_FILE=\"${NOTE_CODEX_SESSION_FILE}\"; "
+fi
+if [[ -n "${NOTE_CODEX_SESSION_DOC_FILE:-}" ]]; then
+  env_exports+="export NOTE_CODEX_SESSION_DOC_FILE=\"${NOTE_CODEX_SESSION_DOC_FILE}\"; "
+fi
 if [[ -n "${VIDEO2BOOK_COURSE_CONFIG:-}" ]]; then
   env_exports+="export VIDEO2BOOK_COURSE_CONFIG=\"${VIDEO2BOOK_COURSE_CONFIG}\"; "
 fi

@@ -73,6 +73,12 @@ def build_parser() -> argparse.ArgumentParser:
         help="Root of the organized external lecture video tree.",
     )
     parser.add_argument(
+        "--source-subdir",
+        type=Path,
+        default=Path(os.environ["SOURCE_SUBDIR"]).expanduser() if os.environ.get("SOURCE_SUBDIR") else None,
+        help="Optional relative subdirectory under --source-root to scan for pending videos.",
+    )
+    parser.add_argument(
         "--whisper-script",
         default=DEFAULT_WHISPER_SCRIPT,
         type=Path,
@@ -96,9 +102,10 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def iter_videos(source_root: Path) -> list[Path]:
+def iter_videos(source_root: Path, source_subdir: Path | None = None) -> list[Path]:
+    scan_root = source_root / source_subdir if source_subdir else source_root
     videos: list[Path] = []
-    for path in source_root.rglob("*"):
+    for path in scan_root.rglob("*"):
         if not path.is_file():
             continue
         if path.name.endswith(".part"):
@@ -117,8 +124,8 @@ def output_paths(repo_root: Path, source_root: Path, video_path: Path) -> tuple[
     return subtitle_path, markdown_path, work_video
 
 
-def next_unprocessed_video(repo_root: Path, source_root: Path) -> Path | None:
-    for video in iter_videos(source_root):
+def next_unprocessed_video(repo_root: Path, source_root: Path, source_subdir: Path | None = None) -> Path | None:
+    for video in iter_videos(source_root, source_subdir=source_subdir):
         subtitle_path, markdown_path, _ = output_paths(repo_root, source_root, video)
         if not subtitle_path.exists() or not markdown_path.exists():
             return video
@@ -336,7 +343,7 @@ def main() -> int:
     args = build_parser().parse_args()
 
     if args.print_next:
-        next_video = next_unprocessed_video(args.repo_root, args.source_root)
+        next_video = next_unprocessed_video(args.repo_root, args.source_root, source_subdir=args.source_subdir)
         if next_video is not None:
             print(next_video)
         return 0

@@ -4,7 +4,9 @@ set -euo pipefail
 module_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 repo_root="${TRANSCRIPTION_REPO_ROOT:-$(pwd)}"
 source_root="${SOURCE_ROOT:-/home/lachlan/ProjectsLFS/YoutubeDownloader/downloads/PLERGeJGfknBTR_nXt5QL88xJF5LhDZBnG}"
+source_subdir="${SOURCE_SUBDIR:-}"
 transcribe_model="${TRANSCRIBE_MODEL:-large-v3}"
+transcription_git_paths="${TRANSCRIPTION_GIT_PATHS:-subtitles markdown}"
 
 if [[ -n "${MIN_FREE_GPU_MIB:-}" ]]; then
   min_free_gpu_mib="${MIN_FREE_GPU_MIB}"
@@ -23,6 +25,7 @@ else
 fi
 
 cd "$repo_root"
+read -r -a git_add_paths <<<"$transcription_git_paths"
 
 wait_for_gpu_memory() {
   while true; do
@@ -36,7 +39,11 @@ wait_for_gpu_memory() {
 }
 
 while true; do
-  next_video="$(python3 "$module_root/videos2subtitles/transcribe_video.py" --repo-root "$repo_root" --source-root "$source_root" --print-next)"
+  next_cmd=(python3 "$module_root/videos2subtitles/transcribe_video.py" --repo-root "$repo_root" --source-root "$source_root" --print-next)
+  if [[ -n "$source_subdir" ]]; then
+    next_cmd+=(--source-subdir "$source_subdir")
+  fi
+  next_video="$("${next_cmd[@]}")"
   if [[ -z "$next_video" ]]; then
     echo "No pending videos remain."
     exit 0
@@ -44,13 +51,20 @@ while true; do
 
   wait_for_gpu_memory
   echo "Processing $next_video with model $transcribe_model"
-  PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True python3 "$module_root/videos2subtitles/transcribe_video.py" \
-    --repo-root "$repo_root" \
-    --source-root "$source_root" \
-    --model "$transcribe_model" \
+  transcribe_cmd=(
+    python3
+    "$module_root/videos2subtitles/transcribe_video.py"
+    --repo-root "$repo_root"
+    --source-root "$source_root"
+    --model "$transcribe_model"
     --video "$next_video"
+  )
+  if [[ -n "$source_subdir" ]]; then
+    transcribe_cmd+=(--source-subdir "$source_subdir")
+  fi
+  PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True "${transcribe_cmd[@]}"
 
-  git add -- subtitles markdown
+  git add -- "${git_add_paths[@]}"
 
   if git diff --cached --quiet; then
     echo "No new tracked changes after processing $next_video"
