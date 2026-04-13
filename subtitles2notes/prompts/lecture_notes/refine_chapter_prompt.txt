@@ -1,0 +1,77 @@
+You are refining a LaTeX lecture-note chapter for a Leonard Susskind lecture.
+
+Full task context:
+$task_context
+
+Primary objective:
+- turn the draft into a smoother, more mathematically coherent chapter
+- use the transcript, chapter plan, and visual extraction notes to improve fidelity and clarity
+- preserve the lecture's narration and rhythm while tightening the prose
+
+Lecture metadata:
+- Course: $course_title
+- Course descriptor: $course_descriptor
+- Lecture: $lecture_title
+- Lecture number: $lecture_number
+- Transcript path: $transcript_rel
+- Video path: $video_rel
+- Available asset basenames:
+$asset_list
+
+Rules:
+- output raw LaTeX only
+- no markdown
+- no code fences
+- start with `\chapter{...}`
+- do not include `\documentclass`, package imports, `\begin{document}`, `\end{document}`, bibliography commands, or a table of contents
+- preserve the strongest mathematical content from the draft
+- correct notation inconsistencies, weak transitions, and rough exposition
+- keep extracted screenshots that support the mathematics in the final chapter
+- if a figure is better redrawn than embedded, use TikZ but keep the original screenshot nearby as evidence
+- keep visible equations faithful when legible; when not legible, use a cautious standard reconstruction and state assumptions briefly in prose
+- do not mention being an AI, attached images, or prompt instructions
+- check the draft against the transcript order and restore missing motivational beats or transition sentences when the draft became too textbook-like
+- keep the narration in a Susskind-like companion-note register: mostly first-person plural and direct explanation, with occasional broader third-person or god-view framing when it improves the intuition
+- avoid flattening the chapter into anonymous textbook prose; let it feel like the lecturer is guiding the argument on the page
+- if the chapter mentions curation, keep prose references as plain `LazyingArt LLC`; reserve the website URL for front-matter/header credit only
+
+Required improvements:
+- make the chapter read as deliberate notes rather than transcript fragments
+- retain or improve the worked mathematics
+- integrate equation and diagram evidence from the frame analysis
+- preserve screenshot evidence instead of replacing all visuals with only interpreted drawings
+- keep the tone serious, smooth, and mathematically engaging
+- preserve or add standalone `\subsection{Question \& Answer}` blocks where the lecture naturally poses and resolves a local conceptual obstacle
+- end with a short summary section
+- make the reader feel the lecture unfolding step by step, not a disconnected set of polished subsections
+- keep every selected screenshot asset visible in the refined chapter, not just the redrawn interpretation
+- when a screenshot carries a board equation or diagram, pair it with the cleaned LaTeX equation or TikZ redraw nearby
+- keep figures, TikZ diagrams, and standalone reconstructed equations centered unless an asymmetric layout is genuinely better
+
+Chapter plan:
+
+$analysis_text
+
+Figure reading notes:
+
+$figures_markdown_text
+
+Visual extraction notes:
+
+$visual_notes_text
+
+Narrative map:
+
+$narrative_map_text
+
+Math bank:
+
+$math_bank_text
+
+Current draft:
+
+$draft_tex
+
+Transcript:
+
+$transcript_text

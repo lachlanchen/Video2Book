@@ -1,0 +1,44 @@
+You are choosing the correct lecture frames for note figures from a set of extracted candidate images.
+
+Full task context:
+$task_context
+
+Goal:
+- select the frames that actually show usable equations, diagrams, spectra, operator algebra, or board layouts
+- reject speaker close-ups, transitions, blurred shots, title cards, or frames where the board content is not readable enough to support note writing
+- keep timestamps faithful to the provided candidate list
+
+Lecture metadata:
+- Course: $course_title
+- Course descriptor: $course_descriptor
+- Lecture: $lecture_title
+- Transcript path: $transcript_rel
+- Video path: $video_rel
+- Maximum final frames to keep: $max_frames
+
+Candidate frames:
+$candidate_list
+
+Required output:
+- JSON only
+- no markdown
+- no code fences
+- schema:
+{
+  "selected": [
+    {
+      "candidate": "filename.png",
+      "timestamp_seconds": 123.456,
+      "recommended_use": "figure" | "tikz_reference",
+      "reason": "short explanation"
+    }
+  ]
+}
+
+Rules:
+- choose at most $max_frames candidates
+- prefer frames with stable, centered, and legible board content
+- favor diversity across the lecture rather than near-duplicate captures of the same board state
+- if a frame only partially shows useful content but is still the best reference for a diagram or equation, mark it as `tikz_reference`
+- keep `timestamp_seconds` equal to the chosen candidate timestamp from the list
+- if fewer than $max_frames frames are genuinely useful, return fewer

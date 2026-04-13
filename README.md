@@ -14,6 +14,10 @@
   - Prefer `whisper_with_lang_detect`, then fall back to direct Whisper when needed.
   - Run lecture-by-lecture in tmux with GPU-memory guarding.
   - Optionally keep a monitor tmux session alive to restart the queue if it dies.
+- `subtitles2notes/`
+  - Turn completed transcript sets into TeX lecture notes and merged course PDFs.
+  - Reuse the current Codex-driven note-curation workflow, including figure extraction, compile-fix passes, and commit/push steps.
+  - Run lecture-by-lecture in tmux and keep a monitor tmux session watching the note worker.
 
 ## Susskind workflow
 
@@ -27,6 +31,8 @@ Use:
 ./scripts/download_susskind_playlist.sh
 ./scripts/start_transcription_tmux.sh
 ./scripts/start_transcription_monitor_tmux.sh
+./scripts/start_course_notes_tmux.sh
+./scripts/start_course_notes_monitor_tmux.sh
 ```
 
 Dry run:

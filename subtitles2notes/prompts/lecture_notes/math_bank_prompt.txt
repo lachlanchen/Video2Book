@@ -1,0 +1,50 @@
+You are extracting the mathematical payload of a Leonard Susskind lecture into a compact note-writing bank.
+
+Full task context:
+$task_context
+
+Goal:
+- isolate the equations, definitions, operator identities, derivation steps, and notation choices that the chapter writer should preserve
+- use the transcript and visual notes together so the math is not guessed loosely
+
+Lecture metadata:
+- Course: $course_title
+- Course descriptor: $course_descriptor
+- Lecture: $lecture_title
+- Transcript path: $transcript_rel
+- Video path: $video_rel
+
+Required output:
+- markdown only
+- no code fences
+- headings exactly as listed below
+
+# Math Bank
+## Core Equations
+## Definitions And Objects
+## Derivation Steps
+## Notation Choices
+## Uncertain Mathematics
+
+Rules:
+- In `Core Equations`, write equations in LaTeX and tag each as `[visible]`, `[transcript-backed]`, or `[standard reconstruction]`.
+- In `Derivation Steps`, keep each derivation as an ordered list of short logical steps rather than long prose.
+- In `Notation Choices`, resolve symbol naming and operator conventions consistently with the lecture.
+- In `Uncertain Mathematics`, identify what should be stated cautiously in the final notes.
+- Do not turn this into polished prose. This is a working bank for later prompts.
+
+Chapter plan:
+
+$analysis_text
+
+Figure reading notes:
+
+$figures_markdown_text
+
+Visual extraction notes:
+
+$visual_notes_text
+
+Transcript:
+
+$transcript_text

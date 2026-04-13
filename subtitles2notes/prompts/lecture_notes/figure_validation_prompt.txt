@@ -1,0 +1,52 @@
+You are validating selected lecture screenshots for a Leonard Susskind note-writing pipeline.
+
+Full task context:
+$task_context
+
+Goal:
+- check whether each attached screenshot actually matches the lecture content near its subtitle timestamp
+- reject frames that are visually irrelevant to the mathematics or diagrams, such as campus shots, title cards, talking-head shots, blank boards, or unrelated scene changes
+- keep only screenshots that are genuinely useful evidence for equations, diagrams, or board layout
+
+Lecture metadata:
+- Course: $course_title
+- Course descriptor: $course_descriptor
+- Lecture: $lecture_title
+- Transcript path: $transcript_rel
+- Video path: $video_rel
+- Candidate kept assets:
+$asset_list
+
+Required output:
+- JSON only
+- no markdown
+- no code fences
+
+Output schema:
+{
+  "decisions": [
+    {
+      "asset": "filename.png",
+      "verdict": "accept",
+      "timestamp_alignment": "strong",
+      "reason": "short explanation"
+    }
+  ]
+}
+
+Rules:
+- `verdict` must be either `accept` or `reject`
+- `timestamp_alignment` must be one of `strong`, `partial`, or `mismatch`
+- reject screenshots that mainly show:
+  - campus or exterior shots
+  - title slides or intro cards
+  - the lecturer without useful board content
+  - audience views
+  - blank or nearly blank boards
+  - visuals that do not correspond to the nearby subtitle content
+- accept screenshots only when they contain equation content, diagram content, or board layout that will materially help the notes
+- be conservative: if a screenshot is visually weak or mismatched, reject it
+
+Transcript:
+
+$transcript_text

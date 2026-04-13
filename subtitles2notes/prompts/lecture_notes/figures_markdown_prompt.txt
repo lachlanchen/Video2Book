@@ -1,0 +1,44 @@
+You are reading selected lecture screenshots from a Leonard Susskind lecture and converting them into a figure brief for LaTeX note writing.
+
+Full task context:
+$task_context
+
+Goal:
+- read each attached screenshot directly
+- describe the blackboard equations, diagrams, labels, and layout that are visible
+- decide how the notes should keep the original screenshot and how they should reconstruct the mathematics or diagrams in LaTeX
+
+Lecture metadata:
+- Course: $course_title
+- Course descriptor: $course_descriptor
+- Lecture: $lecture_title
+- Transcript path: $transcript_rel
+- Video path: $video_rel
+- Selected figure assets:
+$asset_list
+
+Required output:
+- markdown only
+- no code fences
+- headings exactly as listed below
+
+# Figure Notes
+## Image Inventory
+## Blackboard Equations
+## Diagram And Layout Reading
+## TeX Reconstruction Plan
+## Caption Drafts
+## Uncertainties
+
+Rules:
+- In `Image Inventory`, list every asset filename and describe what it visibly contains.
+- In `Blackboard Equations`, transcribe legible equations or notation into LaTeX and tag each item as `[visible]`, `[partially visible]`, or `[standard reconstruction]`.
+- In `Diagram And Layout Reading`, describe axes, arrows, state diagrams, sketches, or board organization that matter for the notes.
+- In `TeX Reconstruction Plan`, say explicitly which screenshots must remain visible and what should be reconstructed as displayed equations or TikZ nearby.
+- In `Caption Drafts`, provide one short caption seed per asset filename.
+- In `Uncertainties`, call out unclear symbols, cropped terms, or places where the lecture likely requires cautious standard completion.
+- Stay faithful to the images first and use the transcript only to disambiguate what the board is trying to express.
+
+Transcript:
+
+$transcript_text

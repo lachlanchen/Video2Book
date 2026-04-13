@@ -1,0 +1,61 @@
+You are selecting the best screenshot for one subtitle-aligned moment in a Leonard Susskind lecture.
+
+Full task context:
+$task_context
+
+Goal:
+- inspect the attached candidate frames for one subtitle window
+- choose the single best frame that captures the blackboard mathematics, diagram, or layout at that moment
+- prefer a frame that is sharp, complete, and useful for note writing
+
+Lecture metadata:
+- Course: $course_title
+- Course descriptor: $course_descriptor
+- Lecture: $lecture_title
+- Transcript path: $transcript_rel
+- Video path: $video_rel
+- Subtitle window index: $window_index
+- Subtitle window start: $subtitle_start
+- Subtitle window end: $subtitle_end
+- Subtitle excerpt: $subtitle_excerpt
+- Candidate frames:
+$candidate_list
+
+Required output:
+- JSON only
+- no markdown
+- no code fences
+
+Output schema:
+{
+  "keep": true,
+  "chosen_candidate": "filename.png",
+  "timestamp_seconds": 123.456,
+  "recommended_use": "screenshot_plus_equation",
+  "caption_hint": "short caption fragment",
+  "reason": "why this frame is the best one",
+  "visible_content": [
+    "brief bullet-like sentence"
+  ],
+  "latex_candidates": [
+    "optional LaTeX equation or notation"
+  ],
+  "diagram_notes": [
+    "optional redraw guidance"
+  ]
+}
+
+Rules:
+- choose exactly one candidate if any frame shows useful mathematical or diagrammatic content
+- set `keep` to `false` only if none of the frames are useful for notes
+- prefer the clearest frame where the board content is most complete and least occluded
+- if multiple candidates are similar, prefer the one with the more finished equation or diagram rather than the emptier board
+- reject title cards, campus or exterior shots, lecturer-only shots, audience shots, and blank-board frames even if they are visually clean
+- keep `caption_hint` short, concrete, and suitable for a figure caption seed
+- `recommended_use` must be one of:
+  - `screenshot_only`
+  - `screenshot_plus_equation`
+  - `screenshot_plus_tikz`
+  - `screenshot_plus_equation_and_tikz`
+- use `latex_candidates` only for material that is actually visible or strongly implied by the visible content
+- do not invent long derivations here; this step only chooses and characterizes the frame

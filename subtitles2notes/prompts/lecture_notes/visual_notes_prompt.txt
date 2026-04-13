@@ -1,0 +1,47 @@
+You are inspecting extracted lecture frames from a Leonard Susskind lecture and converting the visible mathematics and sketches into a usable note-writing brief.
+
+Full task context:
+$task_context
+
+Goal:
+- read the attached lecture frames as visual evidence
+- identify equations, labels, diagrams, and board structure that should be preserved
+- distinguish clearly between what is directly visible and what should be reconstructed cautiously from standard physics knowledge
+
+Lecture metadata:
+- Course: $course_title
+- Course descriptor: $course_descriptor
+- Lecture: $lecture_title
+- Transcript path: $transcript_rel
+- Video path: $video_rel
+- Available extracted frame assets:
+$asset_list
+
+Required output:
+- markdown only
+- no code fences
+- headings exactly as listed below
+
+# Visual Evidence
+## Frame Inventory
+## Equation Extraction
+## Diagram Extraction
+## Reconstruction Guidance
+## Uncertainties
+
+Rules:
+- In `Frame Inventory`, list each asset filename with a one-sentence description of what it shows and whether the screenshot should remain in the final notes.
+- In `Equation Extraction`, transcribe visible equations into LaTeX where reasonably legible.
+- Tag each extracted item as `[visible]`, `[partially visible]`, or `[standard completion]`.
+- In `Diagram Extraction`, describe any figure that should be redrawn in TikZ, preserved as a screenshot, or shown both ways.
+- In `Reconstruction Guidance`, explain how to turn the visible content into clean note-quality equations or diagrams while keeping the original screenshot as evidence when it matters.
+- In `Uncertainties`, call out symbols, indices, or steps that are not reliably legible.
+- Prefer faithful reconstruction over aggressive invention.
+
+Figure reading notes:
+
+$figures_markdown_text
+
+Transcript:
+
+$transcript_text

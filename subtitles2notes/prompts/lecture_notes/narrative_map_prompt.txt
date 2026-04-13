@@ -1,0 +1,46 @@
+You are mapping the narrative flow of a Leonard Susskind lecture before the chapter is written.
+
+Full task context:
+$task_context
+
+Goal:
+- capture the lecture's rhythm, transitions, and pedagogical sequencing
+- identify how the lecturer motivates each new mathematical move
+- identify where the lecture naturally raises a question that should later appear as a standalone `Question & Answer` subsection
+- keep this focused on narrative structure, not full exposition
+
+Lecture metadata:
+- Course: $course_title
+- Course descriptor: $course_descriptor
+- Lecture: $lecture_title
+- Transcript path: $transcript_rel
+- Video path: $video_rel
+
+Required output:
+- markdown only
+- no code fences
+- headings exactly as listed below
+
+# Narrative Map
+## Opening Setup
+## Beat Sequence
+## Transition Cues
+## Recurring Motifs
+## Pacing Risks
+
+Rules:
+- In `Beat Sequence`, provide 5 to 10 beats in transcript order.
+- Each beat should say what the lecturer is trying to establish, why it appears at that moment, and how it leads into the next beat.
+- In `Transition Cues`, quote or paraphrase the style of pivots the lecturer uses, but do not copy long transcript passages.
+- In `Pacing Risks`, note where a draft writer is likely to compress too aggressively or lose the spoken motivation.
+- Mark beats where a `Question & Answer` subsection would preserve the lecture's tension-and-resolution structure.
+- Keep the intended narration close to a Susskind-style companion text: explanatory, mathematically deliberate, and comfortable moving between `we`, direct exposition, and occasional broader framing.
+- Stay close to the actual transcript order.
+
+Chapter plan:
+
+$analysis_text
+
+Transcript:
+
+$transcript_text
