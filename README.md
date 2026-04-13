@@ -1,8 +1,8 @@
 [![LazyingArt banner](https://github.com/lachlanchen/lachlanchen/raw/main/figs/banner.png)](https://lazying.art)
 
-# Video2Book
+# Video2Book by LazyingArt LLC
 
-> Led by **LazyingArt LLC**. Websites: [lazying.art](https://lazying.art) and [learn.lazying.art](https://learn.lazying.art).
+> **Video2Book by LazyingArt LLC**. Websites: [lazying.art](https://lazying.art) and [learn.lazying.art](https://learn.lazying.art).
 
 [![LazyingArt](https://img.shields.io/badge/Website-lazying.art-111827?style=for-the-badge&logo=googlechrome&logoColor=white)](https://lazying.art)
 [![Learn](https://img.shields.io/badge/Learn-learn.lazying.art-1f2937?style=for-the-badge&logo=bookstack&logoColor=white)](https://learn.lazying.art)
