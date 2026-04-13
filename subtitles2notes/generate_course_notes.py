@@ -850,7 +850,7 @@ def validate_selected_frames_with_codex(
     if not selections:
         return []
 
-    prompt_text = read_template(repo_root / "scripts" / "prompts" / "lecture_notes" / "figure_validation_prompt.txt").substitute(
+    prompt_text = read_template(MODULE_ROOT / "subtitles2notes" / "prompts" / "lecture_notes" / "figure_validation_prompt.txt").substitute(
         task_context=build_task_context(lecture, course_config),
         course_title=lecture.course_title,
         course_descriptor=lecture.course_descriptor,
@@ -927,7 +927,7 @@ def select_frames_with_codex(
             for candidate in candidates
         )
         selection_path = runtime_dir / f"figure_probe_{window_index:02d}.json"
-        prompt_text = read_template(repo_root / "scripts" / "prompts" / "lecture_notes" / "frame_probe_prompt.txt").substitute(
+        prompt_text = read_template(MODULE_ROOT / "subtitles2notes" / "prompts" / "lecture_notes" / "frame_probe_prompt.txt").substitute(
             task_context=build_task_context(lecture, course_config),
             course_title=lecture.course_title,
             course_descriptor=lecture.course_descriptor,
