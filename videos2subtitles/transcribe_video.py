@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -38,6 +39,7 @@ DEFAULT_FALLBACK_SCRIPT = Path(__file__).with_name("fallback_whisper_transcribe.
 DEFAULT_CONDA_ENV = "whisper"
 DEFAULT_MODEL = "large-v3"
 VIDEO_EXTENSIONS = {".mp4", ".mkv", ".webm", ".m4a", ".mp3"}
+YT_DLP_FRAGMENT_STEM_RE = re.compile(r"\.f\d+$")
 
 
 def default_repo_root() -> Path:
@@ -109,6 +111,8 @@ def iter_videos(source_root: Path, source_subdir: Path | None = None) -> list[Pa
         if not path.is_file():
             continue
         if path.name.endswith(".part"):
+            continue
+        if YT_DLP_FRAGMENT_STEM_RE.search(path.stem):
             continue
         if path.suffix.lower() not in VIDEO_EXTENSIONS:
             continue
