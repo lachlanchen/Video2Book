@@ -86,7 +86,38 @@ Start a note-writing queue for one course:
 Host-specific wrappers can live under `examples/`. Current bundled patterns:
 
 - `examples/lazyearn/yale-financial-markets/`
+- `examples/lazylearn/how-you-speak-and-write/`
 - `examples/leonardsusskind/susskind-physics-archive/`
+
+## 🧪 Working Host Repos
+
+`Video2Book` is already being used in multiple host repos with different archive shapes.
+
+| Host repo | Focus | Wrapper example | Current tracked outputs |
+| --- | --- | --- | --- |
+| [LazyEarn](https://github.com/lachlanchen/LazyEarn) | Yale `Financial Markets` course with Robert J. Shiller | [examples/lazyearn/yale-financial-markets/](examples/lazyearn/yale-financial-markets/) | [course PDF](https://github.com/lachlanchen/LazyEarn/blob/main/generated_course_notes/lazyearn/yale-financial-markets/course.pdf), [lecture PDFs](https://github.com/lachlanchen/LazyEarn/tree/main/generated_course_notes/lazyearn/yale-financial-markets/chapters), [markdown transcripts](https://github.com/lachlanchen/LazyEarn/tree/main/markdown/lazyearn/yale-financial-markets), [subtitles](https://github.com/lachlanchen/LazyEarn/tree/main/subtitles/lazyearn/yale-financial-markets) |
+| [LazyLearn](https://github.com/lachlanchen/LazyLearn) | Writing-course adaptation for `How You Speak and Write` | [examples/lazylearn/how-you-speak-and-write/](examples/lazylearn/how-you-speak-and-write/) | [course PDF](https://github.com/lachlanchen/LazyLearn/blob/main/generated_course_notes/lazylearn/how-you-speak-and-write/course.pdf), [lecture PDFs](https://github.com/lachlanchen/LazyLearn/tree/main/generated_course_notes/lazylearn/how-you-speak-and-write/chapters) |
+| [leonardsusskind](https://github.com/lachlanchen/leonardsusskind) | Full Leonard Susskind lecture archive, transcript pipeline, and published note books | [examples/leonardsusskind/susskind-physics-archive/](examples/leonardsusskind/susskind-physics-archive/) | [published books folder](https://github.com/lachlanchen/leonardsusskind/tree/main), [advanced quantum PDF](https://github.com/lachlanchen/leonardsusskind/blob/main/supplemental_advanced_quantum/advanced_quantum_mechanics.pdf), [topics in string theory PDF](https://github.com/lachlanchen/leonardsusskind/blob/main/supplemental_cosmology_and_black_holes/topics_in_string_theory.pdf), [particle physics 3 PDF](https://github.com/lachlanchen/leonardsusskind/blob/main/supplemental_particle_physics_3/particle_physics_3_supersymmetry_and_grand_unification.pdf), [markdown transcripts](https://github.com/lachlanchen/leonardsusskind/tree/main/markdown), [subtitles](https://github.com/lachlanchen/leonardsusskind/tree/main/subtitles) |
+
+## 📘 Books And PDFs
+
+The third stage is already producing real book-like outputs in host repos:
+
+- merged course books such as `course.pdf` or a host-published canonical name
+- per-lecture PDFs under `generated_course_notes/.../chapters/`
+- transcript trees in `markdown/` and subtitle trees in `subtitles/`
+
+Representative tracked outputs:
+
+- [LazyEarn: Yale Financial Markets course book](https://github.com/lachlanchen/LazyEarn/blob/main/generated_course_notes/lazyearn/yale-financial-markets/course.pdf)
+- [LazyLearn: How You Speak and Write course book](https://github.com/lachlanchen/LazyLearn/blob/main/generated_course_notes/lazylearn/how-you-speak-and-write/course.pdf)
+- [Leonard Susskind: Advanced Quantum Mechanics](https://github.com/lachlanchen/leonardsusskind/blob/main/supplemental_advanced_quantum/advanced_quantum_mechanics.pdf)
+- [Leonard Susskind: Topics in String Theory](https://github.com/lachlanchen/leonardsusskind/blob/main/supplemental_cosmology_and_black_holes/topics_in_string_theory.pdf)
+- [Leonard Susskind: Particle Physics 1](https://github.com/lachlanchen/leonardsusskind/blob/main/supplemental_particle_physics_1/particle_physics_1_basic_concepts.pdf)
+- [Leonard Susskind: Particle Physics 2](https://github.com/lachlanchen/leonardsusskind/blob/main/supplemental_particle_physics_2/particle_physics_2_standard_model.pdf)
+- [Leonard Susskind: Particle Physics 3](https://github.com/lachlanchen/leonardsusskind/blob/main/supplemental_particle_physics_3/particle_physics_3_supersymmetry_and_grand_unification.pdf)
+- [Leonard Susskind: Quantum Entanglement Part 1](https://github.com/lachlanchen/leonardsusskind/blob/main/supplemental_quantum_entanglement/quantum_entanglement_part_1.pdf)
+- [Leonard Susskind: Demystifying the Higgs Boson](https://github.com/lachlanchen/leonardsusskind/blob/main/supplemental_higgs_boson/demystifying_the_higgs_boson.pdf)
 
 ## 🎬 Current Default Example
 
