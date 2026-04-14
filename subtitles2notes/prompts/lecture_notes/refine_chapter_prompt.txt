@@ -33,7 +33,7 @@ Rules:
 - check the draft against the transcript order and restore missing motivational beats or transition sentences when the draft became too textbook-like
 - keep the narration in a Susskind-like companion-note register: mostly first-person plural and direct explanation, with occasional broader third-person or god-view framing when it improves the intuition
 - avoid flattening the chapter into anonymous textbook prose; let it feel like the lecturer is guiding the argument on the page
-- if the chapter mentions curation, keep prose references as plain `LazyingArt LLC`; reserve the website URL for front-matter/header credit only
+- if the chapter mentions curation or tooling, keep prose references as plain `LazyingArt LLC` and `Video2Book`; reserve the website and GitHub URLs for front-matter/header credit only
 
 Required improvements:
 - make the chapter read as deliberate notes rather than transcript fragments

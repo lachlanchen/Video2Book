@@ -49,7 +49,7 @@ Writing rules:
 - read the transcript as a narrated lecture, not just a bag of facts; preserve the speaker's progression, setup, and payoff
 - let the chapter sound like companion notes written in a Susskind-like register: mainly first-person plural and direct explanatory prose, with occasional broader third-person or god-view framing when it clarifies the physics
 - do not force a rigid single-person voice or an imitation gimmick; keep the voice natural, mathematically serious, and book-like
-- if the chapter text mentions curation, use plain `LazyingArt LLC` in prose; reserve the website URL for front-matter/header credit only
+- if the chapter text mentions curation or tooling, use plain `LazyingArt LLC` and `Video2Book` in prose; reserve the website and GitHub URLs for front-matter/header credit only
 - for every selected asset in the list, include the original screenshot in the chapter with `\includegraphics`
 - when the screenshot shows an equation or diagram worth reconstructing, keep the screenshot and place the cleaned LaTeX equation or TikZ redraw nearby rather than replacing the screenshot
 - center figure environments, screenshots, TikZ diagrams, and standalone visual reconstructions unless there is a specific local reason not to

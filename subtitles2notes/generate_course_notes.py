@@ -143,14 +143,14 @@ class CourseConfig:
         "occasional broader third-person or god-view framing, and direct explanatory prose without forcing a rigid persona."
     )
     credit_target: str = (
-        "keep explicit credit to Leonard Susskind and curation by LazyingArt LLC; reserve the website URL for the "
-        "generated front-matter credit, not the prose body."
+        "keep explicit credit to Leonard Susskind, LazyingArt LLC, and Video2Book; reserve the website and GitHub "
+        "URLs for the generated front-matter credit, not the prose body."
     )
     front_matter_single: str = (
-        "Original lecture by Leonard Susskind. Transcript-derived notes curated by \\href{https://lazying.art}{LazyingArt LLC}."
+        "Original lecture by Leonard Susskind. Transcript-derived notes curated by \\href{https://lazying.art}{LazyingArt LLC} with \\href{https://github.com/lachlanchen/Video2Book}{Video2Book}."
     )
     front_matter_plural: str = (
-        "Original lectures by Leonard Susskind. Transcript-derived course notes curated by \\href{https://lazying.art}{LazyingArt LLC}."
+        "Original lectures by Leonard Susskind. Transcript-derived course notes curated by \\href{https://lazying.art}{LazyingArt LLC} with \\href{https://github.com/lachlanchen/Video2Book}{Video2Book}."
     )
     reference_pdf_hints: list[str] = field(default_factory=list)
     reference_missing_text: str = "No directly matching Susskind-authored PDF reference is available for this course."
