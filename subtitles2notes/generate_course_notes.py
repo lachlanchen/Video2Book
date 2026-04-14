@@ -1249,7 +1249,7 @@ def write_lecture_wrapper(lecture: LectureInfo, lecture_dir: Path, course_config
 \\frontmatter
 \\title{{{title_course}: {title_lecture}}}
 \\author{{{lecturer_name}}}
-\\date{{Transcript-derived notes curated by \\href{{https://lazying.art}}{{LazyingArt LLC}}}}
+\\date{{Transcript-derived notes curated by \\href{{https://lazying.art}}{{LazyingArt LLC}} with \\href{{https://github.com/lachlanchen/Video2Book}}{{Video2Book}}}}
 \\maketitle
 \\begin{{center}}
 \\small {course_config.front_matter_single}
@@ -1278,7 +1278,7 @@ def write_course_book(course_root: Path, lecture_entries: list[LectureInfo], cou
 \\frontmatter
 \\title{{{title_course}}}
 \\author{{{lecturer_name}}}
-\\date{{{descriptor} \\\\ Transcript-derived notes curated by \\href{{https://lazying.art}}{{LazyingArt LLC}}}}
+\\date{{{descriptor} \\\\ Transcript-derived notes curated by \\href{{https://lazying.art}}{{LazyingArt LLC}} with \\href{{https://github.com/lachlanchen/Video2Book}}{{Video2Book}}}}
 \\maketitle
 \\begin{{center}}
 \\small {course_config.front_matter_plural}
