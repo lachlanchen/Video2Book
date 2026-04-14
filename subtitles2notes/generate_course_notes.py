@@ -1282,17 +1282,21 @@ def build_course_cover_titlepage(
   }};
   \\node[
     anchor=north west,
-    align=left,
-    text width=0.72\\paperwidth,
+    inner sep=0,
+    minimum width=\\paperwidth,
+    minimum height=0.34\\paperheight,
     fill=white,
-    fill opacity=0.82,
-    text opacity=1,
-    rounded corners=6pt,
-    inner sep=14pt
-  ] at ([xshift=0.08\\paperwidth,yshift=-0.09\\paperheight]current page.north west) {{%
-    {{\\fontsize{{30}}{{33}}\\selectfont\\bfseries\\color{{black!88}} {title_course}\\par}}
-    \\vspace{{0.85em}}
-    {{\\large\\color{{black!72}} {subtitle}\\par}}
+    fill opacity=1,
+    text opacity=1
+  ] at (current page.north west) {{}};
+  \\node[
+    anchor=north west,
+    align=left,
+    text width=0.78\\paperwidth,
+    inner sep=0pt
+  ] at ([xshift=0.08\\paperwidth,yshift=-0.10\\paperheight]current page.north west) {{%
+    {{\\fontsize{{30}}{{33}}\\selectfont\\bfseries\\color{{black!88}} {title_course}\\\\[0.85em]}}
+    {{\\large\\color{{black!72}} {subtitle}}}
   }};
   \\node[
     anchor=south west,
@@ -1304,9 +1308,8 @@ def build_course_cover_titlepage(
     rounded corners=6pt,
     inner sep=12pt
   ] at ([xshift=0.08\\paperwidth,yshift=0.08\\paperheight]current page.south west) {{%
-    {{\\normalsize\\color{{black!78}} Leonard Susskind lecture notes\\par}}
-    \\vspace{{0.35em}}
-    {{\\small\\color{{black!72}} {front_matter_plural}\\par}}
+    {{\\normalsize\\color{{black!78}} Leonard Susskind lecture notes\\\\[0.35em]}}
+    {{\\small\\color{{black!72}} {front_matter_plural}}}
   }};
 \\end{{tikzpicture}}
 \\mbox{{}}
