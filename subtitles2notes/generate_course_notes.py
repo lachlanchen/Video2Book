@@ -1262,6 +1262,59 @@ def write_lecture_wrapper(lecture: LectureInfo, lecture_dir: Path, course_config
     (lecture_dir / "lecture.tex").write_text(wrapper, encoding="utf-8")
 
 
+def build_course_cover_titlepage(
+    course_root: Path,
+    title_course: str,
+    descriptor: str,
+    front_matter_plural: str,
+) -> str:
+    cover_path = course_root / "assets" / "cover-art.png"
+    if not cover_path.exists():
+        return ""
+
+    subtitle = descriptor or "Transcript-derived lecture notes"
+    return f"""\\hypersetup{{pageanchor=false}}
+\\begin{{titlepage}}
+\\thispagestyle{{empty}}
+\\begin{{tikzpicture}}[remember picture,overlay]
+  \\node[anchor=south west,inner sep=0] at (current page.south west) {{%
+    \\includegraphics[width=\\paperwidth,height=\\paperheight]{{assets/cover-art.png}}%
+  }};
+  \\node[
+    anchor=north west,
+    align=left,
+    text width=0.72\\paperwidth,
+    fill=white,
+    fill opacity=0.82,
+    text opacity=1,
+    rounded corners=6pt,
+    inner sep=14pt
+  ] at ([xshift=0.08\\paperwidth,yshift=-0.09\\paperheight]current page.north west) {{%
+    {{\\fontsize{{30}}{{33}}\\selectfont\\bfseries\\color{{black!88}} {title_course}\\par}}
+    \\vspace{{0.85em}}
+    {{\\large\\color{{black!72}} {subtitle}\\par}}
+  }};
+  \\node[
+    anchor=south west,
+    align=left,
+    text width=0.68\\paperwidth,
+    fill=white,
+    fill opacity=0.82,
+    text opacity=1,
+    rounded corners=6pt,
+    inner sep=12pt
+  ] at ([xshift=0.08\\paperwidth,yshift=0.08\\paperheight]current page.south west) {{%
+    {{\\normalsize\\color{{black!78}} Leonard Susskind lecture notes\\par}}
+    \\vspace{{0.35em}}
+    {{\\small\\color{{black!72}} {front_matter_plural}\\par}}
+  }};
+\\end{{tikzpicture}}
+\\mbox{{}}
+\\end{{titlepage}}
+\\hypersetup{{pageanchor=true}}
+"""
+
+
 def write_course_book(course_root: Path, lecture_entries: list[LectureInfo], course_config: CourseConfig) -> None:
     graphics_path = "\\graphicspath{{figures/}{assets/}}\n"
     title_course = normalize_latex_metadata_text(
@@ -1269,6 +1322,12 @@ def write_course_book(course_root: Path, lecture_entries: list[LectureInfo], cou
     )
     descriptor = normalize_latex_metadata_text(lecture_entries[0].course_descriptor if lecture_entries else "")
     lecturer_name = normalize_latex_metadata_text(course_config.lecturer_name)
+    cover_titlepage = build_course_cover_titlepage(
+        course_root=course_root,
+        title_course=title_course,
+        descriptor=descriptor,
+        front_matter_plural=course_config.front_matter_plural,
+    )
     inputs = "\n".join(
         f"\\input{{chapters/{lecture.lecture_slug}/content.tex}}" for lecture in lecture_entries
     )
@@ -1276,6 +1335,7 @@ def write_course_book(course_root: Path, lecture_entries: list[LectureInfo], cou
 \\input{{common_preamble.tex}}
 {graphics_path}\\begin{{document}}
 \\frontmatter
+{cover_titlepage}
 \\title{{{title_course}}}
 \\author{{{lecturer_name}}}
 \\date{{{descriptor} \\\\ Transcript-derived notes curated by \\href{{https://lazying.art}}{{LazyingArt LLC}} with \\href{{https://github.com/lachlanchen/Video2Book}}{{Video2Book}}}}
