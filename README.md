@@ -83,9 +83,10 @@ Start a note-writing queue for one course:
 ./Video2Book/scripts/start_course_notes_tmux.sh --course supplementary/advanced_quantum_mechanics/2013_fall
 ```
 
-Host-specific wrappers can live under `examples/`. For `LazyEarn`, a reusable course wrapper now lives at:
+Host-specific wrappers can live under `examples/`. Current bundled patterns:
 
 - `examples/lazyearn/yale-financial-markets/`
+- `examples/leonardsusskind/susskind-physics-archive/`
 
 ## 🎬 Current Default Example
 
