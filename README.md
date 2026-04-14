@@ -138,6 +138,37 @@ That default is just a working example. The code is structured so other host rep
 
 - [references/lazylearn-course-adaptation.md](references/lazylearn-course-adaptation.md)
 - [references/lazyearn-yale-financial-markets-adaptation.md](references/lazyearn-yale-financial-markets-adaptation.md)
+- [references/nanobanana-2-book-cover-handoff.md](references/nanobanana-2-book-cover-handoff.md)
+- [references/tex-book-translation-workflow.md](references/tex-book-translation-workflow.md)
+
+## 🎨 Book Cover Utility
+
+`Video2Book` also includes a local Nano Banana 2 helper for editorial book-cover generation:
+
+- script: [scripts/book_cover_nanobanana.py](scripts/book_cover_nanobanana.py)
+- guide: [references/nanobanana-2-book-cover-handoff.md](references/nanobanana-2-book-cover-handoff.md)
+- env template: [.env.example](.env.example)
+- current-book example prompt: [examples/lazylearn/how-you-speak-and-write/book_cover_prompt.txt](examples/lazylearn/how-you-speak-and-write/book_cover_prompt.txt)
+
+It reuses the GRS AI submit-and-poll mechanics from the sibling Nano Banana work, but swaps the segmentation prompts for a book-cover prompt and saves a clean output trace per run.
+
+## 🌐 Book Translation Utility
+
+`Video2Book` can also translate a finished lecture-note book into sibling
+language folders such as `zh/` and `jp/`, while keeping the TeX structure,
+equations, and images intact.
+
+- manager: [scripts/translate_tex_book.py](scripts/translate_tex_book.py)
+- loop runner: [scripts/process_book_translation_one_by_one.sh](scripts/process_book_translation_one_by_one.sh)
+- tmux starter: [scripts/start_book_translation_tmux.sh](scripts/start_book_translation_tmux.sh)
+- workflow note: [references/tex-book-translation-workflow.md](references/tex-book-translation-workflow.md)
+
+The translation loop:
+
+- initializes a XeLaTeX-ready translated edition
+- translates the main book file first, then each chapter
+- recompiles after every unit
+- can commit and push the translated folder after each completed unit
 
 ## ⚙️ Requirements
 
