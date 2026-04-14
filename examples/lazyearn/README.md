@@ -16,6 +16,7 @@ The intent is to keep the pipeline core generic while letting each course custom
 - course path under `markdown/` and `subtitles/`
 - lecturer credits in generated books
 - notes-writing defaults
+- optional dedupe sources for sequential playlist ingestion
 
 Current example:
 
@@ -29,3 +30,9 @@ All `lazyearn` wrappers now default to:
 - a per-course `downloads/` subdirectory
 - a per-course `SOURCE_SUBDIR` for transcription scans
 - per-course `git add` paths for `subtitles/` and `markdown/`
+
+Sequential playlist feature:
+
+- future wrappers can declare `DEDUP_SOURCE_SUBDIRS=(...)` in `course.env`
+- the shared downloader will pre-link duplicate videos from those earlier playlist folders before yt-dlp starts
+- the same duplicate IDs are also written into the target playlist archive file so yt-dlp skips re-downloading them

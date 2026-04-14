@@ -19,3 +19,45 @@ load_lazyearn_course_env() {
   export TRANSCRIPTION_SOURCE_SUBDIR="${TRANSCRIPTION_SOURCE_SUBDIR:-$COURSE_REL}"
   export TRANSCRIPTION_GIT_PATHS="${TRANSCRIPTION_GIT_PATHS:-subtitles/$COURSE_REL markdown/$COURSE_REL}"
 }
+
+run_lazyearn_playlist_download() {
+  local playlist_id archive_file
+  playlist_id="${PLAYLIST_URL#*list=}"
+  playlist_id="${playlist_id%%&*}"
+  archive_file="${DOWNLOAD_ARCHIVE_FILE:-$DOWNLOAD_LOG_ROOT/playlist_${playlist_id}.archive}"
+  local forward_dry_run=""
+  local arg
+  for arg in "$@"; do
+    if [[ "$arg" == "--dry-run" ]]; then
+      forward_dry_run="--dry-run"
+      break
+    fi
+  done
+
+  mkdir -p "$DOWNLOAD_LOG_ROOT"
+
+  if declare -p DEDUP_SOURCE_SUBDIRS >/dev/null 2>&1 && (( ${#DEDUP_SOURCE_SUBDIRS[@]} > 0 )); then
+    local dedup_args=()
+    local source_subdir
+    for source_subdir in "${DEDUP_SOURCE_SUBDIRS[@]}"; do
+      dedup_args+=(--source-subdir "$source_subdir")
+    done
+    python3 "$VIDEO2BOOK_ROOT/playlist2videos/link_playlist_duplicates.py" \
+      --playlist-url "$PLAYLIST_URL" \
+      --workspace "$YT_DLP_WORKSPACE" \
+      --download-root "$DOWNLOAD_ROOT" \
+      --download-subdir "$DOWNLOAD_SUBDIR" \
+      --archive-file "$archive_file" \
+      ${forward_dry_run:+$forward_dry_run} \
+      "${dedup_args[@]}"
+  fi
+
+  exec python3 "$VIDEO2BOOK_ROOT/playlist2videos/download_playlist.py" \
+    --playlist-url "$PLAYLIST_URL" \
+    --workspace "$YT_DLP_WORKSPACE" \
+    --download-root "$DOWNLOAD_ROOT" \
+    --download-subdir "$DOWNLOAD_SUBDIR" \
+    --log-root "$DOWNLOAD_LOG_ROOT" \
+    --archive-file "$archive_file" \
+    "$@"
+}
