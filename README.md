@@ -102,6 +102,11 @@ That default is just a working example. The code is structured so other host rep
 - [subtitles2notes](subtitles2notes)
 - [scripts](scripts)
 
+## 📚 Host Adaptation Notes
+
+- [references/lazylearn-course-adaptation.md](references/lazylearn-course-adaptation.md)
+- [references/lazyearn-yale-financial-markets-adaptation.md](references/lazyearn-yale-financial-markets-adaptation.md)
+
 ## ⚙️ Requirements
 
 - `tmux`
