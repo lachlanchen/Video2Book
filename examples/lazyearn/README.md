@@ -20,3 +20,12 @@ The intent is to keep the pipeline core generic while letting each course custom
 Current example:
 
 - `yale-financial-markets/`
+- `hard-knocks-interviews/`
+- `ten-questions-with-a-millionaire/`
+- `entrepreneurship/`
+
+All `lazyearn` wrappers now default to:
+
+- a per-course `downloads/` subdirectory
+- a per-course `SOURCE_SUBDIR` for transcription scans
+- per-course `git add` paths for `subtitles/` and `markdown/`

@@ -1,0 +1,16 @@
+{
+  "course_rel": "lazyearn/school-of-hard-knocks/hard-knocks-interviews",
+  "course_title": "Hard Knocks Interviews",
+  "course_descriptor": "Lazyearn track, School of Hard Knocks interview series",
+  "lecturer_name": "School of Hard Knocks",
+  "deliverable_target": "a faithful, source-conscious chapter for Hard Knocks Interviews, plus a per-course compiled PDF book.",
+  "visual_target": "selected frames are supporting evidence for names, on-screen captions, charts, and interview context; do not let them override the spoken content.",
+  "mathematical_standard": "preserve concrete claims, business details, and any quantitative or institutional statements, but avoid invented textbook exposition.",
+  "style_target": "notes should read like a careful interview-derived companion text for wealth, entrepreneurship, and commercial reasoning, with explicit separation between anecdote, claim, and mechanism.",
+  "credit_target": "keep explicit credit to School of Hard Knocks and curation by LazyingArt LLC; reserve the website URL for front matter, not body prose.",
+  "front_matter_single": "Original interview by School of Hard Knocks. Transcript-derived notes curated by \\href{https://lazying.art}{LazyingArt LLC}.",
+  "front_matter_plural": "Original interviews by School of Hard Knocks. Transcript-derived course notes curated by \\href{https://lazying.art}{LazyingArt LLC}.",
+  "reference_missing_text": "No directly matching reference PDF is available for this course.",
+  "reference_no_match_text": "Matching course reference PDFs were found, but no strong topical excerpt was automatically matched for this interview.",
+  "reference_budget_text": "Matching course reference PDFs were found, but no excerpt fit within the current prompt budget."
+}
