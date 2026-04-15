@@ -8,8 +8,8 @@
   "mathematical_standard": "preserve concrete advice, examples, process details, and any explicit analytic structure from the videos, but avoid generic filler or invented textbook exposition.",
   "style_target": "notes should read like polished companion notes for a serious writing and speaking course, with clean prose, explicit structure, and careful separation between principles, examples, and process advice.",
   "credit_target": "keep explicit credit to the original speakers as a curated multi-speaker collection and curation by LazyingArt LLC; reserve the website URL for the generated front-matter credit, not the prose body.",
-  "front_matter_single": "Original video from the How You Speak and Write collection. Transcript-derived notes curated by \\href{https://lazying.art}{LazyingArt LLC}.",
-  "front_matter_plural": "Original videos from the How You Speak and Write collection. Transcript-derived course notes curated by \\href{https://lazying.art}{LazyingArt LLC}.",
+  "front_matter_single": "Original video from the How You Speak and Write collection. Lecture notes organized by \\href{https://lazying.art}{LazyingArt LLC}.",
+  "front_matter_plural": "Original videos from the How You Speak and Write collection. Lecture notes organized by \\href{https://lazying.art}{LazyingArt LLC}.",
   "reference_missing_text": "No directly matching reference PDF is available for this course.",
   "reference_no_match_text": "Matching course reference PDFs were found, but no strong topical excerpt was automatically matched for this lecture.",
   "reference_budget_text": "Matching course reference PDFs were found, but no excerpt fit within the current prompt budget."

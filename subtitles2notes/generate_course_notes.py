@@ -147,10 +147,10 @@ class CourseConfig:
         "URLs for the generated front-matter credit, not the prose body."
     )
     front_matter_single: str = (
-        "Original lecture by Leonard Susskind. Transcript-derived notes curated by \\href{https://lazying.art}{LazyingArt LLC} with \\href{https://github.com/lachlanchen/Video2Book}{Video2Book}."
+        "Original lecture by Leonard Susskind. Lecture notes organized by \\href{https://lazying.art}{LazyingArt LLC} with \\href{https://github.com/lachlanchen/Video2Book}{Video2Book}."
     )
     front_matter_plural: str = (
-        "Original lectures by Leonard Susskind. Transcript-derived course notes curated by \\href{https://lazying.art}{LazyingArt LLC} with \\href{https://github.com/lachlanchen/Video2Book}{Video2Book}."
+        "Original lectures by Leonard Susskind. Lecture notes organized by \\href{https://lazying.art}{LazyingArt LLC} with \\href{https://github.com/lachlanchen/Video2Book}{Video2Book}."
     )
     reference_pdf_hints: list[str] = field(default_factory=list)
     reference_missing_text: str = "No directly matching Susskind-authored PDF reference is available for this course."
@@ -1249,7 +1249,7 @@ def write_lecture_wrapper(lecture: LectureInfo, lecture_dir: Path, course_config
 \\frontmatter
 \\title{{{title_course}: {title_lecture}}}
 \\author{{{lecturer_name}}}
-\\date{{Transcript-derived notes curated by \\href{{https://lazying.art}}{{LazyingArt LLC}} with \\href{{https://github.com/lachlanchen/Video2Book}}{{Video2Book}}}}
+\\date{{Lecture notes organized by \\href{{https://lazying.art}}{{LazyingArt LLC}} with \\href{{https://github.com/lachlanchen/Video2Book}}{{Video2Book}}}}
 \\maketitle
 \\begin{{center}}
 \\small {course_config.front_matter_single}
@@ -1273,7 +1273,7 @@ def build_course_cover_titlepage(
     if not cover_path.exists():
         return ""
 
-    subtitle = descriptor or "Transcript-derived lecture notes"
+    subtitle = descriptor or "Lecture notes"
     return f"""\\hypersetup{{pageanchor=false}}
 \\begin{{titlepage}}
 \\thispagestyle{{empty}}
@@ -1343,7 +1343,7 @@ def write_course_book(course_root: Path, lecture_entries: list[LectureInfo], cou
 {cover_titlepage}
 \\title{{{title_course}}}
 \\author{{{lecturer_name}}}
-\\date{{{descriptor} \\\\ Transcript-derived notes curated by \\href{{https://lazying.art}}{{LazyingArt LLC}} with \\href{{https://github.com/lachlanchen/Video2Book}}{{Video2Book}}}}
+\\date{{{descriptor} \\\\ Lecture notes organized by \\href{{https://lazying.art}}{{LazyingArt LLC}} with \\href{{https://github.com/lachlanchen/Video2Book}}{{Video2Book}}}}
 \\maketitle
 \\begin{{center}}
 \\small {course_config.front_matter_plural}
