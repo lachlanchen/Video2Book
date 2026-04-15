@@ -350,18 +350,72 @@ def count_files(root: Path, suffix: str) -> int:
     return len([p for p in root.iterdir() if p.is_file() and p.suffix.lower() == suffix])
 
 
-def ordered_courses(course_map: dict[str, list[Path]]) -> list[str]:
-    def key(course_rel: str) -> tuple[int, str]:
-        parts = Path(course_rel).parts
-        bucket = 2
-        if parts:
-            if parts[0] == "supplementary":
-                bucket = 0
-            elif parts[0] == "core":
-                bucket = 1
-        return (bucket, course_rel)
+def course_bucket(course_rel: str) -> int:
+    parts = Path(course_rel).parts
+    if parts:
+        if parts[0] == "supplementary":
+            return 0
+        if parts[0] == "core":
+            return 1
+    return 2
 
-    return sorted(course_map.keys(), key=key)
+
+def core_course_group_key(course_rel: str) -> tuple[int, str, str]:
+    parts = Path(course_rel).parts
+    track = parts[0] if len(parts) > 0 else ""
+    subject = parts[1] if len(parts) > 1 else course_rel
+    return (course_bucket(course_rel), track, subject)
+
+
+def core_course_variant_key(course_rel: str) -> tuple[int, int, str]:
+    parts = Path(course_rel).parts
+    run = parts[2].lower() if len(parts) > 2 else ""
+    year_match = re.match(r"(\d{4})_", run)
+    year = int(year_match.group(1)) if year_match else 0
+
+    if "theoretical_minimum" in run and "partial" not in run:
+        rank = 0
+    elif "legacy" in run:
+        rank = 2
+    elif "stanford" in run and "partial" not in run:
+        rank = 3
+    elif "partial" in run:
+        rank = 4
+    else:
+        rank = 1
+
+    return (rank, -year, run)
+
+
+def ordered_courses(course_map: dict[str, list[Path]]) -> list[str]:
+    supplementary = sorted(
+        [course_rel for course_rel in course_map if course_bucket(course_rel) == 0],
+        key=lambda course_rel: (course_bucket(course_rel), course_rel),
+    )
+    other = sorted(
+        [course_rel for course_rel in course_map if course_bucket(course_rel) > 1],
+        key=lambda course_rel: (course_bucket(course_rel), course_rel),
+    )
+
+    core_groups: dict[tuple[int, str, str], list[str]] = defaultdict(list)
+    for course_rel in course_map:
+        if course_bucket(course_rel) != 1:
+            continue
+        core_groups[core_course_group_key(course_rel)].append(course_rel)
+
+    ordered_core_groups = sorted(core_groups.keys())
+    for group_key in ordered_core_groups:
+        core_groups[group_key].sort(key=core_course_variant_key)
+
+    interleaved_core: list[str] = []
+    max_variants = max((len(values) for values in core_groups.values()), default=0)
+    for variant_index in range(max_variants):
+        for group_key in ordered_core_groups:
+            variants = core_groups[group_key]
+            if variant_index < len(variants):
+                interleaved_core.append(variants[variant_index])
+
+    return supplementary + interleaved_core + other
 
 
 def eligible_courses(source_root: Path, markdown_root: Path, subtitle_root: Path) -> list[str]:
