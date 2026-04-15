@@ -1,4 +1,4 @@
-# Lazyearn Wrappers
+# LazyEarn Wrappers
 
 This folder stores host-repo wrappers for running `Video2Book` inside `LazyEarn`.
 
