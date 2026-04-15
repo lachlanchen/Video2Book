@@ -83,6 +83,7 @@ if [[ -n "$session_file" && -s "$session_file" ]]; then
     --json
     -m "$model"
     -c "model_reasoning_effort=\"$reasoning\""
+    --dangerously-bypass-approvals-and-sandbox
     -o "$output_file"
   )
 else
@@ -92,7 +93,7 @@ else
     --json
     -m "$model"
     -c "model_reasoning_effort=\"$reasoning\""
-    -s read-only
+    --dangerously-bypass-approvals-and-sandbox
     -C "$repo_path"
     -o "$output_file"
   )
