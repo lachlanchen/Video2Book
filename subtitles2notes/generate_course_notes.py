@@ -126,6 +126,18 @@ class CourseConfig:
     course_rel: str | None = None
     course_title: str | None = None
     course_descriptor: str | None = None
+    dynamic_book_enabled: bool = False
+    dynamic_book_title: str | None = None
+    dynamic_book_descriptor: str | None = None
+    dynamic_book_target: str = (
+        "build a coherent book that is more thematic than lecture-by-lecture, and revise it as new lectures arrive."
+    )
+    dynamic_book_style_target: str = (
+        "keep the book vivid, intriguing, and factual; braid together story, philosophy, and methodology without drifting into hype."
+    )
+    dynamic_book_structure_target: str = (
+        "maintain a dynamic set of thematic chapters that can be revised, merged, split, or reordered as the evidence base grows; do not force one chapter per lecture."
+    )
     lecturer_name: str = "Leonard Susskind"
     deliverable_target: str = (
         "a faithful, mathematically serious chapter for the course, plus a per-course compiled PDF book."
@@ -162,6 +174,18 @@ class CourseConfig:
     )
 
 
+def parse_bool(value: object, default: bool = False) -> bool:
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        lowered = value.strip().lower()
+        if lowered in {"1", "true", "yes", "on"}:
+            return True
+        if lowered in {"0", "false", "no", "off"}:
+            return False
+    return default
+
+
 def load_course_config(path: Path | None) -> CourseConfig:
     config = CourseConfig()
     if path is None:
@@ -170,10 +194,16 @@ def load_course_config(path: Path | None) -> CourseConfig:
     if not config_path.exists():
         return config
     raw = json.loads(config_path.read_text(encoding="utf-8"))
+    config.dynamic_book_enabled = parse_bool(raw.get("dynamic_book_enabled"), config.dynamic_book_enabled)
     for key in (
         "course_rel",
         "course_title",
         "course_descriptor",
+        "dynamic_book_title",
+        "dynamic_book_descriptor",
+        "dynamic_book_target",
+        "dynamic_book_style_target",
+        "dynamic_book_structure_target",
         "lecturer_name",
         "deliverable_target",
         "visual_target",
@@ -239,18 +269,27 @@ def transcript_text(path: Path) -> str:
 
 
 def build_task_context(lecture: LectureInfo, course_config: CourseConfig) -> str:
-    return "\n".join(
-        [
-            f"- Final deliverable: {course_config.deliverable_target}",
-            "- Primary source of truth: the matching lecture transcript; preserve its order, rhythm, motivation, and narrative progression.",
-            f"- Visual evidence: {course_config.visual_target}",
-            f"- Analytical standard: {course_config.mathematical_standard}",
-            f"- Style target: {course_config.style_target}",
-            "- Structural target: when the lecture naturally raises and resolves a local conceptual obstacle, preserve that rhythm with a standalone `Question & Answer` subsection inside the chapter rather than flattening it away.",
-            f"- Credit target: {course_config.credit_target}",
-            "- Output discipline: each prompt stage should solve only its local subtask, but keep the full end goal in mind so downstream stages remain coherent.",
-        ]
-    )
+    lines = [
+        f"- Final deliverable: {course_config.deliverable_target}",
+        "- Primary source of truth: the matching lecture transcript; preserve its order, rhythm, motivation, and narrative progression.",
+        f"- Visual evidence: {course_config.visual_target}",
+        f"- Analytical standard: {course_config.mathematical_standard}",
+        f"- Style target: {course_config.style_target}",
+        "- Structural target: when the lecture naturally raises and resolves a local conceptual obstacle, preserve that rhythm with a standalone `Question & Answer` subsection inside the chapter rather than flattening it away.",
+        f"- Credit target: {course_config.credit_target}",
+        "- Output discipline: each prompt stage should solve only its local subtask, but keep the full end goal in mind so downstream stages remain coherent.",
+    ]
+    if course_config.dynamic_book_enabled:
+        lines.extend(
+            [
+                f"- Dynamic book target: {course_config.dynamic_book_target}",
+                f"- Dynamic book style: {course_config.dynamic_book_style_target}",
+                f"- Dynamic book structure: {course_config.dynamic_book_structure_target}",
+                "- Dynamic book rule: do not treat one lecture as one permanent book chapter; let each lecture feed an evolving thematic book that can revise earlier chapters and set up later ones.",
+                "- Dynamic visual rule: preserve concrete frames, captions, and diagrams when they clarify a claim, but use them as evidence anchors inside a coherent book arc rather than as a linear slideshow replay.",
+            ]
+        )
+    return "\n".join(lines)
 
 
 def parse_source_rel(md_text: str) -> str:
@@ -1357,6 +1396,127 @@ def write_course_book(course_root: Path, lecture_entries: list[LectureInfo], cou
     (course_root / "course.tex").write_text(content, encoding="utf-8")
 
 
+def slugify_filename(value: str) -> str:
+    normalized = unicodedata.normalize("NFKD", value)
+    ascii_only = normalized.encode("ascii", "ignore").decode("ascii")
+    slug = re.sub(r"[^a-z0-9]+", "-", ascii_only.lower()).strip("-")
+    return slug or "dynamic-book"
+
+
+def processed_lecture_summary(course_root: Path) -> str:
+    entries: list[tuple[int, str, str]] = []
+    for metadata_file in sorted((course_root / "chapters").glob("lecture_*/metadata.json")):
+        meta = json.loads(metadata_file.read_text(encoding="utf-8"))
+        entries.append(
+            (
+                int(meta.get("lecture_number") or 0),
+                str(meta.get("lecture_slug") or metadata_file.parent.name),
+                str(meta.get("lecture_title") or metadata_file.parent.name),
+            )
+        )
+    entries.sort(key=lambda item: (item[0], item[1]))
+    if not entries:
+        return "- No processed lectures yet."
+    return "\n".join(
+        f"- {slug} | lecture {number:02d} | {title}" if number > 0 else f"- {slug} | {title}"
+        for number, slug, title in entries
+    )
+
+
+def update_dynamic_book(
+    repo_root: Path,
+    course_root: Path,
+    lecture: LectureInfo,
+    course_config: CourseConfig,
+    runtime_dir: Path,
+    prompt_root: Path,
+    model: str,
+    reasoning: str,
+    asset_list_text: str,
+    figures_markdown_text: str,
+    visual_notes_text: str,
+    narrative_map_text: str,
+    math_bank_text: str,
+    analysis_text: str,
+    current_chapter_tex: str,
+    assets: Iterable[Path],
+) -> None:
+    if not course_config.dynamic_book_enabled:
+        return
+
+    dynamic_root = course_root / "dynamic_book"
+    dynamic_root.mkdir(parents=True, exist_ok=True)
+    book_title = course_config.dynamic_book_title or lecture.course_title
+    book_descriptor = course_config.dynamic_book_descriptor or lecture.course_descriptor
+    tex_slug = slugify_filename(book_title)
+    tex_path = dynamic_root / f"{tex_slug}.tex"
+    existing_dynamic_book_tex = (
+        tex_path.read_text(encoding="utf-8") if tex_path.exists() else "% No dynamic manuscript exists yet.\n"
+    )
+
+    prompt = read_template(prompt_root / "dynamic_book_prompt.txt").substitute(
+        task_context=build_task_context(lecture, course_config),
+        course_title=lecture.course_title,
+        course_descriptor=lecture.course_descriptor,
+        dynamic_book_title=book_title,
+        dynamic_book_descriptor=book_descriptor,
+        dynamic_book_target=course_config.dynamic_book_target,
+        dynamic_book_style_target=course_config.dynamic_book_style_target,
+        dynamic_book_structure_target=course_config.dynamic_book_structure_target,
+        lecturer_name=course_config.lecturer_name,
+        transcript_rel=lecture.transcript_rel,
+        video_rel=lecture.video_rel,
+        lecture_title=lecture.lecture_title,
+        lecture_number=lecture.lecture_number,
+        processed_lectures_text=processed_lecture_summary(course_root),
+        asset_list=asset_list_text,
+        figures_markdown_text=figures_markdown_text,
+        visual_notes_text=visual_notes_text,
+        narrative_map_text=narrative_map_text,
+        math_bank_text=math_bank_text,
+        analysis_text=analysis_text,
+        current_chapter_tex=current_chapter_tex,
+        existing_dynamic_book_tex=existing_dynamic_book_tex,
+    )
+    run_codex_prompt(
+        repo_root=repo_root,
+        prompt_text=prompt,
+        output_path=tex_path,
+        runtime_dir=runtime_dir,
+        log_prefix="dynamic_book",
+        model=model,
+        reasoning=reasoning,
+        images=assets,
+    )
+
+    if not compile_tex(tex_path.name, dynamic_root, runtime_dir, "dynamic_book_compile"):
+        fix_prompt = read_template(prompt_root / "dynamic_book_compile_fix_prompt.txt").substitute(
+            dynamic_book_title=book_title,
+            compile_log=compile_log_excerpt(runtime_dir, "dynamic_book_compile"),
+            current_tex=tex_path.read_text(encoding="utf-8"),
+        )
+        run_codex_prompt(
+            repo_root=repo_root,
+            prompt_text=fix_prompt,
+            output_path=tex_path,
+            runtime_dir=runtime_dir,
+            log_prefix="dynamic_book_fix",
+            model=model,
+            reasoning=reasoning,
+        )
+        if not compile_tex(tex_path.name, dynamic_root, runtime_dir, "dynamic_book_compile_retry"):
+            raise RuntimeError(f"Failed to compile dynamic book for {lecture.course_rel}")
+
+    cleanup_build_artifacts(dynamic_root)
+    commit_generated_step(
+        repo_root=repo_root,
+        runtime_dir=runtime_dir,
+        log_prefix="commit_dynamic_book",
+        commit_message=f"Update dynamic book for {lecture.course_rel}",
+        paths=[tex_path, dynamic_root / f"{tex_slug}.pdf"],
+    )
+
+
 def compile_tex(tex_name: str, cwd: Path, runtime_dir: Path, log_prefix: str, passes: int = 2) -> bool:
     build_dir = cwd / "build"
     build_dir.mkdir(parents=True, exist_ok=True)
@@ -1827,6 +1987,25 @@ def generate_one_lecture(
         log_prefix="commit_course_pdf",
         commit_message=f"Rebuild course notes for {lecture.course_rel}",
         paths=[course_root / "course.tex", course_root / "course.pdf"],
+    )
+
+    update_dynamic_book(
+        repo_root=repo_root,
+        course_root=course_root,
+        lecture=lecture,
+        course_config=course_config,
+        runtime_dir=course_runtime,
+        prompt_root=prompt_root,
+        model=model,
+        reasoning=reasoning,
+        asset_list_text=asset_list_text,
+        figures_markdown_text=figures_markdown_path.read_text(encoding="utf-8"),
+        visual_notes_text=visual_notes_path.read_text(encoding="utf-8"),
+        narrative_map_text=narrative_map_path.read_text(encoding="utf-8"),
+        math_bank_text=math_bank_path.read_text(encoding="utf-8"),
+        analysis_text=analysis_path.read_text(encoding="utf-8"),
+        current_chapter_tex=content_path.read_text(encoding="utf-8"),
+        assets=assets,
     )
 
 

@@ -1,0 +1,83 @@
+You are writing and continuously revising a LaTeX book manuscript that synthesizes many interviews into one coherent nonlinear book.
+
+Task context:
+$task_context
+
+Book title: $dynamic_book_title
+Book descriptor: $dynamic_book_descriptor
+Underlying source series: $course_title
+Course descriptor: $course_descriptor
+Current lecture number: $lecture_number
+Current lecture title: $lecture_title
+Current transcript path: $transcript_rel
+Current video path: $video_rel
+
+Dynamic book target:
+$dynamic_book_target
+
+Dynamic book style target:
+$dynamic_book_style_target
+
+Dynamic book structure target:
+$dynamic_book_structure_target
+
+Processed lectures so far:
+$processed_lectures_text
+
+Current lecture asset list:
+$asset_list
+
+Figure markdown:
+$figures_markdown_text
+
+Visual notes:
+$visual_notes_text
+
+Narrative map:
+$narrative_map_text
+
+Math / detail bank:
+$math_bank_text
+
+Chapter analysis for the current lecture:
+$analysis_text
+
+Current lecture chapter TeX:
+$current_chapter_tex
+
+Existing dynamic book TeX:
+$existing_dynamic_book_tex
+
+Write a full replacement LaTeX manuscript for the evolving book.
+
+Hard requirements:
+- Output only LaTeX.
+- Start with `\documentclass[11pt,oneside]{book}`.
+- Use `\input{../common_preamble.tex}`.
+- Use `\graphicspath{{../figures/}{../assets/}}`.
+- Produce a complete compilable book document ending with `\end{document}`.
+- Set the title to `$dynamic_book_title`.
+- Credit the original source as `$lecturer_name` or `School of Hard Knocks` in front matter where appropriate, and keep LazyingArt LLC / Video2Book credit in the same style as the repo's other books.
+- Use real thematic chapters. Do not mirror the lecture list or create one chapter per video.
+- You may revise, merge, compress, reorder, or split chapters based on the current lecture and the accumulated manuscript.
+- Keep the whole book consistent and intriguing, with explicit story, philosophy, and methodology threads.
+- Distinguish clearly between anecdote, mechanism, heuristic, and evidence.
+- Preserve useful concrete details, names, numbers, and business mechanisms from the interviews when they are actually supported by the transcript.
+- Do not invent facts, timelines, quotes, or financial details.
+- Use frames and diagrams only when supported by the available assets; keep them as evidence anchors, not decorative filler.
+- If a current lecture frame materially helps, include it with `\includegraphics` from `../figures/...` and explain why it matters.
+- Keep the prose dynamic and vivid, but not hype-heavy or sloppy.
+- Use a nonlinear architecture: recurring ideas should reappear across chapters when that improves the book.
+- Let later insight revise earlier claims. The book should feel maintained, not merely appended.
+
+Structural guidance:
+- Include a short preface or opening note that explains what the book is trying to learn about getting rich without glamorizing shallow clichés.
+- Build a chapter system around durable themes such as paths to wealth, leverage, skill concentration, sales, capital allocation, ownership, risk, timing, luck, character, institutional constraints, and mistaken beliefs.
+- A single interview may inform several chapters; a single chapter may synthesize many interviews.
+- Keep chapter titles memorable and book-like.
+- Favor a compact, high-signal book over bloated coverage.
+
+Output discipline:
+- Rewrite the whole manuscript so it stays internally coherent.
+- Prefer maintaining a strong through-line over maximizing raw transcript coverage.
+- Keep the manuscript compatible with repeated future rewrites as more interviews arrive.

@@ -1,0 +1,16 @@
+You are fixing a LaTeX book manuscript after a failed compile.
+
+Book title: $dynamic_book_title
+
+Compile log:
+$compile_log
+
+Current manuscript:
+$current_tex
+
+Requirements:
+- Output only corrected LaTeX.
+- Preserve the same book content and structure as much as possible.
+- Fix only what is needed to make the manuscript compile cleanly.
+- Keep `\documentclass`, `\input{../common_preamble.tex}`, and the overall front matter intact.
+- Do not drop whole chapters unless the compile failure leaves no smaller fix.
