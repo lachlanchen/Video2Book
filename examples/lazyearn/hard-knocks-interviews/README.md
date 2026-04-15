@@ -9,7 +9,7 @@ It customizes:
 - a dedicated transcript subtree
 - tmux session names for transcription
 - tmux session names for course-note writing
-- a dynamic nonlinear book mode for the evolving book `How Did You Get Rich?`
+- a dynamic nonlinear book mode for the evolving book `How You Got Rich?`
 
 Expected host-repo usage from the host repo root:
 

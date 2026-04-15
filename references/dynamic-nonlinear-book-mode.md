@@ -54,4 +54,12 @@ Some playlists are better turned into a thematic field book than a linear transc
 The first target for this mode is:
 
 - `examples/lazyearn/hard-knocks-interviews/`
-- dynamic book title: `How Did You Get Rich?`
+- dynamic book title: `How You Got Rich?`
+
+The intended control flow is:
+
+1. process one lecture normally into lecture-specific notes, frames, and chapter TeX
+2. update a course-level memory file that synthesizes the whole processed series into thematic evidence, chapter candidates, frame ideas, and diagram ideas
+3. rewrite one separate dynamic book from that course memory plus the accumulated manuscript
+
+This keeps the lecture-by-lecture artifacts intact while the book itself stays nonlinear and series-level.

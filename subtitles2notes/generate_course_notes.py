@@ -1423,6 +1423,127 @@ def processed_lecture_summary(course_root: Path) -> str:
     )
 
 
+def markdown_body_excerpt(path: Path, limit: int = 260) -> str:
+    if not path.exists():
+        return "none"
+    lines = [
+        line.strip()
+        for line in path.read_text(encoding="utf-8", errors="replace").splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    ]
+    if not lines:
+        return "none"
+    return trim_excerpt(" ".join(lines), limit=limit)
+
+
+def course_corpus_snapshot(course_root: Path) -> str:
+    entries: list[str] = []
+    for metadata_file in sorted((course_root / "chapters").glob("lecture_*/metadata.json")):
+        chapter_dir = metadata_file.parent
+        meta = json.loads(metadata_file.read_text(encoding="utf-8"))
+        lecture_number = int(meta.get("lecture_number") or 0)
+        lecture_slug = str(meta.get("lecture_slug") or chapter_dir.name)
+        lecture_title = str(meta.get("lecture_title") or chapter_dir.name)
+        assets = [Path(asset).name for asset in meta.get("assets", []) if str(asset).strip()]
+        analysis_excerpt = markdown_body_excerpt(chapter_dir / "analysis.md", limit=240)
+        narrative_excerpt = markdown_body_excerpt(chapter_dir / "narrative_map.md", limit=220)
+        math_excerpt = markdown_body_excerpt(chapter_dir / "math_bank.md", limit=180)
+        parts = [
+            f"- {lecture_slug} | lecture {lecture_number:02d} | {lecture_title}" if lecture_number > 0 else f"- {lecture_slug} | {lecture_title}",
+            f"analysis: {analysis_excerpt}",
+            f"narrative: {narrative_excerpt}",
+            f"math/business detail: {math_excerpt}",
+        ]
+        if assets:
+            parts.append(f"assets: {', '.join(assets)}")
+        entries.append("\n".join(parts))
+    return "\n\n".join(entries) or "- No processed lecture corpus yet."
+
+
+def course_figure_inventory(course_root: Path) -> str:
+    entries: list[str] = []
+    for metadata_file in sorted((course_root / "chapters").glob("lecture_*/metadata.json")):
+        chapter_dir = metadata_file.parent
+        meta = json.loads(metadata_file.read_text(encoding="utf-8"))
+        assets = [Path(asset).name for asset in meta.get("assets", []) if str(asset).strip()]
+        if not assets:
+            continue
+        lecture_number = int(meta.get("lecture_number") or 0)
+        lecture_slug = str(meta.get("lecture_slug") or chapter_dir.name)
+        lecture_title = str(meta.get("lecture_title") or chapter_dir.name)
+        figure_excerpt = markdown_body_excerpt(chapter_dir / "figures_markdown.md", limit=240)
+        entries.append(
+            "\n".join(
+                [
+                    f"- {lecture_slug} | lecture {lecture_number:02d} | {lecture_title}" if lecture_number > 0 else f"- {lecture_slug} | {lecture_title}",
+                    f"assets: {', '.join(assets)}",
+                    f"figure notes: {figure_excerpt}",
+                ]
+            )
+        )
+    return "\n\n".join(entries) or "- No validated figure assets exist yet across the processed lectures."
+
+
+def update_dynamic_book_memory(
+    repo_root: Path,
+    course_root: Path,
+    markdown_root: Path,
+    lecture: LectureInfo,
+    course_config: CourseConfig,
+    runtime_dir: Path,
+    prompt_root: Path,
+    model: str,
+    reasoning: str,
+    asset_list_text: str,
+    figures_markdown_text: str,
+    visual_notes_text: str,
+    narrative_map_text: str,
+    math_bank_text: str,
+    analysis_text: str,
+    current_chapter_tex: str,
+) -> str:
+    dynamic_root = course_root / "dynamic_book"
+    dynamic_root.mkdir(parents=True, exist_ok=True)
+    memory_path = dynamic_root / "course_memory.md"
+    existing_memory_text = (
+        memory_path.read_text(encoding="utf-8")
+        if memory_path.exists()
+        else "# Course Memory\n\nNo persistent course memory exists yet.\n"
+    )
+    prompt = read_template(prompt_root / "dynamic_book_memory_prompt.txt").substitute(
+        task_context=build_task_context(lecture, course_config),
+        course_title=lecture.course_title,
+        course_descriptor=lecture.course_descriptor,
+        dynamic_book_title=course_config.dynamic_book_title or lecture.course_title,
+        dynamic_book_descriptor=course_config.dynamic_book_descriptor or lecture.course_descriptor,
+        transcript_dir_rel=str((markdown_root / lecture.course_rel).relative_to(repo_root)),
+        accumulated_notes_dir_rel=str(course_root.relative_to(repo_root)),
+        lecture_title=lecture.lecture_title,
+        lecture_number=lecture.lecture_number,
+        processed_lectures_text=processed_lecture_summary(course_root),
+        course_corpus_text=course_corpus_snapshot(course_root),
+        course_figure_inventory_text=course_figure_inventory(course_root),
+        asset_list=asset_list_text,
+        figures_markdown_text=figures_markdown_text,
+        visual_notes_text=visual_notes_text,
+        narrative_map_text=narrative_map_text,
+        math_bank_text=math_bank_text,
+        analysis_text=analysis_text,
+        current_chapter_tex=current_chapter_tex,
+        existing_course_memory_text=existing_memory_text,
+    )
+    run_codex_prompt(
+        repo_root=repo_root,
+        prompt_text=prompt,
+        output_path=memory_path,
+        runtime_dir=runtime_dir,
+        log_prefix="dynamic_book_memory",
+        model=model,
+        reasoning=reasoning,
+    )
+    return memory_path.read_text(encoding="utf-8")
+
+
 def update_dynamic_book(
     repo_root: Path,
     course_root: Path,
@@ -1447,6 +1568,24 @@ def update_dynamic_book(
 
     dynamic_root = course_root / "dynamic_book"
     dynamic_root.mkdir(parents=True, exist_ok=True)
+    course_memory_text = update_dynamic_book_memory(
+        repo_root=repo_root,
+        course_root=course_root,
+        markdown_root=markdown_root,
+        lecture=lecture,
+        course_config=course_config,
+        runtime_dir=runtime_dir,
+        prompt_root=prompt_root,
+        model=model,
+        reasoning=reasoning,
+        asset_list_text=asset_list_text,
+        figures_markdown_text=figures_markdown_text,
+        visual_notes_text=visual_notes_text,
+        narrative_map_text=narrative_map_text,
+        math_bank_text=math_bank_text,
+        analysis_text=analysis_text,
+        current_chapter_tex=current_chapter_tex,
+    )
     book_title = course_config.dynamic_book_title or lecture.course_title
     book_descriptor = course_config.dynamic_book_descriptor or lecture.course_descriptor
     tex_slug = slugify_filename(book_title)
@@ -1474,11 +1613,13 @@ def update_dynamic_book(
         processed_lectures_text=processed_lecture_summary(course_root),
         asset_list=asset_list_text,
         figures_markdown_text=figures_markdown_text,
+        course_figure_inventory_text=course_figure_inventory(course_root),
         visual_notes_text=visual_notes_text,
         narrative_map_text=narrative_map_text,
         math_bank_text=math_bank_text,
         analysis_text=analysis_text,
         current_chapter_tex=current_chapter_tex,
+        course_memory_text=course_memory_text,
         existing_dynamic_book_tex=existing_dynamic_book_tex,
     )
     run_codex_prompt(
@@ -1516,7 +1657,7 @@ def update_dynamic_book(
         runtime_dir=runtime_dir,
         log_prefix="commit_dynamic_book",
         commit_message=f"Update dynamic book for {lecture.course_rel}",
-        paths=[tex_path, dynamic_root / f"{tex_slug}.pdf"],
+        paths=[dynamic_root / "course_memory.md", tex_path, dynamic_root / f"{tex_slug}.pdf"],
     )
 
 

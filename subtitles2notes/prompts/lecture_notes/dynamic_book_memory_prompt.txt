@@ -1,0 +1,83 @@
+You are maintaining a persistent course-level memory for a nonlinear book project.
+
+Task context:
+$task_context
+
+Book title: $dynamic_book_title
+Book descriptor: $dynamic_book_descriptor
+Underlying source series: $course_title
+Course descriptor: $course_descriptor
+Current lecture number: $lecture_number
+Current lecture title: $lecture_title
+Full transcript directory for the whole course: $transcript_dir_rel
+Accumulated course notes/output directory: $accumulated_notes_dir_rel
+
+Processed lectures so far:
+$processed_lectures_text
+
+Compact corpus snapshot across all processed lectures:
+$course_corpus_text
+
+Course-wide figure inventory:
+$course_figure_inventory_text
+
+Current lecture asset list:
+$asset_list
+
+Current lecture figure notes:
+$figures_markdown_text
+
+Current lecture visual notes:
+$visual_notes_text
+
+Current lecture narrative map:
+$narrative_map_text
+
+Current lecture math / business detail bank:
+$math_bank_text
+
+Current lecture chapter analysis:
+$analysis_text
+
+Current lecture chapter TeX:
+$current_chapter_tex
+
+Existing course memory:
+$existing_course_memory_text
+
+Write a full replacement Markdown memory file for the evolving book.
+
+Hard requirements:
+- Output only Markdown.
+- Treat this as a living book-planning workspace for the whole series, not as notes for a single lecture.
+- The memory must reflect the full processed corpus, with the current lecture integrated into that wider map.
+- Do not organize the memory by lecture order except for a short evidence index.
+- Track recurring themes, contradictions, recurring story types, business mechanisms, and philosophical tensions across the whole series.
+- Keep explicit room for frames and diagrams that could belong in the final book.
+- Do not invent facts.
+
+Required sections:
+1. `# Book North Star`
+2. `## Core thesis`
+3. `## Candidate chapter system`
+4. `## Evidence bank by theme`
+5. `## Frame bank`
+6. `## Diagram and table bank`
+7. `## Tensions and contradictions`
+8. `## Revision agenda for the next rewrite`
+9. `## Processed lecture evidence index`
+
+Section guidance:
+- `Core thesis`: state what the series is really teaching about getting rich, in durable terms.
+- `Candidate chapter system`: list real book chapters, not lecture names.
+- `Evidence bank by theme`: group evidence from multiple lectures under themes such as ownership, sales, leverage, timing, reputation, geography, risk, luck, cost discipline, exits, and character.
+- `Frame bank`: identify which validated frames are actually worth reusing in the book and why.
+- `Diagram and table bank`: propose transcript-backed diagrams or tables that synthesize multiple interviews.
+- `Tensions and contradictions`: keep competing claims visible instead of flattening them.
+- `Revision agenda`: say what earlier chapters of the book should probably be revised now that the current lecture has been integrated.
+- `Processed lecture evidence index`: keep this concise and factual.
+
+Output discipline:
+- Favor compression and durable synthesis.
+- Do not let the current lecture dominate the memory unless it truly changes the book's structure.
+- Keep the memory useful for a second prompt that will rewrite the full LaTeX book.

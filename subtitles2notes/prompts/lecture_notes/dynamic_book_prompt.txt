@@ -26,6 +26,12 @@ $dynamic_book_structure_target
 Processed lectures so far:
 $processed_lectures_text
 
+Course memory for the whole series:
+$course_memory_text
+
+Course-wide figure inventory:
+$course_figure_inventory_text
+
 Current lecture asset list:
 $asset_list
 
@@ -63,13 +69,16 @@ Hard requirements:
 - Use real thematic chapters. Do not mirror the lecture list or create one chapter per video.
 - Treat the full transcript directory and the accumulated course-notes tree as the default working context for every rewrite, even when the current prompt was triggered by a single lecture.
 - Always reconcile the current lecture against the full set of already processed notes before deciding what to add, remove, merge, or rewrite.
+- Use the course memory as the primary overview map of the full series, then use the current lecture materials to update that map where needed.
+- This book is not a lecture digest. It should read like a real book about how people get rich, built from the whole series.
 - You may revise, merge, compress, reorder, or split chapters based on the current lecture and the accumulated manuscript.
 - Keep the whole book consistent and intriguing, with explicit story, philosophy, and methodology threads.
 - Distinguish clearly between anecdote, mechanism, heuristic, and evidence.
 - Preserve useful concrete details, names, numbers, and business mechanisms from the interviews when they are actually supported by the transcript.
 - Do not invent facts, timelines, quotes, or financial details.
 - Use frames and diagrams only when supported by the available assets; keep them as evidence anchors, not decorative filler.
-- If a current lecture frame materially helps, include it with `\includegraphics` from `../figures/...` and explain why it matters.
+- When a validated frame materially strengthens a thematic chapter, include it with `\includegraphics` from `../figures/...` and explain why it matters.
+- Add compact tables or simple TikZ / text-native diagrams when they clarify transcript-backed mechanisms across multiple interviews.
 - Keep the prose dynamic and vivid, but not hype-heavy or sloppy.
 - Use a nonlinear architecture: recurring ideas should reappear across chapters when that improves the book.
 - Let later insight revise earlier claims. The book should feel maintained, not merely appended.
@@ -80,6 +89,7 @@ Structural guidance:
 - A single interview may inform several chapters; a single chapter may synthesize many interviews.
 - Keep chapter titles memorable and book-like.
 - Favor a compact, high-signal book over bloated coverage.
+- Prefer cross-interview synthesis over chronology.
 
 Output discipline:
 - Rewrite the whole manuscript so it stays internally coherent.
