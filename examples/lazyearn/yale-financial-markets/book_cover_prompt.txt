@@ -1,0 +1,13 @@
+Design a polished front-cover image for a book titled "Financial Markets".
+This should feel like a real bookstore-ready nonfiction cover, not a poster, slide, or social graphic.
+Render a flat front-cover artwork only, not a photographed book, not a 3D mockup, and not a product render.
+Portrait composition with aspect ratio 2:3.
+Overall tone: calm, rigorous, elegant, and editorial with a Japanese minimalist sensibility.
+Use a restrained palette of warm paper cream, soft charcoal, deep indigo, and one small vermilion accent.
+Build the image from clean, disciplined forms only: sparse geometric price arcs, subtle wave structures, quiet grid hints, and one or two precise financial marks.
+No tangled linework, no chaotic scribbles, no faux technical charts, no neon, no skyline montage, no currency symbols, no characters, and no busy collage elements.
+Leave a large clean typographic field in the upper portion for the title and subtitle overlay.
+If any marks are used, they should be sparse, balanced, and exact, with strong negative space and no messy lines.
+Do not render any title, subtitle, author name, logo, seal text, numerals, letters, or readable typography inside the image.
+The image should contain only abstract visual forms and empty editorial space for later overlay text.
+Front cover only. No spine. No back cover. No watermark. No fake readable text inside the art itself.

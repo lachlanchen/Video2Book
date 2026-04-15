@@ -1266,6 +1266,7 @@ def build_course_cover_titlepage(
     course_root: Path,
     title_course: str,
     descriptor: str,
+    lecturer_name: str,
     front_matter_plural: str,
 ) -> str:
     cover_path = course_root / "assets" / "cover-art.png"
@@ -1308,7 +1309,7 @@ def build_course_cover_titlepage(
     rounded corners=6pt,
     inner sep=12pt
   ] at ([xshift=0.08\\paperwidth,yshift=0.08\\paperheight]current page.south west) {{%
-    {{\\normalsize\\color{{black!78}} Leonard Susskind lecture notes\\\\[0.35em]}}
+    {{\\normalsize\\color{{black!78}} Original lectures by {lecturer_name}\\\\[0.35em]}}
     {{\\small\\color{{black!72}} {front_matter_plural}}}
   }};
 \\end{{tikzpicture}}
@@ -1329,6 +1330,7 @@ def write_course_book(course_root: Path, lecture_entries: list[LectureInfo], cou
         course_root=course_root,
         title_course=title_course,
         descriptor=descriptor,
+        lecturer_name=lecturer_name,
         front_matter_plural=course_config.front_matter_plural,
     )
     inputs = "\n".join(
