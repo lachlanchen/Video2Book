@@ -24,6 +24,7 @@ Current example:
 - `hard-knocks-interviews/`
 - `ten-questions-with-a-millionaire/`
 - `entrepreneurship/`
+- `jim-rohn-originals-no-ai/`
 
 All `lazyearn` wrappers now default to:
 

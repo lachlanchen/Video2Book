@@ -10,6 +10,7 @@ repo_path="$1"
 commit_message="$2"
 shift 2
 pathspecs=("$@")
+git_lock="${CODEX_GIT_LOCK_FILE:-$repo_path/.git/video2book-main.lock}"
 
 model="${CODEX_COMMIT_MODEL:-gpt-5.4-mini}"
 reasoning_effort="${CODEX_COMMIT_REASONING:-low}"
@@ -109,48 +110,57 @@ fi
   echo "- Do not stage files outside the provided pathspec list."
 } > "$prompt_file"
 
-if [[ -n "$session_file" && -s "$session_file" ]]; then
-  session_id="$(tr -d '[:space:]' < "$session_file")"
-  set +e
-  cat "$prompt_file" | codex exec resume \
-    --json \
-    --model "$model" \
-    -c "model_reasoning_effort=\"$reasoning_effort\"" \
-    --dangerously-bypass-approvals-and-sandbox \
-    --skip-git-repo-check \
-    "$session_id" \
-    - > "$jsonl_file"
-  status=$?
-  set -e
-else
-  set +e
-  cat "$prompt_file" | codex exec \
-    --json \
-    --model "$model" \
-    -c "model_reasoning_effort=\"$reasoning_effort\"" \
-    --dangerously-bypass-approvals-and-sandbox \
-    -C "$repo_path" \
-    --skip-git-repo-check \
-    - > "$jsonl_file"
-  status=$?
-  set -e
+run_commit_step() {
+  local status=0
+  local session_id=""
+  local new_session_id=""
 
-  if [[ -n "$session_file" && ! -s "$session_file" ]]; then
-    new_session_id="$(extract_session_id "$jsonl_file")"
-    if [[ -n "$new_session_id" ]]; then
-      printf '%s\n' "$new_session_id" > "$session_file"
-      write_session_doc "$new_session_id" "$session_doc_file"
+  if [[ -n "$session_file" && -s "$session_file" ]]; then
+    session_id="$(tr -d '[:space:]' < "$session_file")"
+    set +e
+    cat "$prompt_file" | codex exec resume \
+      --json \
+      --model "$model" \
+      -c "model_reasoning_effort=\"$reasoning_effort\"" \
+      --dangerously-bypass-approvals-and-sandbox \
+      --skip-git-repo-check \
+      "$session_id" \
+      - > "$jsonl_file"
+    status=$?
+    set -e
+  else
+    set +e
+    cat "$prompt_file" | codex exec \
+      --json \
+      --model "$model" \
+      -c "model_reasoning_effort=\"$reasoning_effort\"" \
+      --dangerously-bypass-approvals-and-sandbox \
+      -C "$repo_path" \
+      --skip-git-repo-check \
+      - > "$jsonl_file"
+    status=$?
+    set -e
+
+    if [[ -n "$session_file" && ! -s "$session_file" ]]; then
+      new_session_id="$(extract_session_id "$jsonl_file")"
+      if [[ -n "$new_session_id" ]]; then
+        printf '%s\n' "$new_session_id" > "$session_file"
+        write_session_doc "$new_session_id" "$session_doc_file"
+      fi
     fi
   fi
-fi
 
-if [[ -n "${session_id:-}" ]]; then
-  write_session_doc "$session_id" "$session_doc_file"
-fi
+  if [[ -n "$session_id" ]]; then
+    write_session_doc "$session_id" "$session_doc_file"
+  fi
 
-cat "$jsonl_file"
-if [[ "${status:-0}" -ne 0 ]]; then
-  fallback_commit_push
-  exit 0
-fi
-exit 0
+  cat "$jsonl_file"
+  if [[ "$status" -ne 0 ]]; then
+    fallback_commit_push
+  fi
+}
+
+(
+  flock 200
+  run_commit_step
+) 200>"$git_lock"

@@ -7,6 +7,7 @@ source_root="${SOURCE_ROOT:-/home/lachlan/ProjectsLFS/YoutubeDownloader/download
 source_subdir="${SOURCE_SUBDIR:-}"
 transcribe_model="${TRANSCRIBE_MODEL:-large-v3}"
 transcription_git_paths="${TRANSCRIPTION_GIT_PATHS:-subtitles markdown}"
+git_lock="${TRANSCRIPTION_GIT_LOCK_FILE:-$repo_root/.git/video2book-main.lock}"
 
 if [[ -n "${MIN_FREE_GPU_MIB:-}" ]]; then
   min_free_gpu_mib="${MIN_FREE_GPU_MIB}"
@@ -70,19 +71,23 @@ while true; do
       existing_git_add_paths+=("$path")
     fi
   done
-  if (( ${#existing_git_add_paths[@]} > 0 )); then
-    git add -- "${existing_git_add_paths[@]}"
-  else
-    echo "No transcript paths exist yet after processing $next_video"
-  fi
+  (
+    flock 200
 
-  if git diff --cached --quiet; then
-    echo "No new tracked changes after processing $next_video"
-    continue
-  fi
+    if (( ${#existing_git_add_paths[@]} > 0 )); then
+      git add -- "${existing_git_add_paths[@]}"
+    else
+      echo "No transcript paths exist yet after processing $next_video"
+    fi
 
-  rel_path="${next_video#${source_root}/}"
-  rel_path="${rel_path%.*}"
-  git commit -m "Add transcript for ${rel_path}"
-  git push origin main
+    if git diff --cached --quiet; then
+      echo "No new tracked changes after processing $next_video"
+      exit 0
+    fi
+
+    rel_path="${next_video#${source_root}/}"
+    rel_path="${rel_path%.*}"
+    git commit -m "Add transcript for ${rel_path}"
+    git push origin main
+  ) 200>"$git_lock"
 done
