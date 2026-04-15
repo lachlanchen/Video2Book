@@ -254,7 +254,9 @@ def transcribe_video(
     model: str,
     force: bool,
 ) -> tuple[Path, Path]:
-    video_path = video_path.resolve()
+    video_path = video_path.expanduser()
+    if not video_path.is_absolute():
+        video_path = (Path.cwd() / video_path).resolve()
     source_root = source_root.resolve()
     repo_root = repo_root.resolve()
 
@@ -268,6 +270,31 @@ def transcribe_video(
     subtitle_path, markdown_path, work_video = output_paths(repo_root, source_root, video_path)
     subtitle_path.parent.mkdir(parents=True, exist_ok=True)
     markdown_path.parent.mkdir(parents=True, exist_ok=True)
+
+    if video_path.is_symlink() and not force:
+        target_path = video_path.resolve()
+        try:
+            target_subtitle_path, target_markdown_path, _ = output_paths(
+                repo_root, source_root, target_path
+            )
+        except ValueError:
+            target_subtitle_path = None
+            target_markdown_path = None
+        if (
+            target_subtitle_path
+            and target_markdown_path
+            and target_subtitle_path != subtitle_path
+            and target_markdown_path != markdown_path
+            and target_subtitle_path.exists()
+            and target_markdown_path.exists()
+        ):
+            shutil.copy2(target_subtitle_path, subtitle_path)
+            shutil.copy2(target_markdown_path, markdown_path)
+            print(f"VIDEO {video_path}")
+            print(f"SUBTITLE {subtitle_path}")
+            print(f"MARKDOWN {markdown_path}")
+            print(f"REUSED {target_subtitle_path}")
+            return subtitle_path, markdown_path
 
     if subtitle_path.exists() and markdown_path.exists() and not force:
         print(f"SKIP {source_rel.as_posix()}")

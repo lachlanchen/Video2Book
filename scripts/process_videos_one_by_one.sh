@@ -64,7 +64,17 @@ while true; do
   fi
   PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True "${transcribe_cmd[@]}"
 
-  git add -- "${git_add_paths[@]}"
+  existing_git_add_paths=()
+  for path in "${git_add_paths[@]}"; do
+    if [[ -e "$path" ]]; then
+      existing_git_add_paths+=("$path")
+    fi
+  done
+  if (( ${#existing_git_add_paths[@]} > 0 )); then
+    git add -- "${existing_git_add_paths[@]}"
+  else
+    echo "No transcript paths exist yet after processing $next_video"
+  fi
 
   if git diff --cached --quiet; then
     echo "No new tracked changes after processing $next_video"
