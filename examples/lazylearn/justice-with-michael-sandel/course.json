@@ -1,0 +1,16 @@
+{
+  "course_rel": "lazylearn/justice-with-michael-sandel",
+  "course_title": "Justice",
+  "course_descriptor": "LazyLearn track, Michael Sandel moral and political philosophy lecture series",
+  "lecturer_name": "Michael Sandel",
+  "deliverable_target": "a faithful, source-conscious chapter for Justice, plus a per-course compiled PDF book.",
+  "visual_target": "selected lecture and broadcast frames are only supporting evidence for names, prompts, on-screen text, and discussion structure; do not let them override the spoken content.",
+  "mathematical_standard": "preserve the conceptual distinctions, examples, thought experiments, and argumentative structure from the lectures, but avoid generic filler or invented textbook exposition.",
+  "style_target": "notes should read like polished companion notes for a serious public philosophy course, with explicit structure, careful distinctions between arguments and objections, and clear treatment of examples and principles.",
+  "credit_target": "keep explicit credit to Michael Sandel and curation by LazyingArt LLC; reserve the website URL for the generated front-matter credit, not the prose body.",
+  "front_matter_single": "Original lecture by Michael Sandel. Lecture notes organized by \\href{https://lazying.art}{LazyingArt LLC}.",
+  "front_matter_plural": "Original lectures by Michael Sandel. Lecture notes organized by \\href{https://lazying.art}{LazyingArt LLC}.",
+  "reference_missing_text": "No directly matching reference PDF is available for this course.",
+  "reference_no_match_text": "Matching course reference PDFs were found, but no strong topical excerpt was automatically matched for this lecture.",
+  "reference_budget_text": "Matching course reference PDFs were found, but no excerpt fit within the current prompt budget."
+}
