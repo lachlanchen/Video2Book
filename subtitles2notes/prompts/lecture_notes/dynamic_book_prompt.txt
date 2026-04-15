@@ -10,6 +10,8 @@ Course descriptor: $course_descriptor
 Current lecture number: $lecture_number
 Current lecture title: $lecture_title
 Current transcript path: $transcript_rel
+Full transcript directory for the whole course: $transcript_dir_rel
+Accumulated course notes/output directory: $accumulated_notes_dir_rel
 Current video path: $video_rel
 
 Dynamic book target:
@@ -59,6 +61,8 @@ Hard requirements:
 - Set the title to `$dynamic_book_title`.
 - Credit the original source as `$lecturer_name` or `School of Hard Knocks` in front matter where appropriate, and keep LazyingArt LLC / Video2Book credit in the same style as the repo's other books.
 - Use real thematic chapters. Do not mirror the lecture list or create one chapter per video.
+- Treat the full transcript directory and the accumulated course-notes tree as the default working context for every rewrite, even when the current prompt was triggered by a single lecture.
+- Always reconcile the current lecture against the full set of already processed notes before deciding what to add, remove, merge, or rewrite.
 - You may revise, merge, compress, reorder, or split chapters based on the current lecture and the accumulated manuscript.
 - Keep the whole book consistent and intriguing, with explicit story, philosophy, and methodology threads.
 - Distinguish clearly between anecdote, mechanism, heuristic, and evidence.
@@ -79,5 +83,6 @@ Structural guidance:
 
 Output discipline:
 - Rewrite the whole manuscript so it stays internally coherent.
+- Assume future rewrites will keep revisiting this same manuscript; prefer durable structure over local lecture-driven patches.
 - Prefer maintaining a strong through-line over maximizing raw transcript coverage.
 - Keep the manuscript compatible with repeated future rewrites as more interviews arrive.

@@ -44,6 +44,8 @@ The dynamic manuscript is rewritten after each processed lecture using:
 - extracted frame inventory
 - the existing dynamic manuscript
 - the set of already processed lectures
+- the full transcript directory for the course
+- the accumulated course-notes/output directory for the course
 
 ## Why this exists
 

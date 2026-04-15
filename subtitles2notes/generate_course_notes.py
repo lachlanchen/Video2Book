@@ -1426,6 +1426,7 @@ def processed_lecture_summary(course_root: Path) -> str:
 def update_dynamic_book(
     repo_root: Path,
     course_root: Path,
+    markdown_root: Path,
     lecture: LectureInfo,
     course_config: CourseConfig,
     runtime_dir: Path,
@@ -1466,6 +1467,8 @@ def update_dynamic_book(
         lecturer_name=course_config.lecturer_name,
         transcript_rel=lecture.transcript_rel,
         video_rel=lecture.video_rel,
+        transcript_dir_rel=str((markdown_root / lecture.course_rel).relative_to(repo_root)),
+        accumulated_notes_dir_rel=str(course_root.relative_to(repo_root)),
         lecture_title=lecture.lecture_title,
         lecture_number=lecture.lecture_number,
         processed_lectures_text=processed_lecture_summary(course_root),
@@ -1992,6 +1995,7 @@ def generate_one_lecture(
     update_dynamic_book(
         repo_root=repo_root,
         course_root=course_root,
+        markdown_root=markdown_root,
         lecture=lecture,
         course_config=course_config,
         runtime_dir=course_runtime,
