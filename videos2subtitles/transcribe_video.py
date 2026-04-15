@@ -188,6 +188,20 @@ def cleanup_paths(paths: list[Path]) -> None:
             continue
 
 
+def link_or_copy(source_path: Path, target_path: Path) -> None:
+    target_path.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        if target_path.exists() or target_path.is_symlink():
+            target_path.unlink()
+    except FileNotFoundError:
+        pass
+
+    try:
+        os.link(source_path, target_path)
+    except OSError:
+        shutil.copy2(source_path, target_path)
+
+
 def load_entries(json_path: Path) -> list[dict]:
     return json.loads(json_path.read_text(encoding="utf-8"))
 
@@ -288,8 +302,8 @@ def transcribe_video(
             and target_subtitle_path.exists()
             and target_markdown_path.exists()
         ):
-            shutil.copy2(target_subtitle_path, subtitle_path)
-            shutil.copy2(target_markdown_path, markdown_path)
+            link_or_copy(target_subtitle_path, subtitle_path)
+            link_or_copy(target_markdown_path, markdown_path)
             print(f"VIDEO {video_path}")
             print(f"SUBTITLE {subtitle_path}")
             print(f"MARKDOWN {markdown_path}")
