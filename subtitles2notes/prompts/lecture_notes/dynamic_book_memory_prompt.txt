@@ -74,10 +74,13 @@ Section guidance:
 - `Frame bank`: identify which validated frames are actually worth reusing in the book and why.
 - `Diagram and table bank`: propose transcript-backed diagrams or tables that synthesize multiple interviews.
 - `Tensions and contradictions`: keep competing claims visible instead of flattening them.
-- `Revision agenda`: say what earlier chapters of the book should probably be revised now that the current lecture has been integrated.
+- `Revision agenda`: say what earlier chapters of the book should probably be revised now that the current lecture has been integrated, with an explicit bias toward adding nuance, evidence, counterexamples, or new subsections rather than merely shortening prose.
 - `Processed lecture evidence index`: keep this concise and factual.
 
 Output discipline:
-- Favor compression and durable synthesis.
+- Favor durable synthesis without losing distinct evidence clusters.
+- Do not optimize the memory for brevity. Optimize it for preserving retrievable thematic material that the book can continue to absorb.
+- Preserve separate named cases, mechanisms, contradictions, and examples when they are not truly redundant.
+- Make the memory useful for a growing book. It should help the next rewrite expand or refine chapters, not repeatedly collapse the manuscript back into a smaller outline.
 - Do not let the current lecture dominate the memory unless it truly changes the book's structure.
 - Keep the memory useful for a second prompt that will rewrite the full LaTeX book.
