@@ -1278,16 +1278,55 @@ def dedent_latex_for_diff(text: str) -> str:
     return normalized.strip()
 
 
+def added_nonblank_lines(old_text: str, new_text: str) -> list[str]:
+    old_lines = dedent_latex_for_diff(old_text).splitlines()
+    new_lines = dedent_latex_for_diff(new_text).splitlines()
+    return [line[2:] for line in difflib.ndiff(old_lines, new_lines) if line.startswith("+ ") and line[2:].strip()]
+
+
+def significant_lines(text: str, *, latex: bool) -> list[str]:
+    lines: list[str] = []
+    for raw_line in dedent_latex_for_diff(text).splitlines():
+        stripped = re.sub(r"\s+", " ", raw_line).strip()
+        if not stripped or stripped.startswith("%"):
+            continue
+        if latex and stripped in {DOCUMENT_BEGIN, DOCUMENT_END}:
+            continue
+
+        if latex:
+            is_structural = stripped.startswith(
+                (
+                    "\\chapter{",
+                    "\\section{",
+                    "\\subsection{",
+                    "\\subsubsection{",
+                    "\\paragraph{",
+                    "\\item ",
+                )
+            )
+        else:
+            is_structural = stripped.startswith(("# ", "## ", "### ", "#### ", "- ", "* "))
+
+        if is_structural or len(stripped) >= 40:
+            lines.append(stripped)
+    return lines
+
+
+def missing_significant_lines(existing_text: str, generated_text: str, *, latex: bool) -> list[str]:
+    existing_counter = Counter(significant_lines(existing_text, latex=latex))
+    generated_counter = Counter(significant_lines(generated_text, latex=latex))
+    missing: list[str] = []
+    for line, count in existing_counter.items():
+        if generated_counter[line] < count:
+            missing.append(line)
+    return missing
+
+
 def derive_dynamic_appendix_block(old_body: str, new_body: str, lecture: LectureInfo) -> str:
-    old_lines = dedent_latex_for_diff(old_body).splitlines()
-    new_lines = dedent_latex_for_diff(new_body).splitlines()
-    additions = [line[2:] for line in difflib.ndiff(old_lines, new_lines) if line.startswith("+ ")]
+    additions = added_nonblank_lines(old_body, new_body)
     appendix_body = "\n".join(line for line in additions if line.strip())
 
     if not appendix_body:
-        appendix_body = new_body.strip()
-
-    if not appendix_body.strip():
         return ""
 
     if "\\chapter" in appendix_body or "\\section" in appendix_body:
@@ -1310,12 +1349,14 @@ def merge_dynamic_book_preserve(existing_text: str, generated_text: str, lecture
     existing_preamble, existing_body, existing_tail = split_latex_document(existing_text)
     _, generated_body, _ = split_latex_document(generated_text)
 
-    if not existing_body or not generated_body:
+    if not existing_body:
         return generated_text
+    if not generated_body:
+        return existing_text
 
     appendix = derive_dynamic_appendix_block(existing_body, generated_body, lecture)
     if not appendix.strip():
-        return generated_text
+        return existing_text
 
     if DOCUMENT_BEGIN not in existing_text:
         return existing_text + "\n" + appendix
@@ -1338,7 +1379,11 @@ def enforce_non_reducing_dynamic_book(existing_text: str | None, generated_path:
         return True
 
     generated_text = generated_path.read_text(encoding="utf-8")
-    if len(generated_text) >= len(existing_text) - 1:
+    _, existing_body, _ = split_latex_document(existing_text)
+    _, generated_body, _ = split_latex_document(generated_text)
+    shrink_detected = len(generated_body) < len(existing_body) - 1
+    missing_lines = missing_significant_lines(existing_body, generated_body, latex=True)
+    if not shrink_detected and not missing_lines:
         return True
 
     merged_text = merge_dynamic_book_preserve(existing_text, generated_text, lecture)
@@ -1349,6 +1394,39 @@ def enforce_non_reducing_dynamic_book(existing_text: str | None, generated_path:
         generated_path.write_text(merged_text, encoding="utf-8")
         return True
 
+    return False
+
+
+def merge_markdown_preserve(existing_text: str, generated_text: str, lecture: LectureInfo) -> str:
+    additions = added_nonblank_lines(existing_text, generated_text)
+    if not additions:
+        return existing_text
+
+    heading = f"## Incremental additions after lecture {lecture.lecture_number:02d}: {lecture.lecture_title}"
+    block = "\n".join(additions).strip()
+    if not block:
+        return existing_text
+    return existing_text.rstrip() + "\n\n" + heading + "\n" + block + "\n"
+
+
+def enforce_non_reducing_markdown(existing_text: str | None, generated_path: Path, lecture: LectureInfo) -> bool:
+    if not existing_text:
+        return True
+    if not generated_path.exists():
+        return True
+
+    generated_text = generated_path.read_text(encoding="utf-8")
+    shrink_detected = len(dedent_latex_for_diff(generated_text)) < len(dedent_latex_for_diff(existing_text)) - 1
+    missing_lines = missing_significant_lines(existing_text, generated_text, latex=False)
+    if not shrink_detected and not missing_lines:
+        return True
+
+    merged_text = merge_markdown_preserve(existing_text, generated_text, lecture)
+    if not merged_text.strip():
+        return False
+    if merged_text != generated_text:
+        generated_path.write_text(merged_text, encoding="utf-8")
+        return True
     return False
 
 
@@ -1741,6 +1819,7 @@ def update_dynamic_book_memory(
         model=model,
         reasoning=reasoning,
     )
+    enforce_non_reducing_markdown(existing_memory_text, memory_path, lecture)
     return memory_path.read_text(encoding="utf-8")
 
 
@@ -1845,6 +1924,7 @@ def update_dynamic_book(
             compile_log=compile_log_excerpt(runtime_dir, "dynamic_book_compile"),
             current_tex=tex_path.read_text(encoding="utf-8"),
         )
+        protected_dynamic_book_tex = tex_path.read_text(encoding="utf-8")
         run_codex_prompt(
             repo_root=repo_root,
             prompt_text=fix_prompt,
@@ -1853,6 +1933,11 @@ def update_dynamic_book(
             log_prefix="dynamic_book_fix",
             model=model,
             reasoning=reasoning,
+        )
+        enforce_non_reducing_dynamic_book(
+            protected_dynamic_book_tex,
+            tex_path,
+            lecture,
         )
         if not compile_tex(tex_path.name, dynamic_root, runtime_dir, "dynamic_book_compile_retry"):
             raise RuntimeError(f"Failed to compile dynamic book for {lecture.course_rel}")

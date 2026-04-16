@@ -63,3 +63,26 @@ The intended control flow is:
 3. rewrite one separate dynamic book from that course memory plus the accumulated manuscript
 
 This keeps the lecture-by-lecture artifacts intact while the book itself stays nonlinear and series-level.
+
+## Preservation mode
+
+The dynamic-book path now runs in append-only preservation mode by default.
+
+That means:
+
+- the writer prompt is explicitly told not to compress away supported material
+- the generated dynamic manuscript is checked against the prior manuscript for missing significant lines
+- if the candidate rewrite deletes supported content, the runtime keeps the old manuscript and only appends net-new material
+- the course-level memory file is protected with the same no-shrink rule
+- LaTeX compile-fix retries are also forced through the same preservation guard
+
+This is intentionally conservative. It prefers duplication over accidental loss of accumulated evidence.
+
+## Replay safety
+
+`scripts/rerun_dynamic_book.py` now treats append-only replay as the default safe behavior.
+
+- normal replay keeps the current dynamic book and reprocesses lecture updates into it
+- `--clean-start` still exists for deliberate rebuilds, but it now requires `--allow-destructive-rebuild`
+
+That extra flag is there so a replay cannot wipe the current dynamic manuscript by accident.

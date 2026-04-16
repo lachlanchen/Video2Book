@@ -49,6 +49,7 @@ Write a full replacement Markdown memory file for the evolving book.
 
 Hard requirements:
 - Output only Markdown.
+- The runtime is operating in append-only preservation mode. Unsupported deletion or broad compression will be rejected or merged back.
 - Treat this as a living book-planning workspace for the whole series, not as notes for a single lecture.
 - The memory must reflect the full processed corpus, with the current lecture integrated into that wider map.
 - Do not organize the memory by lecture order except for a short evidence index.
@@ -57,6 +58,7 @@ Hard requirements:
 - Do not invent facts.
 - Prefer preservation over replacement. Do not delete previously established mechanisms or evidence unless it is false, redundant, or genuinely unsupported.
 - Keep alternative positions side-by-side when interviews contradict each other.
+- If a new formulation improves on an older one, add the improvement without discarding the older supported entry.
 
 Required sections:
 1. `# Book North Star`
@@ -86,3 +88,4 @@ Output discipline:
 - Make the memory useful for a growing book. It should help the next rewrite expand or refine chapters, not repeatedly collapse the manuscript back into a smaller outline.
 - Do not let the current lecture dominate the memory unless it truly changes the book's structure.
 - Keep the memory useful for a second prompt that will rewrite the full LaTeX book.
+- When in doubt, append nuance instead of rewriting away prior evidence.

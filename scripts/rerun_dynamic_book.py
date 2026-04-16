@@ -184,6 +184,11 @@ def parser() -> argparse.ArgumentParser:
     parsed.add_argument("--model", default="gpt-5.4")
     parsed.add_argument("--reasoning", default="xhigh", choices=["low", "medium", "high", "xhigh"])
     parsed.add_argument("--clean-start", action="store_true", help="Backup and rebuild the dynamic book from scratch before replaying.")
+    parsed.add_argument(
+        "--allow-destructive-rebuild",
+        action="store_true",
+        help="Required together with --clean-start because it wipes the current dynamic_book directory after backup.",
+    )
     return parsed
 
 
@@ -219,6 +224,12 @@ def main() -> None:
     if not transcript_rels:
         raise SystemExit("No lectures matched the requested replay range.")
 
+    if args.clean_start and not args.allow_destructive_rebuild:
+        raise SystemExit(
+            "--clean-start now requires --allow-destructive-rebuild. "
+            "Replay is append-only by default; destructive rebuild must be explicit."
+        )
+
     primary_lecture = lecture_from_transcript_rel(
         repo_root,
         source_root,
@@ -235,6 +246,7 @@ def main() -> None:
     print(f"Dynamic-book replay lectures: {len(transcript_rels)}")
     print(f"Course: {args.course}")
     print(f"Range: {args.start_number} to {args.end_number}")
+    print("Dynamic-book replay mode: append-only preservation")
     if backup_root is not None:
         print(f"Backed up prior dynamic book to: {backup_root}")
 

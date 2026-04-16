@@ -56,7 +56,7 @@ $current_chapter_tex
 Existing dynamic book TeX:
 $existing_dynamic_book_tex
 
-Write a full replacement LaTeX manuscript for the evolving book.
+Write a full replacement candidate LaTeX manuscript for the evolving book.
 
 Hard requirements:
 - Output only LaTeX.
@@ -66,6 +66,7 @@ Hard requirements:
 - Produce a complete compilable book document ending with `\end{document}`.
 - Set the title to `$dynamic_book_title`.
 - Credit the original source as `$lecturer_name` or `School of Hard Knocks` in front matter where appropriate, and keep LazyingArt LLC / Video2Book credit in the same style as the repo's other books.
+- The runtime is operating in append-only preservation mode. Any unsupported deletion or broad compression will be rejected or merged back.
 
 Writing contract:
 - Do not optimize for compression. Do not turn this into a shorter summary.
@@ -81,6 +82,8 @@ Writing contract:
 - If a topic has multiple conflicting formulations, preserve both with context rather than deleting one unless transcript logic proves one is wrong.
 - Do not collapse materially different interviews into generic summary paragraphs.
 - Never remove content only to reduce length or make the manuscript “tidier.”
+- If you are tempted to replace a large passage with a tighter version, do not. Keep the old supported material and add the new formulation beside it.
+- It is better to duplicate a supported mechanism than to delete it.
 - Use frames and diagrams only when supported by available assets; treat visuals as evidence anchors.
 
 No-compression safeguard:
@@ -88,6 +91,7 @@ No-compression safeguard:
 - If a section is already present and still supported, keep it in the manuscript.
 - If evidence from this lecture changes emphasis, preserve the older version and add the new perspective as an explicit cross-reference, extension, or updated subsection unless earlier material is demonstrably unsupported.
 - Do not replace broad manuscript blocks simply to simplify the flow.
+- Prefer additive local edits: new subsections, added examples, added Q&A blocks, inserted tables, or added paragraphs inside existing chapters.
 
 Content guidance:
 - Keep the book coherent and vivid. Distinguish anecdote, mechanism, heuristic, and evidence.
@@ -99,4 +103,5 @@ Output discipline:
 - Keep the output as one coherent LaTeX document, and preserve all previously durable structure unless a section is explicitly unsupported.
 - If you revise an existing chapter/subsection, keep prior validated evidence tracks and add the revision inline with context.
 - Do not remove core evidence tracks just to shorten the manuscript; if you must revise, do so by relocating or extending them.
+- Treat prior chapters and sections as protected assets. Add to them; do not compress them away.
 - Keep the manuscript compatible with repeated future rewrites as more interviews arrive.
