@@ -21,6 +21,7 @@
 - Transcribe videos into `.srt` subtitles and timestamped Markdown.
 - Convert completed transcript sets into structured TeX notes and merged course PDFs.
 - Run long jobs in `tmux` with queue scripts and monitor/guard scripts.
+- Export compact pocket-format companion PDFs from finished course LaTeX.
 
 ## 🧪 Working Host Repos
 
@@ -77,6 +78,7 @@ If you are running these repos from a shared parent directory (for example `/hom
 | 1 | `playlist2videos/` | Download or refresh a playlist with `yt-dlp`, keep logs, and skip already archived items. |
 | 2 | `videos2subtitles/` | Transcribe the archived media into `subtitles/` and `markdown/`. |
 | 3 | `subtitles2notes/` | Turn completed transcripts into chapter TeX, lecture PDFs, and merged course PDFs. |
+| 4 | `scripts/export_course_pocket_pdfs.sh` | Rebuild finished `course.tex` outputs into pocket/A5 variants for publishing packages. |
 
 ## 🚀 Quick Start
 
@@ -131,6 +133,12 @@ Start a note-writing queue for one course:
 ./Video2Book/scripts/start_course_notes_tmux.sh --course supplementary/advanced_quantum_mechanics/2013_fall
 ```
 
+Export compact PDFs for all completed courses (for example in `leonardsusskind`):
+
+```bash
+./Video2Book/scripts/export_course_pocket_pdfs.sh --host-root /home/lachlan/ProjectsLFS/leonardsusskind
+```
+
 Host-specific wrappers can live under `examples/`. Current bundled patterns:
 
 - `examples/lazyearn/yale-financial-markets/`
@@ -151,6 +159,7 @@ That default is just a working example. The code is structured so other host rep
 - [videos2subtitles](videos2subtitles)
 - [subtitles2notes](subtitles2notes)
 - [scripts](scripts)
+- [Pocket export handoff](references/pocket-size-course-pdfs-handoff.md)
 
 ## 📚 Host Adaptation Notes
 
@@ -199,6 +208,7 @@ The translation loop:
 - `codex` CLI for the notes pipeline
 - a working `whisper` conda env for transcription
 - `whisper_with_lang_detect` if you want the primary subtitle path instead of fallback-only Whisper
+- `rsync` (for optional local publishing sync of pocket PDFs)
 
 ## 🤝 Good Fit
 
