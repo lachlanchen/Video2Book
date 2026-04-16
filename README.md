@@ -79,6 +79,7 @@ If you are running these repos from a shared parent directory (for example `/hom
 | 2 | `videos2subtitles/` | Transcribe the archived media into `subtitles/` and `markdown/`. |
 | 3 | `subtitles2notes/` | Turn completed transcripts into chapter TeX, lecture PDFs, and merged course PDFs. |
 | 4 | `scripts/export_course_pocket_pdfs.sh` | Rebuild finished `course.tex` outputs into pocket/A5 variants for publishing packages. |
+| 5 | `scripts/export_course_epubs.sh` | Rebuild finished `course.tex` outputs directly into EPUB3. |
 
 ## 🚀 Quick Start
 
@@ -139,6 +140,12 @@ Export compact PDFs for all completed courses (for example in `leonardsusskind`)
 ./Video2Book/scripts/export_course_pocket_pdfs.sh --host-root /home/lachlan/ProjectsLFS/leonardsusskind
 ```
 
+Export EPUB3 directly from TeX for all completed courses:
+
+```bash
+./Video2Book/scripts/export_course_epubs.sh --host-root /home/lachlan/ProjectsLFS/leonardsusskind
+```
+
 Host-specific wrappers can live under `examples/`. Current bundled patterns:
 
 - `examples/lazyearn/yale-financial-markets/`
@@ -160,6 +167,7 @@ That default is just a working example. The code is structured so other host rep
 - [subtitles2notes](subtitles2notes)
 - [scripts](scripts)
 - [Pocket export handoff](references/pocket-size-course-pdfs-handoff.md)
+- [EPUB export handoff](references/tex-to-epub-handoff.md)
 
 ## 📚 Host Adaptation Notes
 
@@ -167,6 +175,7 @@ That default is just a working example. The code is structured so other host rep
 - [references/lazyearn-yale-financial-markets-adaptation.md](references/lazyearn-yale-financial-markets-adaptation.md)
 - [references/nanobanana-2-book-cover-handoff.md](references/nanobanana-2-book-cover-handoff.md)
 - [references/tex-book-translation-workflow.md](references/tex-book-translation-workflow.md)
+- [references/tex-to-epub-handoff.md](references/tex-to-epub-handoff.md)
 
 ## 🎨 Book Cover Utility
 
@@ -205,6 +214,7 @@ The translation loop:
 - `pdfunite`
 - `pdftotext`
 - `yt-dlp`
+- `pandoc` (for `scripts/export_course_epubs.sh`)
 - `codex` CLI for the notes pipeline
 - a working `whisper` conda env for transcription
 - `whisper_with_lang_detect` if you want the primary subtitle path instead of fallback-only Whisper
