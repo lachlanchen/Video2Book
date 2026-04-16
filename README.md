@@ -113,6 +113,12 @@ Start a note-writing queue for one course:
 ./Video2Book/scripts/start_course_notes_tmux.sh --course supplementary/advanced_quantum_mechanics/2013_fall
 ```
 
+Export finished course PDFs to EPUB:
+
+```bash
+./Video2Book/scripts/export_course_epubs.sh --source-dir /home/lachlan/ProjectsLFS/leonardsusskind/all_notes
+```
+
 Host-specific wrappers can live under `examples/`. Current bundled patterns:
 
 - `examples/lazyearn/yale-financial-markets/`
@@ -179,6 +185,7 @@ The translation loop:
 - `pdftotext`
 - `yt-dlp`
 - `codex` CLI for the notes pipeline
+- `pandoc`
 - a working `whisper` conda env for transcription
 - `whisper_with_lang_detect` if you want the primary subtitle path instead of fallback-only Whisper
 
