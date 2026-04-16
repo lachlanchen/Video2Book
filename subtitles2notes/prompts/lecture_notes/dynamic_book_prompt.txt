@@ -1,4 +1,4 @@
-You are writing and continuously revising a LaTeX book manuscript that synthesizes many interviews into one coherent nonlinear book.
+You are feeding one new lecture into an existing nonlinear LaTeX book.
 
 Task context:
 $task_context
@@ -56,52 +56,34 @@ $current_chapter_tex
 Existing dynamic book TeX:
 $existing_dynamic_book_tex
 
-Write a full replacement candidate LaTeX manuscript for the evolving book.
+Write only the new LaTeX fragment that should be appended to the current dynamic book.
 
 Hard requirements:
-- Output only LaTeX.
-- Start with `\documentclass[11pt,oneside]{book}`.
-- Use `\input{../common_preamble.tex}`.
-- Use `\graphicspath{{../figures/}{../assets/}}`.
-- Produce a complete compilable book document ending with `\end{document}`.
-- Set the title to `$dynamic_book_title`.
-- Credit the original source as `$lecturer_name` or `School of Hard Knocks` in front matter where appropriate, and keep LazyingArt LLC / Video2Book credit in the same style as the repo's other books.
-- The runtime is operating in append-only preservation mode. Any unsupported deletion or broad compression will be rejected or merged back.
+- Output only LaTeX fragment content.
+- Do not output `\documentclass`, `\begin{document}`, or `\end{document}`.
+- Treat the existing dynamic book as the current canonical book.
+- Do not rewrite or summarize the whole book.
+- Only write material that is genuinely new from this lecture's evidence and that belongs in the book.
+- If this lecture adds nothing materially new, output exactly:
+  `% no new dynamic book material from lecture $lecture_number`
 
-Writing contract:
-- Do not optimize for compression. Do not turn this into a shorter summary.
-- Preserve the manuscript as a cumulative corpus. The default action is to extend or deepen prior content.
-- You are writing a book from the full series, not a lecture-by-lecture digest.
-- Use the full transcript directory context, the current lecture materials, and `course_memory_text` together.
-- Keep real thematic chapters. Do not mirror the lecture list or force one chapter per video.
-- As more lectures arrive, rewrites should normally keep total usable detail stable or increase, unless you are removing exact duplicates, unsupported material, or truly contradicted claims.
-- Maintain or increase chapter coverage. Keep chapter names and core sections unless there is a clear transcript-backed reason to split or merge.
-- Each new lecture should leave a visible trace: enrich one or more existing chapters, or add a justified new subsection/chapter where needed.
-- Prefer revising locally inside existing chapters over replacing broad manuscript areas.
-- Preserve distinct interview cases, name-backed details, numbers, quotes, mechanisms, and doctrinal distinctions even if noisy.
-- If a topic has multiple conflicting formulations, preserve both with context rather than deleting one unless transcript logic proves one is wrong.
-- Do not collapse materially different interviews into generic summary paragraphs.
-- Never remove content only to reduce length or make the manuscript “tidier.”
-- If you are tempted to replace a large passage with a tighter version, do not. Keep the old supported material and add the new formulation beside it.
-- It is better to duplicate a supported mechanism than to delete it.
-- Use frames and diagrams only when supported by available assets; treat visuals as evidence anchors.
-
-No-compression safeguard:
-- You must treat `$existing_dynamic_book_tex` as protected canonical content.
-- If a section is already present and still supported, keep it in the manuscript.
-- If evidence from this lecture changes emphasis, preserve the older version and add the new perspective as an explicit cross-reference, extension, or updated subsection unless earlier material is demonstrably unsupported.
-- Do not replace broad manuscript blocks simply to simplify the flow.
-- Prefer additive local edits: new subsections, added examples, added Q&A blocks, inserted tables, or added paragraphs inside existing chapters.
-
-Content guidance:
-- Keep the book coherent and vivid. Distinguish anecdote, mechanism, heuristic, and evidence.
-- Build stable recurring themes: how wealth is built, protected, copied, sold, scaled, and morally organized under uncertainty.
-- Use a nonlinear architecture that revisits ideas across chapters where needed.
-- Add tables, compact equations, and diagrams when they raise signal density.
+Writing guidance:
+- Think in terms of feeding this lecture into the current book.
+- Usually that means one of:
+  - a new subsection inside an existing theme,
+  - a new `Question & Answer` block,
+  - a new case study paragraph cluster,
+  - a new table or compact diagram,
+  - or a justified new section/chapter when the lecture really expands the book.
+- Prefer adding local material over creating a large new structure.
+- Avoid duplication. If the existing book already says it, do not say it again unless this lecture adds a clearly distinct case, number, contradiction, or refinement.
+- Keep the fragment source-conscious, vivid, and specific.
+- Preserve anecdote, mechanism, evidence, and doctrine as distinct layers when useful.
+- Use names, numbers, and transcript-backed distinctions when available.
+- Use frames and diagrams only when supported by the available assets.
 
 Output discipline:
-- Keep the output as one coherent LaTeX document, and preserve all previously durable structure unless a section is explicitly unsupported.
-- If you revise an existing chapter/subsection, keep prior validated evidence tracks and add the revision inline with context.
-- Do not remove core evidence tracks just to shorten the manuscript; if you must revise, do so by relocating or extending them.
-- Treat prior chapters and sections as protected assets. Add to them; do not compress them away.
-- Keep the manuscript compatible with repeated future rewrites as more interviews arrive.
+- The fragment must be compilable when inserted into an existing book body.
+- Use normal sectioning commands when needed (`\chapter`, `\section`, `\subsection`, `\paragraph`).
+- Do not add front matter.
+- Do not add filler transitions like “in conclusion” unless they carry new substance.

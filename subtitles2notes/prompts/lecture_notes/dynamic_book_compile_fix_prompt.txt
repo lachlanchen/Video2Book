@@ -10,7 +10,7 @@ $current_tex
 
 Requirements:
 - Output only corrected LaTeX.
-- Preserve the same book content and structure as much as possible.
+- Keep the same book content and structure.
 - Fix only what is needed to make the manuscript compile cleanly.
 - Keep `\documentclass`, `\input{../common_preamble.tex}`, and the overall front matter intact.
-- Do not drop whole chapters unless the compile failure leaves no smaller fix.
+- Do not rewrite the manuscript. Make the smallest syntax or LaTeX-environment fix needed.

@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import argparse
-import difflib
 import json
 import os
 import re
@@ -289,7 +288,7 @@ def build_task_context(lecture: LectureInfo, course_config: CourseConfig) -> str
                 f"- Dynamic book target: {course_config.dynamic_book_target}",
                 f"- Dynamic book style: {course_config.dynamic_book_style_target}",
                 f"- Dynamic book structure: {course_config.dynamic_book_structure_target}",
-                "- Dynamic book rule: do not treat one lecture as one permanent book chapter; let each lecture feed an evolving thematic book that can revise earlier chapters and set up later ones.",
+                "- Dynamic book rule: do not treat one lecture as one permanent book chapter; let each lecture feed an evolving thematic book by adding the new material that now belongs in it.",
                 "- Dynamic visual rule: preserve concrete frames, captions, and diagrams when they clarify a claim, but use them as evidence anchors inside a coherent book arc rather than as a linear slideshow replay.",
             ]
         )
@@ -1272,162 +1271,89 @@ def split_latex_document(tex: str) -> tuple[str, str, str]:
     return preamble, body.strip("\n"), tail
 
 
-def dedent_latex_for_diff(text: str) -> str:
+def normalize_text_block(text: str) -> str:
     normalized = re.sub(r"\r\n", "\n", text)
     normalized = re.sub(r"\n{3,}", "\n\n", normalized)
     return normalized.strip()
 
 
-def added_nonblank_lines(old_text: str, new_text: str) -> list[str]:
-    old_lines = dedent_latex_for_diff(old_text).splitlines()
-    new_lines = dedent_latex_for_diff(new_text).splitlines()
-    return [line[2:] for line in difflib.ndiff(old_lines, new_lines) if line.startswith("+ ") and line[2:].strip()]
+def strip_full_document_wrappers(fragment: str) -> str:
+    _preamble, body, _tail = split_latex_document(fragment)
+    if body:
+        if "\\mainmatter" in body:
+            body = body.split("\\mainmatter", 1)[1]
+        return body.strip()
+    return normalize_text_block(fragment)
 
 
-def significant_lines(text: str, *, latex: bool) -> list[str]:
-    lines: list[str] = []
-    for raw_line in dedent_latex_for_diff(text).splitlines():
-        stripped = re.sub(r"\s+", " ", raw_line).strip()
-        if not stripped or stripped.startswith("%"):
-            continue
-        if latex and stripped in {DOCUMENT_BEGIN, DOCUMENT_END}:
-            continue
-
-        if latex:
-            is_structural = stripped.startswith(
-                (
-                    "\\chapter{",
-                    "\\section{",
-                    "\\subsection{",
-                    "\\subsubsection{",
-                    "\\paragraph{",
-                    "\\item ",
-                )
-            )
-        else:
-            is_structural = stripped.startswith(("# ", "## ", "### ", "#### ", "- ", "* "))
-
-        if is_structural or len(stripped) >= 40:
-            lines.append(stripped)
-    return lines
+def dynamic_book_placeholder_comment(lecture: LectureInfo) -> str:
+    return f"% no new dynamic book material from lecture {lecture.lecture_number}"
 
 
-def missing_significant_lines(existing_text: str, generated_text: str, *, latex: bool) -> list[str]:
-    existing_counter = Counter(significant_lines(existing_text, latex=latex))
-    generated_counter = Counter(significant_lines(generated_text, latex=latex))
-    missing: list[str] = []
-    for line, count in existing_counter.items():
-        if generated_counter[line] < count:
-            missing.append(line)
-    return missing
+def dynamic_memory_placeholder_comment(lecture: LectureInfo) -> str:
+    return f"<!-- no new course memory material from lecture {lecture.lecture_number} -->"
 
 
-def derive_dynamic_appendix_block(old_body: str, new_body: str, lecture: LectureInfo) -> str:
-    additions = added_nonblank_lines(old_body, new_body)
-    appendix_body = "\n".join(line for line in additions if line.strip())
+def dynamic_book_shell(
+    book_title: str,
+    book_descriptor: str,
+    lecturer_name: str,
+    course_config: CourseConfig,
+) -> str:
+    title = normalize_latex_metadata_text(book_title)
+    descriptor = normalize_latex_metadata_text(book_descriptor)
+    lecturer = normalize_latex_metadata_text(lecturer_name)
+    return f"""\\documentclass[11pt,oneside]{{book}}
+\\input{{../common_preamble.tex}}
+\\graphicspath{{{{../figures/}}{{../assets/}}}}
+\\begin{{document}}
+\\frontmatter
+\\title{{{title}}}
+\\author{{{lecturer}}}
+\\date{{{descriptor} \\\\ Lecture notes organized by \\href{{https://lazying.art}}{{LazyingArt LLC}} with \\href{{https://github.com/lachlanchen/Video2Book}}{{Video2Book}}}}
+\\maketitle
+\\begin{{center}}
+\\small {course_config.front_matter_plural}
+\\end{{center}}
+\\clearpage
+\\tableofcontents
+\\mainmatter
 
-    if not appendix_body:
-        return ""
+\\end{{document}}
+"""
 
-    if "\\chapter" in appendix_body or "\\section" in appendix_body:
-        appendix = appendix_body
-    else:
-        safe_title = lecture.lecture_title.replace("{", "\\{").replace("}", "\\}")
-        appendix = (
-            f"\\clearpage\n\\section*{{New material from Lecture {lecture.lecture_number:02d}: {safe_title}}}\n"
-            + appendix_body
-        )
 
-    return (
-        "\n% --- Dynamic append from latest lecture (preserve prior content) ---\n"
-        + appendix.strip()
-        + "\n"
+def append_latex_fragment(document_text: str, fragment: str, lecture: LectureInfo) -> str:
+    cleaned = strip_full_document_wrappers(fragment)
+    if not cleaned:
+        return document_text
+    if normalize_text_block(cleaned) == dynamic_book_placeholder_comment(lecture):
+        return document_text
+    if cleaned in document_text:
+        return document_text
+
+    marker = (
+        f"% --- Lecture {lecture.lecture_number:02d} additions: "
+        f"{lecture.lecture_title} ---"
     )
+    insertion = marker + "\n" + cleaned.strip() + "\n"
+    end_index = document_text.rfind(DOCUMENT_END)
+    if end_index < 0:
+        return document_text.rstrip() + "\n\n" + insertion
+    prefix = document_text[:end_index].rstrip()
+    suffix = document_text[end_index:]
+    return prefix + "\n\n" + insertion + "\n" + suffix.lstrip()
 
 
-def merge_dynamic_book_preserve(existing_text: str, generated_text: str, lecture: LectureInfo) -> str:
-    existing_preamble, existing_body, existing_tail = split_latex_document(existing_text)
-    _, generated_body, _ = split_latex_document(generated_text)
-
-    if not existing_body:
-        return generated_text
-    if not generated_body:
+def append_markdown_fragment(existing_text: str, fragment: str, lecture: LectureInfo) -> str:
+    cleaned = normalize_text_block(fragment)
+    if not cleaned:
         return existing_text
-
-    appendix = derive_dynamic_appendix_block(existing_body, generated_body, lecture)
-    if not appendix.strip():
+    if cleaned == dynamic_memory_placeholder_comment(lecture):
         return existing_text
-
-    if DOCUMENT_BEGIN not in existing_text:
-        return existing_text + "\n" + appendix
-
-    new_body = existing_body.rstrip() + "\n\n" + appendix.rstrip()
-    if existing_tail.strip():
-        tail = existing_tail
-    else:
-        tail = DOCUMENT_END
-    if DOCUMENT_END in tail:
-        tail = DOCUMENT_END + tail.split(DOCUMENT_END, 1)[1]
-
-    return existing_preamble + DOCUMENT_BEGIN + "\n\n" + new_body.rstrip() + "\n" + tail + "\n"
-
-
-def enforce_non_reducing_dynamic_book(existing_text: str | None, generated_path: Path, lecture: LectureInfo) -> bool:
-    if not existing_text:
-        return True
-    if not generated_path.exists():
-        return True
-
-    generated_text = generated_path.read_text(encoding="utf-8")
-    _, existing_body, _ = split_latex_document(existing_text)
-    _, generated_body, _ = split_latex_document(generated_text)
-    shrink_detected = len(generated_body) < len(existing_body) - 1
-    missing_lines = missing_significant_lines(existing_body, generated_body, latex=True)
-    if not shrink_detected and not missing_lines:
-        return True
-
-    merged_text = merge_dynamic_book_preserve(existing_text, generated_text, lecture)
-    if not merged_text.strip():
-        return False
-
-    if merged_text != generated_text:
-        generated_path.write_text(merged_text, encoding="utf-8")
-        return True
-
-    return False
-
-
-def merge_markdown_preserve(existing_text: str, generated_text: str, lecture: LectureInfo) -> str:
-    additions = added_nonblank_lines(existing_text, generated_text)
-    if not additions:
+    if cleaned in existing_text:
         return existing_text
-
-    heading = f"## Incremental additions after lecture {lecture.lecture_number:02d}: {lecture.lecture_title}"
-    block = "\n".join(additions).strip()
-    if not block:
-        return existing_text
-    return existing_text.rstrip() + "\n\n" + heading + "\n" + block + "\n"
-
-
-def enforce_non_reducing_markdown(existing_text: str | None, generated_path: Path, lecture: LectureInfo) -> bool:
-    if not existing_text:
-        return True
-    if not generated_path.exists():
-        return True
-
-    generated_text = generated_path.read_text(encoding="utf-8")
-    shrink_detected = len(dedent_latex_for_diff(generated_text)) < len(dedent_latex_for_diff(existing_text)) - 1
-    missing_lines = missing_significant_lines(existing_text, generated_text, latex=False)
-    if not shrink_detected and not missing_lines:
-        return True
-
-    merged_text = merge_markdown_preserve(existing_text, generated_text, lecture)
-    if not merged_text.strip():
-        return False
-    if merged_text != generated_text:
-        generated_path.write_text(merged_text, encoding="utf-8")
-        return True
-    return False
+    return existing_text.rstrip() + "\n\n" + cleaned + "\n"
 
 
 def sanitize_texttt_literals(text: str) -> str:
@@ -1647,40 +1573,6 @@ def slugify_filename(value: str) -> str:
     return slug or "dynamic-book"
 
 
-def dynamic_book_sources(dynamic_root: Path, target_slug: str) -> list[Path]:
-    return sorted(
-        [path for path in dynamic_root.glob("*.tex") if path.name != f"{target_slug}.tex"],
-        key=lambda item: (item.stat().st_mtime, item.name),
-    )
-
-
-def combined_dynamic_book_tex(dynamic_root: Path, target_slug: str, target_path: Path) -> str:
-    blocks: list[str] = []
-    if target_path.exists():
-        blocks.append(target_path.read_text(encoding="utf-8"))
-    for source in dynamic_book_sources(dynamic_root, target_slug):
-        text = source.read_text(encoding="utf-8", errors="replace")
-        if text.strip():
-            blocks.append(f"% Legacy dynamic manuscript source: {source.name}\n{text}")
-    if not blocks:
-        return "% No dynamic manuscript exists yet.\n"
-    return "\n\n".join(blocks)
-
-
-def cleanup_legacy_dynamic_outputs(dynamic_root: Path, target_slug: str) -> list[Path]:
-    removed: list[Path] = []
-    keep = {f"{target_slug}.tex", f"{target_slug}.pdf", "course_memory.md"}
-    for path in dynamic_root.iterdir():
-        if path.name in keep or path.name == "build":
-            continue
-        if path.suffix.lower() not in {".tex", ".pdf"}:
-            continue
-        if path.is_file():
-            path.unlink()
-            removed.append(path)
-    return removed
-
-
 def processed_lecture_summary(course_root: Path) -> str:
     entries: list[tuple[int, str, str]] = []
     for metadata_file in sorted((course_root / "chapters").glob("lecture_*/metadata.json")):
@@ -1786,8 +1678,9 @@ def update_dynamic_book_memory(
     existing_memory_text = (
         memory_path.read_text(encoding="utf-8")
         if memory_path.exists()
-        else "# Course Memory\n\nNo persistent course memory exists yet.\n"
+        else "# Course Memory\n"
     )
+    memory_fragment_path = runtime_dir / "dynamic_book_memory_fragment.md"
     prompt = read_template(prompt_root / "dynamic_book_memory_prompt.txt").substitute(
         task_context=build_task_context(lecture, course_config),
         course_title=lecture.course_title,
@@ -1813,14 +1706,16 @@ def update_dynamic_book_memory(
     run_codex_prompt(
         repo_root=repo_root,
         prompt_text=prompt,
-        output_path=memory_path,
+        output_path=memory_fragment_path,
         runtime_dir=runtime_dir,
         log_prefix="dynamic_book_memory",
         model=model,
         reasoning=reasoning,
     )
-    enforce_non_reducing_markdown(existing_memory_text, memory_path, lecture)
-    return memory_path.read_text(encoding="utf-8")
+    memory_fragment = memory_fragment_path.read_text(encoding="utf-8")
+    merged_memory_text = append_markdown_fragment(existing_memory_text, memory_fragment, lecture)
+    memory_path.write_text(merged_memory_text, encoding="utf-8")
+    return merged_memory_text
 
 
 def update_dynamic_book(
@@ -1870,8 +1765,16 @@ def update_dynamic_book(
     tex_slug = slugify_filename(book_title)
     tex_path = dynamic_root / f"{tex_slug}.tex"
     existing_dynamic_book_tex = (
-        tex_path.read_text(encoding="utf-8") if tex_path.exists() else "% No dynamic manuscript exists yet.\n"
+        tex_path.read_text(encoding="utf-8")
+        if tex_path.exists()
+        else dynamic_book_shell(
+            book_title=book_title,
+            book_descriptor=book_descriptor,
+            lecturer_name=course_config.lecturer_name,
+            course_config=course_config,
+        )
     )
+    fragment_path = runtime_dir / "dynamic_book_fragment.tex"
 
     prompt = read_template(prompt_root / "dynamic_book_prompt.txt").substitute(
         task_context=build_task_context(lecture, course_config),
@@ -1904,19 +1807,16 @@ def update_dynamic_book(
     run_codex_prompt(
         repo_root=repo_root,
         prompt_text=prompt,
-        output_path=tex_path,
+        output_path=fragment_path,
         runtime_dir=runtime_dir,
         log_prefix="dynamic_book",
         model=model,
         reasoning=reasoning,
         images=assets,
     )
-
-    enforce_non_reducing_dynamic_book(
-        existing_dynamic_book_tex,
-        tex_path,
-        lecture,
-    )
+    dynamic_fragment = fragment_path.read_text(encoding="utf-8")
+    merged_dynamic_book_tex = append_latex_fragment(existing_dynamic_book_tex, dynamic_fragment, lecture)
+    tex_path.write_text(merged_dynamic_book_tex, encoding="utf-8")
 
     if not compile_tex(tex_path.name, dynamic_root, runtime_dir, "dynamic_book_compile"):
         fix_prompt = read_template(prompt_root / "dynamic_book_compile_fix_prompt.txt").substitute(
@@ -1924,7 +1824,6 @@ def update_dynamic_book(
             compile_log=compile_log_excerpt(runtime_dir, "dynamic_book_compile"),
             current_tex=tex_path.read_text(encoding="utf-8"),
         )
-        protected_dynamic_book_tex = tex_path.read_text(encoding="utf-8")
         run_codex_prompt(
             repo_root=repo_root,
             prompt_text=fix_prompt,
@@ -1933,11 +1832,6 @@ def update_dynamic_book(
             log_prefix="dynamic_book_fix",
             model=model,
             reasoning=reasoning,
-        )
-        enforce_non_reducing_dynamic_book(
-            protected_dynamic_book_tex,
-            tex_path,
-            lecture,
         )
         if not compile_tex(tex_path.name, dynamic_root, runtime_dir, "dynamic_book_compile_retry"):
             raise RuntimeError(f"Failed to compile dynamic book for {lecture.course_rel}")

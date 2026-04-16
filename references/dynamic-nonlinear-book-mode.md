@@ -37,7 +37,7 @@ Inside the generated course root:
 - `dynamic_book/<book-slug>.tex`
 - `dynamic_book/<book-slug>.pdf`
 
-The dynamic manuscript is rewritten after each processed lecture using:
+The dynamic manuscript is fed after each processed lecture using:
 
 - the current lecture chapter
 - analysis / narrative / visual / math notes
@@ -59,30 +59,32 @@ The first target for this mode is:
 The intended control flow is:
 
 1. process one lecture normally into lecture-specific notes, frames, and chapter TeX
-2. update a course-level memory file that synthesizes the whole processed series into thematic evidence, chapter candidates, frame ideas, and diagram ideas
-3. rewrite one separate dynamic book from that course memory plus the accumulated manuscript
+2. append a course-level memory block that records only what this lecture adds to the whole-series map
+3. append one separate dynamic-book fragment into the existing manuscript
 
 This keeps the lecture-by-lecture artifacts intact while the book itself stays nonlinear and series-level.
 
-## Preservation mode
+## First-principles append logic
 
-The dynamic-book path now runs in append-only preservation mode by default.
+The dynamic-book path is now intentionally simple:
 
-That means:
+1. the current dynamic book is the canonical book
+2. a prompt reads the current lecture plus the current book
+3. the prompt writes only the new LaTeX fragment for this lecture
+4. the code inserts that fragment before `\end{document}`
+5. the book is compiled
 
-- the writer prompt is explicitly told not to compress away supported material
-- the generated dynamic manuscript is checked against the prior manuscript for missing significant lines
-- if the candidate rewrite deletes supported content, the runtime keeps the old manuscript and only appends net-new material
-- the course-level memory file is protected with the same no-shrink rule
-- LaTeX compile-fix retries are also forced through the same preservation guard
+The same pattern is used for `course_memory.md`:
 
-This is intentionally conservative. It prefers duplication over accidental loss of accumulated evidence.
+- the current memory file is canonical
+- the prompt writes only the new Markdown block for this lecture
+- the code appends that block if it is not empty
 
-## Replay safety
+This keeps the logic close to the actual intent: each lecture feeds the current book and memory forward.
 
-`scripts/rerun_dynamic_book.py` now treats append-only replay as the default safe behavior.
+## Replay
 
-- normal replay keeps the current dynamic book and reprocesses lecture updates into it
-- `--clean-start` still exists for deliberate rebuilds, but it now requires `--allow-destructive-rebuild`
+`scripts/rerun_dynamic_book.py` follows the same lecture-by-lecture append logic.
 
-That extra flag is there so a replay cannot wipe the current dynamic manuscript by accident.
+- normal replay keeps the current dynamic book and appends lecture deltas into it
+- `--clean-start` backs up the current dynamic book and rebuilds it from lecture 1 through the requested cutoff using the same incremental append path

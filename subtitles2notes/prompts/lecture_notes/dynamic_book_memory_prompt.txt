@@ -1,4 +1,4 @@
-You are maintaining a persistent course-level memory for a nonlinear book project.
+You are feeding one new lecture into a persistent course-level memory file for a nonlinear book project.
 
 Task context:
 $task_context
@@ -45,47 +45,29 @@ $current_chapter_tex
 Existing course memory:
 $existing_course_memory_text
 
-Write a full replacement Markdown memory file for the evolving book.
+Write only the new Markdown block that should be appended to the existing course memory.
 
 Hard requirements:
-- Output only Markdown.
-- The runtime is operating in append-only preservation mode. Unsupported deletion or broad compression will be rejected or merged back.
-- Treat this as a living book-planning workspace for the whole series, not as notes for a single lecture.
-- The memory must reflect the full processed corpus, with the current lecture integrated into that wider map.
-- Do not organize the memory by lecture order except for a short evidence index.
-- Track recurring themes, contradictions, recurring story types, business mechanisms, and philosophical tensions across the whole series.
-- Keep explicit room for frames and diagrams that could belong in the final book.
+- Output only Markdown fragment content.
+- Do not rewrite or replace the whole memory file.
+- Treat the existing memory as canonical.
+- Add only material that is genuinely new or newly clarified by this lecture.
+- If the lecture adds nothing materially new, output exactly:
+  `<!-- no new course memory material from lecture $lecture_number -->`
+
+Block format:
+- Start with:
+  `## Lecture $lecture_number integration: $lecture_title`
+- Then use short subsections or bullets such as:
+  - `### New evidence`
+  - `### Revisions to chapter map`
+  - `### New tensions or contradictions`
+  - `### Frame or diagram opportunities`
+  - `### Next rewrite implications`
+
+Writing guidance:
+- Keep this useful for the next dynamic-book append step.
+- Track only what this lecture adds to the current understanding of the full series.
+- Avoid repeating evidence that is already well represented in the existing memory.
+- Favor concrete named cases, mechanisms, numbers, contradictions, and revision cues.
 - Do not invent facts.
-- Prefer preservation over replacement. Do not delete previously established mechanisms or evidence unless it is false, redundant, or genuinely unsupported.
-- Keep alternative positions side-by-side when interviews contradict each other.
-- If a new formulation improves on an older one, add the improvement without discarding the older supported entry.
-
-Required sections:
-1. `# Book North Star`
-2. `## Core thesis`
-3. `## Candidate chapter system`
-4. `## Evidence bank by theme`
-5. `## Frame bank`
-6. `## Diagram and table bank`
-7. `## Tensions and contradictions`
-8. `## Revision agenda for the next rewrite`
-9. `## Processed lecture evidence index`
-
-Section guidance:
-- `Core thesis`: state what the series is really teaching about getting rich, in durable terms.
-- `Candidate chapter system`: list real book chapters, not lecture names.
-- `Evidence bank by theme`: group evidence from multiple lectures under themes such as ownership, sales, leverage, timing, reputation, geography, risk, luck, cost discipline, exits, and character.
-- `Frame bank`: identify which validated frames are actually worth reusing in the book and why.
-- `Diagram and table bank`: propose transcript-backed diagrams or tables that synthesize multiple interviews.
-- `Tensions and contradictions`: keep competing claims visible instead of flattening them.
-- `Revision agenda`: say what earlier chapters of the book should probably be revised now that the current lecture has been integrated, with an explicit bias toward adding nuance, evidence, counterexamples, or new subsections rather than merely shortening prose.
-- `Processed lecture evidence index`: keep this concise and factual.
-
-Output discipline:
-- Favor durable synthesis without losing distinct evidence clusters.
-- Do not optimize the memory for brevity. Optimize it for preserving retrievable thematic material that the book can continue to absorb.
-- Preserve separate named cases, mechanisms, contradictions, and examples when they are not truly redundant.
-- Make the memory useful for a growing book. It should help the next rewrite expand or refine chapters, not repeatedly collapse the manuscript back into a smaller outline.
-- Do not let the current lecture dominate the memory unless it truly changes the book's structure.
-- Keep the memory useful for a second prompt that will rewrite the full LaTeX book.
-- When in doubt, append nuance instead of rewriting away prior evidence.
