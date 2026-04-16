@@ -68,6 +68,6 @@ Block format:
 Writing guidance:
 - Keep this useful for the next dynamic-book append step.
 - Track only what this lecture adds to the current understanding of the full series.
-- Avoid repeating evidence that is already well represented in the existing memory.
+- Reinforcing evidence is still useful. If this lecture gives another named case, story, number, or similar opinion that supports an existing theme, keep it as additional support rather than discarding it as repetition.
 - Favor concrete named cases, mechanisms, numbers, contradictions, and revision cues.
 - Do not invent facts.

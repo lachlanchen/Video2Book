@@ -76,7 +76,7 @@ Writing guidance:
   - a new table or compact diagram,
   - or a justified new section/chapter when the lecture really expands the book.
 - Prefer adding local material over creating a large new structure.
-- Avoid duplication. If the existing book already says it, do not say it again unless this lecture adds a clearly distinct case, number, contradiction, or refinement.
+- Repetition is acceptable when it is evidential. If this lecture reinforces an existing mechanism, theme, or claim with a new named case, number, story, or matching opinion, add it as further support instead of suppressing it.
 - Keep the fragment source-conscious, vivid, and specific.
 - Preserve anecdote, mechanism, evidence, and doctrine as distinct layers when useful.
 - Use names, numbers, and transcript-backed distinctions when available.
