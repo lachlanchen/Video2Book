@@ -46,8 +46,11 @@ Representative tracked outputs:
 - [LazyLearn: How You Speak and Write course book](https://github.com/lachlanchen/LazyLearn/blob/main/generated_course_notes/lazylearn/how-you-speak-and-write/course.pdf)
 - [LazyLearn: Justice with Michael Sandel course book](https://github.com/lachlanchen/LazyLearn/blob/main/generated_course_notes/lazylearn/justice-with-michael-sandel/course.pdf)
 - [Leonard Susskind: Classical Mechanics (Stanford partial)](https://github.com/lachlanchen/leonardsusskind/blob/main/core_classical_mechanics/2011_fall_modern_physics_stanford_partial/classical_mechanics_stanford_partial.pdf)
+- [Leonard Susskind: Classical Mechanics (Theoretical Minimum)](https://github.com/lachlanchen/leonardsusskind/blob/main/all_notes/classical_mechanics_theoretical_minimum.pdf)
 - [Leonard Susskind: Advanced Quantum Mechanics](https://github.com/lachlanchen/leonardsusskind/blob/main/supplemental_advanced_quantum/advanced_quantum_mechanics.pdf)
 - [Leonard Susskind: Topics in String Theory](https://github.com/lachlanchen/leonardsusskind/blob/main/supplemental_cosmology_and_black_holes/topics_in_string_theory.pdf)
+- [Leonard Susskind: Cosmology Legacy](https://github.com/lachlanchen/leonardsusskind/blob/main/all_notes/cosmology_legacy.pdf)
+- [Leonard Susskind: Cosmology Theoretical Minimum](https://github.com/lachlanchen/leonardsusskind/blob/main/all_notes/cosmology_theoretical_minimum.pdf)
 - [Leonard Susskind: Demystifying the Higgs Boson](https://github.com/lachlanchen/leonardsusskind/blob/main/supplemental_higgs_boson/demystifying_the_higgs_boson.pdf)
 - [Leonard Susskind: Particle Physics 1](https://github.com/lachlanchen/leonardsusskind/blob/main/supplemental_particle_physics_1/particle_physics_1_basic_concepts.pdf)
 - [Leonard Susskind: Particle Physics 2](https://github.com/lachlanchen/leonardsusskind/blob/main/supplemental_particle_physics_2/particle_physics_2_standard_model.pdf)
@@ -55,7 +58,8 @@ Representative tracked outputs:
 - [Leonard Susskind: Quantum Entanglement Part 1](https://github.com/lachlanchen/leonardsusskind/blob/main/supplemental_quantum_entanglement/quantum_entanglement_part_1.pdf)
 - [Leonard Susskind: Quantum Entanglement Part 3](https://github.com/lachlanchen/leonardsusskind/blob/main/supplemental_quantum_entanglement/quantum_entanglement_part_3.pdf)
 - [Leonard Susskind: String Theory and M-Theory](https://github.com/lachlanchen/leonardsusskind/blob/main/supplemental_string_theory/string_theory_and_m_theory.pdf)
-- [Leonard Susskind: Demystifying the Higgs Boson](https://github.com/lachlanchen/leonardsusskind/blob/main/supplemental_higgs_boson/demystifying_the_higgs_boson.pdf)
+
+Other Susskind consolidated titles are available in `[all_notes](https://github.com/lachlanchen/leonardsusskind/tree/main/all_notes)` (for example `classical_mechanics_stanford_partial.pdf`, `classical_mechanics_theoretical_minimum.pdf`, `cosmology_legacy.pdf`, `cosmology_theoretical_minimum.pdf`, and more).
 
 ### Local Sibling Repo Pointers
 
