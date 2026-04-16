@@ -76,6 +76,10 @@ Writing guidance:
   - a new table or compact diagram,
   - or a justified new section/chapter when the lecture really expands the book.
 - Prefer adding local material over creating a large new structure.
+- Restructure is allowed, but it should be cautious, conservative, and clearly justified by the new lecture's evidence.
+- Do not introduce a new chapter or major section split unless the new material clearly creates a missing theme, a new contradiction, or a stronger organizing line that the current book does not yet express well.
+- If you make a meaningful structural move, begin the fragment with 1-3 LaTeX comment lines that state the plan and the new evidence behind it, for example:
+  `% restructure plan: add a subsection on X because this lecture adds Y and Z`
 - Repetition is acceptable when it is evidential. If this lecture reinforces an existing mechanism, theme, or claim with a new named case, number, story, or matching opinion, add it as further support instead of suppressing it.
 - Keep the fragment source-conscious, vivid, and specific.
 - Preserve anecdote, mechanism, evidence, and doctrine as distinct layers when useful.

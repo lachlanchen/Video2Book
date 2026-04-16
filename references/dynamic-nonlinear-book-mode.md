@@ -82,6 +82,12 @@ The same pattern is used for `course_memory.md`:
 
 This keeps the logic close to the actual intent: each lecture feeds the current book and memory forward.
 
+Structural change is still allowed, but the intended policy is conservative:
+
+- local additions are the default
+- larger chapter/section reshaping should happen only when the new lecture clearly justifies it
+- the memory block should record a short explicit restructure plan tied to the new evidence
+
 ## Replay
 
 `scripts/rerun_dynamic_book.py` follows the same lecture-by-lecture append logic.

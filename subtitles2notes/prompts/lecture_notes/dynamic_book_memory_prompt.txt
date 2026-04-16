@@ -60,7 +60,7 @@ Block format:
   `## Lecture $lecture_number integration: $lecture_title`
 - Then use short subsections or bullets such as:
   - `### New evidence`
-  - `### Revisions to chapter map`
+  - `### Conservative restructure plan`
   - `### New tensions or contradictions`
   - `### Frame or diagram opportunities`
   - `### Next rewrite implications`
@@ -70,4 +70,5 @@ Writing guidance:
 - Track only what this lecture adds to the current understanding of the full series.
 - Reinforcing evidence is still useful. If this lecture gives another named case, story, number, or similar opinion that supports an existing theme, keep it as additional support rather than discarding it as repetition.
 - Favor concrete named cases, mechanisms, numbers, contradictions, and revision cues.
+- If this lecture suggests structural change, keep the plan conservative and explicit: say exactly what should move, what should be added, and which new evidence justifies that change.
 - Do not invent facts.
