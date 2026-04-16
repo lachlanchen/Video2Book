@@ -86,7 +86,7 @@ Structural change is still allowed, but the intended policy is conservative:
 
 - local additions are the default
 - larger chapter/section reshaping should happen only when the new lecture clearly justifies it
-- the memory block should record a short explicit restructure plan tied to the new evidence
+- the memory block should record an explicit restructure plan tied to the new evidence
 
 ## Replay
 
