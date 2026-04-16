@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import difflib
 import json
 import os
 import re
@@ -104,6 +105,9 @@ REFERENCE_PDF_HINTS = {
     "cosmology_and_black_holes": ["Cosmology"],
     "statistical_mechanics": ["Statistical_Mechanics"],
 }
+
+DOCUMENT_BEGIN = "\\begin{document}"
+DOCUMENT_END = "\\end{document}"
 
 
 @dataclass
@@ -1240,6 +1244,114 @@ def run_codex_prompt(
         raise RuntimeError(f"Command failed ({completed.returncode}): {' '.join(cmd)}\n{detail}")
 
 
+def tracked_path_exists(repo_root: Path, path: Path) -> bool:
+    pathspec = str(path.relative_to(repo_root))
+    if path.exists():
+        return True
+    result = subprocess.run(
+        ["git", "-C", str(repo_root), "ls-files", "--error-unmatch", "--", pathspec],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        check=False,
+    )
+    return result.returncode == 0
+
+
+def split_latex_document(tex: str) -> tuple[str, str, str]:
+    begin_index = tex.find(DOCUMENT_BEGIN)
+    if begin_index < 0:
+        return "", tex.strip(), ""
+
+    end_index = tex.rfind(DOCUMENT_END)
+    if end_index < 0:
+        return "", tex.strip(), ""
+
+    preamble = tex[:begin_index]
+    body = tex[begin_index + len(DOCUMENT_BEGIN) : end_index]
+    tail = tex[end_index:]
+    return preamble, body.strip("\n"), tail
+
+
+def dedent_latex_for_diff(text: str) -> str:
+    normalized = re.sub(r"\r\n", "\n", text)
+    normalized = re.sub(r"\n{3,}", "\n\n", normalized)
+    return normalized.strip()
+
+
+def derive_dynamic_appendix_block(old_body: str, new_body: str, lecture: LectureInfo) -> str:
+    old_lines = dedent_latex_for_diff(old_body).splitlines()
+    new_lines = dedent_latex_for_diff(new_body).splitlines()
+    additions = [line[2:] for line in difflib.ndiff(old_lines, new_lines) if line.startswith("+ ")]
+    appendix_body = "\n".join(line for line in additions if line.strip())
+
+    if not appendix_body:
+        appendix_body = new_body.strip()
+
+    if not appendix_body.strip():
+        return ""
+
+    if "\\chapter" in appendix_body or "\\section" in appendix_body:
+        appendix = appendix_body
+    else:
+        safe_title = lecture.lecture_title.replace("{", "\\{").replace("}", "\\}")
+        appendix = (
+            f"\\clearpage\n\\section*{{New material from Lecture {lecture.lecture_number:02d}: {safe_title}}}\n"
+            + appendix_body
+        )
+
+    return (
+        "\n% --- Dynamic append from latest lecture (preserve prior content) ---\n"
+        + appendix.strip()
+        + "\n"
+    )
+
+
+def merge_dynamic_book_preserve(existing_text: str, generated_text: str, lecture: LectureInfo) -> str:
+    existing_preamble, existing_body, existing_tail = split_latex_document(existing_text)
+    _, generated_body, _ = split_latex_document(generated_text)
+
+    if not existing_body or not generated_body:
+        return generated_text
+
+    appendix = derive_dynamic_appendix_block(existing_body, generated_body, lecture)
+    if not appendix.strip():
+        return generated_text
+
+    if DOCUMENT_BEGIN not in existing_text:
+        return existing_text + "\n" + appendix
+
+    new_body = existing_body.rstrip() + "\n\n" + appendix.rstrip()
+    if existing_tail.strip():
+        tail = existing_tail
+    else:
+        tail = DOCUMENT_END
+    if DOCUMENT_END in tail:
+        tail = DOCUMENT_END + tail.split(DOCUMENT_END, 1)[1]
+
+    return existing_preamble + DOCUMENT_BEGIN + "\n\n" + new_body.rstrip() + "\n" + tail + "\n"
+
+
+def enforce_non_reducing_dynamic_book(existing_text: str | None, generated_path: Path, lecture: LectureInfo) -> bool:
+    if not existing_text:
+        return True
+    if not generated_path.exists():
+        return True
+
+    generated_text = generated_path.read_text(encoding="utf-8")
+    if len(generated_text) >= len(existing_text) - 1:
+        return True
+
+    merged_text = merge_dynamic_book_preserve(existing_text, generated_text, lecture)
+    if not merged_text.strip():
+        return False
+
+    if merged_text != generated_text:
+        generated_path.write_text(merged_text, encoding="utf-8")
+        return True
+
+    return False
+
+
 def sanitize_texttt_literals(text: str) -> str:
     def repl(match: re.Match[str]) -> str:
         body = LATEX_SPECIAL_IN_TEXTTT_RE.sub(r"\\\1", match.group(1))
@@ -1281,7 +1393,7 @@ def commit_generated_step(
     commit_message: str,
     paths: Iterable[Path],
 ) -> None:
-    pathspecs = [str(path.relative_to(repo_root)) for path in paths if path.exists()]
+    pathspecs = [str(path.relative_to(repo_root)) for path in paths if tracked_path_exists(repo_root, path)]
     if not pathspecs:
         return
 
@@ -1455,6 +1567,40 @@ def slugify_filename(value: str) -> str:
     ascii_only = normalized.encode("ascii", "ignore").decode("ascii")
     slug = re.sub(r"[^a-z0-9]+", "-", ascii_only.lower()).strip("-")
     return slug or "dynamic-book"
+
+
+def dynamic_book_sources(dynamic_root: Path, target_slug: str) -> list[Path]:
+    return sorted(
+        [path for path in dynamic_root.glob("*.tex") if path.name != f"{target_slug}.tex"],
+        key=lambda item: (item.stat().st_mtime, item.name),
+    )
+
+
+def combined_dynamic_book_tex(dynamic_root: Path, target_slug: str, target_path: Path) -> str:
+    blocks: list[str] = []
+    if target_path.exists():
+        blocks.append(target_path.read_text(encoding="utf-8"))
+    for source in dynamic_book_sources(dynamic_root, target_slug):
+        text = source.read_text(encoding="utf-8", errors="replace")
+        if text.strip():
+            blocks.append(f"% Legacy dynamic manuscript source: {source.name}\n{text}")
+    if not blocks:
+        return "% No dynamic manuscript exists yet.\n"
+    return "\n\n".join(blocks)
+
+
+def cleanup_legacy_dynamic_outputs(dynamic_root: Path, target_slug: str) -> list[Path]:
+    removed: list[Path] = []
+    keep = {f"{target_slug}.tex", f"{target_slug}.pdf", "course_memory.md"}
+    for path in dynamic_root.iterdir():
+        if path.name in keep or path.name == "build":
+            continue
+        if path.suffix.lower() not in {".tex", ".pdf"}:
+            continue
+        if path.is_file():
+            path.unlink()
+            removed.append(path)
+    return removed
 
 
 def processed_lecture_summary(course_root: Path) -> str:
@@ -1685,6 +1831,12 @@ def update_dynamic_book(
         model=model,
         reasoning=reasoning,
         images=assets,
+    )
+
+    enforce_non_reducing_dynamic_book(
+        existing_dynamic_book_tex,
+        tex_path,
+        lecture,
     )
 
     if not compile_tex(tex_path.name, dynamic_root, runtime_dir, "dynamic_book_compile"):

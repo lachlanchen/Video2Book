@@ -55,6 +55,8 @@ Hard requirements:
 - Track recurring themes, contradictions, recurring story types, business mechanisms, and philosophical tensions across the whole series.
 - Keep explicit room for frames and diagrams that could belong in the final book.
 - Do not invent facts.
+- Prefer preservation over replacement. Do not delete previously established mechanisms or evidence unless it is false, redundant, or genuinely unsupported.
+- Keep alternative positions side-by-side when interviews contradict each other.
 
 Required sections:
 1. `# Book North Star`

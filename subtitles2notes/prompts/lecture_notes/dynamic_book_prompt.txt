@@ -66,47 +66,37 @@ Hard requirements:
 - Produce a complete compilable book document ending with `\end{document}`.
 - Set the title to `$dynamic_book_title`.
 - Credit the original source as `$lecturer_name` or `School of Hard Knocks` in front matter where appropriate, and keep LazyingArt LLC / Video2Book credit in the same style as the repo's other books.
-- Use real thematic chapters. Do not mirror the lecture list or create one chapter per video.
-- Treat the full transcript directory and the accumulated course-notes tree as the default working context for every rewrite, even when the current prompt was triggered by a single lecture.
-- Always reconcile the current lecture against the full set of already processed notes before deciding what to add, remove, merge, or rewrite.
-- Use the course memory as the primary overview map of the full series, then use the current lecture materials to update that map where needed.
-- This book is not a lecture digest. It should read like a real book about how people get rich, built from the whole series.
-- You may revise, merge, compress, reorder, or split chapters based on the current lecture and the accumulated manuscript.
-- Compression is not a goal. Dynamic integration is the goal.
-- The default action for each new lecture is to feed its usable content into the book: enrich existing chapters, create new subsections when needed, sharpen tensions, and add transcript-backed examples, mechanisms, frames, tables, or diagrams.
-- Default to preserving and extending the manuscript's accumulated informational payload. Do not make the book substantially shorter unless you are removing true duplication, contradiction, unsupported claims, or clearly weaker filler.
-- If you compress one passage, carry forward every distinct mechanism, case, name-backed detail, warning, or story beat into some surviving place in the manuscript.
-- Do not collapse several materially different interviews into one generic paragraph when the distinctions still matter.
-- Prefer revising locally inside chapters and adding subsections, examples, tables, or diagrams over replacing whole chapters with shorter abstractions.
-- As more lectures arrive, the manuscript should usually become richer: more evidence, more mechanisms, more cross-links, more qualified claims, and more durable thematic structure.
-- The current lecture should leave a visible trace in the revised manuscript, either by creating a new subsection, materially deepening an existing argument, sharpening a tension, or adding a transcript-backed example, frame, table, or diagram.
-- Keep the whole book consistent and intriguing, with explicit story, philosophy, and methodology threads.
-- Distinguish clearly between anecdote, mechanism, heuristic, and evidence.
-- Preserve useful concrete details, names, numbers, and business mechanisms from the interviews when they are actually supported by the transcript.
-- Do not invent facts, timelines, quotes, or financial details.
-- Use frames and diagrams only when supported by the available assets; keep them as evidence anchors, not decorative filler.
-- When a validated frame materially strengthens a thematic chapter, include it with `\includegraphics` from `../figures/...` and explain why it matters.
-- Add compact tables or simple TikZ / text-native diagrams when they clarify transcript-backed mechanisms across multiple interviews.
-- Keep the prose dynamic and vivid, but not hype-heavy or sloppy.
-- Use a nonlinear architecture: recurring ideas should reappear across chapters when that improves the book.
-- Let later insight revise earlier claims. The book should feel maintained, not merely appended.
 
-Structural guidance:
-- Include a short preface or opening note that explains what the book is trying to learn about getting rich without glamorizing shallow clichés.
-- Build a chapter system around durable themes such as paths to wealth, leverage, skill concentration, sales, capital allocation, ownership, risk, timing, luck, character, institutional constraints, and mistaken beliefs.
-- A single interview may inform several chapters; a single chapter may synthesize many interviews.
-- Keep chapter titles memorable and book-like.
-- Favor a cumulative, high-signal book over a repeatedly compressed one.
-- Preserve chapter-level diversity. Do not merge or delete chapters merely to simplify the outline if they still carry distinct thematic work.
-- Let the book expand when the corpus has genuinely expanded. Later rewrites should normally deepen or widen the book, not repeatedly distill it to a smaller skeleton.
-- Prefer cross-interview synthesis over chronology.
+Writing contract:
+- Do not optimize for compression. Do not turn this into a shorter summary.
+- Preserve the manuscript as a cumulative corpus. The default action is to extend or deepen prior content.
+- You are writing a book from the full series, not a lecture-by-lecture digest.
+- Use the full transcript directory context, the current lecture materials, and `course_memory_text` together.
+- Keep real thematic chapters. Do not mirror the lecture list or force one chapter per video.
+- As more lectures arrive, rewrites should normally keep total usable detail stable or increase, unless you are removing exact duplicates, unsupported material, or truly contradicted claims.
+- Maintain or increase chapter coverage. Keep chapter names and core sections unless there is a clear transcript-backed reason to split or merge.
+- Each new lecture should leave a visible trace: enrich one or more existing chapters, or add a justified new subsection/chapter where needed.
+- Prefer revising locally inside existing chapters over replacing broad manuscript areas.
+- Preserve distinct interview cases, name-backed details, numbers, quotes, mechanisms, and doctrinal distinctions even if noisy.
+- If a topic has multiple conflicting formulations, preserve both with context rather than deleting one unless transcript logic proves one is wrong.
+- Do not collapse materially different interviews into generic summary paragraphs.
+- Never remove content only to reduce length or make the manuscript “tidier.”
+- Use frames and diagrams only when supported by available assets; treat visuals as evidence anchors.
+
+No-compression safeguard:
+- You must treat `$existing_dynamic_book_tex` as protected canonical content.
+- If a section is already present and still supported, keep it in the manuscript.
+- If evidence from this lecture changes emphasis, preserve the older version and add the new perspective as an explicit cross-reference, extension, or updated subsection unless earlier material is demonstrably unsupported.
+- Do not replace broad manuscript blocks simply to simplify the flow.
+
+Content guidance:
+- Keep the book coherent and vivid. Distinguish anecdote, mechanism, heuristic, and evidence.
+- Build stable recurring themes: how wealth is built, protected, copied, sold, scaled, and morally organized under uncertainty.
+- Use a nonlinear architecture that revisits ideas across chapters where needed.
+- Add tables, compact equations, and diagrams when they raise signal density.
 
 Output discipline:
-- Rewrite the whole manuscript so it stays internally coherent.
-- Assume future rewrites will keep revisiting this same manuscript; prefer durable structure over local lecture-driven patches.
-- Prefer maintaining a strong through-line without sacrificing distinct evidence and mechanisms already earned by earlier lectures.
-- When in doubt, retain and relocate rather than summarize away.
-- Do not optimize for brevity. Optimize for cumulative clarity, usable detail, and thematic coherence.
-- Treat prior surviving chapters and subsections as hard-won structure. Keep them unless there is a clear transcript-backed reason to merge, relocate, or remove them.
-- Each rewrite should be at least as informative as the previous manuscript, except where you are deleting genuine duplication or unsupported material.
+- Keep the output as one coherent LaTeX document, and preserve all previously durable structure unless a section is explicitly unsupported.
+- If you revise an existing chapter/subsection, keep prior validated evidence tracks and add the revision inline with context.
+- Do not remove core evidence tracks just to shorten the manuscript; if you must revise, do so by relocating or extending them.
 - Keep the manuscript compatible with repeated future rewrites as more interviews arrive.

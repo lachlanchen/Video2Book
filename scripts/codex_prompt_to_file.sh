@@ -16,6 +16,13 @@ session_file="${CODEX_SHARED_SESSION_FILE:-}"
 session_doc_file="${CODEX_SHARED_SESSION_DOC_FILE:-}"
 tmux_session_name="${NOTE_TMUX_SESSION_NAME:-susskind-notes}"
 session_scope="${NOTE_CODEX_SESSION_SCOPE:-global}"
+disable_shell_snapshot="${CODEX_DISABLE_SHELL_SNAPSHOT:-false}"
+codex_config=(
+  -c "model_reasoning_effort=\"$reasoning\""
+)
+if [[ "$disable_shell_snapshot" == "true" ]]; then
+  codex_config+=(-c "features.shell_snapshot=false")
+fi
 
 extract_session_id() {
   python3 - "$1" <<'PY'
@@ -82,7 +89,7 @@ if [[ -n "$session_file" && -s "$session_file" ]]; then
     resume
     --json
     -m "$model"
-    -c "model_reasoning_effort=\"$reasoning\""
+    "${codex_config[@]}"
     --dangerously-bypass-approvals-and-sandbox
     -o "$output_file"
   )
@@ -92,7 +99,7 @@ else
     exec
     --json
     -m "$model"
-    -c "model_reasoning_effort=\"$reasoning\""
+    "${codex_config[@]}"
     --dangerously-bypass-approvals-and-sandbox
     -C "$repo_path"
     -o "$output_file"
