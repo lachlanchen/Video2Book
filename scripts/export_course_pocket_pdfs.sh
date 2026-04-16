@@ -171,9 +171,19 @@ get_output_name() {
     return
   fi
 
-  local subject="${course_rel#*/}"
-  subject="${subject%%/*}"
-  local run="${course_rel#*/$subject/}"
+  if [[ "$course_rel" != */* ]]; then
+    printf '%s.pdf\n' "$course_rel"
+    return
+  fi
+
+  local remainder="${course_rel#*/}"
+  local subject="${remainder%%/*}"
+  if [[ "$remainder" == "$subject" ]]; then
+    printf '%s.pdf\n' "$subject"
+    return
+  fi
+
+  local run="${remainder#*/}"
 
   if [[ "$run" == *theoretical_minimum* ]]; then
     printf '%s\n' "${subject}_theoretical_minimum.pdf"
