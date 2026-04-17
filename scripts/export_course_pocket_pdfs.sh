@@ -313,13 +313,13 @@ apply_pocket_layout_tuning() {
   local tolerance="2000"
   local hbadness="2000"
   local hfuzz="1pt"
-  local chapter_number_font="\\small"
-  local chapter_title_font="\\large"
-  local section_font="\\normalsize"
-  local subsection_font="\\small"
+  local chapter_number_font="small"
+  local chapter_title_font="large"
+  local section_font="normalsize"
+  local subsection_font="small"
   local section_afterskip="0.9ex"
   local subsection_afterskip="0.7ex"
-  local header_font="\\footnotesize"
+  local header_font="footnotesize"
   local header_width_ratio="0.70"
   local headheight="30pt"
 
@@ -331,13 +331,13 @@ apply_pocket_layout_tuning() {
       tolerance="3200"
       hbadness="3200"
       hfuzz="1.5pt"
-      chapter_number_font="\\footnotesize"
-      chapter_title_font="\\normalsize"
-      section_font="\\small"
-      subsection_font="\\footnotesize"
+      chapter_number_font="footnotesize"
+      chapter_title_font="normalsize"
+      section_font="small"
+      subsection_font="footnotesize"
       section_afterskip="0.75ex"
       subsection_afterskip="0.55ex"
-      header_font="\\scriptsize"
+      header_font="scriptsize"
       header_width_ratio="0.72"
       headheight="34pt"
       ;;
@@ -346,13 +346,13 @@ apply_pocket_layout_tuning() {
       tolerance="4300"
       hbadness="4300"
       hfuzz="2pt"
-      chapter_number_font="\\normalsize"
-      chapter_title_font="\\small"
-      section_font="\\small"
-      subsection_font="\\footnotesize"
+      chapter_number_font="normalsize"
+      chapter_title_font="small"
+      section_font="small"
+      subsection_font="footnotesize"
       section_afterskip="0.6ex"
       subsection_afterskip="0.45ex"
-      header_font="\\scriptsize"
+      header_font="scriptsize"
       header_width_ratio="0.74"
       headheight="38pt"
       ;;
@@ -361,13 +361,13 @@ apply_pocket_layout_tuning() {
       tolerance="6500"
       hbadness="6500"
       hfuzz="3pt"
-      chapter_number_font="\\normalsize"
-      chapter_title_font="\\footnotesize"
-      section_font="\\footnotesize"
-      subsection_font="\\footnotesize"
+      chapter_number_font="normalsize"
+      chapter_title_font="footnotesize"
+      section_font="footnotesize"
+      subsection_font="footnotesize"
       section_afterskip="0.45ex"
       subsection_afterskip="0.35ex"
-      header_font="\\tiny"
+      header_font="tiny"
       header_width_ratio="0.76"
       headheight="44pt"
       ;;
@@ -412,12 +412,12 @@ apply_pocket_layout_tuning() {
       print "  \\allowdisplaybreaks[2]";
       print "  \\sloppy";
       print "  \\makeatletter";
-      print "  \\def\\pocket@chapternumberfont{" chapter_num_font "\\bfseries}";
-      print "  \\def\\pocket@chaptertitlefont{" chapter_title_font "\\bfseries}";
-      print "  \\def\\pocket@sectionfont{" section_font "\\bfseries}";
-      print "  \\def\\pocket@subsectionfont{" subsection_font "\\bfseries}";
-      print "  \\def\\pocket@headerfont{\\sffamily" header_font "\\bfseries}";
-      print "  \\def\\pocket@pagefont{\\sffamily" header_font "}";
+      print "  \\def\\pocket@chapternumberfont{\\" chapter_num_font "\\bfseries}";
+      print "  \\def\\pocket@chaptertitlefont{\\" chapter_title_font "\\bfseries}";
+      print "  \\def\\pocket@sectionfont{\\" section_font "\\bfseries}";
+      print "  \\def\\pocket@subsectionfont{\\" subsection_font "\\bfseries}";
+      print "  \\def\\pocket@headerfont{\\sffamily\\" header_font "\\bfseries}";
+      print "  \\def\\pocket@pagefont{\\sffamily\\" header_font "}";
       print "  \\newcommand{\\pocket@oddheadbox}[1]{\\parbox[t]{" header_width_ratio "\\textwidth}{\\raggedright\\pocket@headerfont\\strut #1\\strut}}";
       print "  \\newcommand{\\pocket@evenheadbox}[1]{\\parbox[t]{" header_width_ratio "\\textwidth}{\\raggedleft\\pocket@headerfont\\strut #1\\strut}}";
       print "  \\renewcommand{\\chaptermark}[1]{\\markboth{\\chaptername\\ \\thechapter.\\ #1}{}}";
