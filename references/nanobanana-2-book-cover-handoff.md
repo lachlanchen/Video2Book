@@ -138,14 +138,14 @@ Good cover prompts usually specify:
 - visual metaphor or composition
 - what to avoid
 
-For book covers, this adaptation uses a stronger default prompt structure than the segmentation repo:
+For book covers, this adaptation uses a text-free default prompt structure:
 
-- bookstore-ready front cover
+- bookstore-ready front-cover art
 - portrait composition
-- clear title zone
-- instruction to prefer a clean title block over garbled fake text
+- clean negative space for later LaTeX typography
+- explicit instruction not to render title text, author text, logos, or fake publisher marks
 
-That last point matters because image generators often produce unstable typography.
+That matters because image generators often produce unstable or incorrect typography.
 
 ## Reference Images
 

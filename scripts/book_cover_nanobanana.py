@@ -175,19 +175,19 @@ def build_prompt(args: argparse.Namespace) -> str:
         "This should look like a real bookstore-ready cover, not a poster or social graphic.",
         f"Portrait composition with aspect ratio {args.aspect_ratio}.",
         f"Overall tone: {args.tone}.",
-        "Reserve strong, readable space for the title and author typography.",
+        "Leave strong clean negative space where final typography can be added later outside the image.",
         (
-            "If exact typography becomes unstable, prefer a clean typographic zone over "
-            "garbled fake text."
+            "Do not render any title text, author text, initials, numbers, logos, or publisher marks "
+            "inside the artwork."
         ),
     ]
     if args.subtitle:
         pieces.append(
-            f'Include the subtitle "{args.subtitle}" if the typography stays clean and legible.'
+            f'Use the subtitle "{args.subtitle}" only as design context; do not render it as visible text.'
         )
     if args.author:
         pieces.append(
-            f'Include the author or curator line "{args.author}" if the typography stays clean and legible.'
+            f'Use the author or curator line "{args.author}" only as context; do not render it as visible text.'
         )
     if args.visual_direction:
         pieces.append(f"Visual direction: {args.visual_direction}.")

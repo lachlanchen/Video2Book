@@ -1,10 +1,10 @@
-Design a polished front-cover image for a book titled "How to Speak and Write".
-This should look like a real bookstore-ready cover, not a poster or social graphic.
+Design text-free front-cover art for a serious literary nonfiction book about speaking and writing.
+This must be cover art only, not a photographed book mockup, poster, or social graphic.
 Portrait composition with aspect ratio 2:3.
 Overall tone: intellectually serious, warm, modern, and editorial.
 Use a restrained palette of cream, charcoal, muted teal, and a small brass accent.
 Show a visual transition from speech to writing: breath, sound, or spoken rhythm becoming lines, marks, or pages.
-Reserve strong, readable space for the title and author typography.
-If exact typography becomes unstable, prefer a clean typographic zone over garbled fake text.
-Avoid watermarks, mockup scenes, clutter, stock-photo cliches, distorted typography, and unreadable tiny text.
-Front cover only. No spine. No back cover. No watermark.
+Leave strong clean negative space where final typography can be added later outside the image, but do not render any text inside the artwork.
+Absolutely no words, no letters, no title text, no author name, no initials, no publisher mark, no logo, no numbers, and no typographic glyphs anywhere in the image.
+Avoid watermarks, mockup scenes, clutter, stock-photo cliches, distorted symbols, and unreadable pseudo-text.
+Front cover artwork only. No spine. No back cover. No watermark.
