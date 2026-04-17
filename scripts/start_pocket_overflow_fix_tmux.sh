@@ -135,6 +135,7 @@ if [[ -n "$start_course" ]]; then
 fi
 
 env_exports="export NOTES_REPO_ROOT=\"$repo_root\"; export NOTE_TMUX_SESSION_NAME=\"$session\"; "
+env_exports+="export VIDEO2BOOK_WORKER_LOG_PATH=\"$log_path\"; "
 if [[ -n "${VIDEO2BOOK_POST_OVERFLOW_FIX_HOOK:-}" ]]; then
   env_exports+="export VIDEO2BOOK_POST_OVERFLOW_FIX_HOOK=\"${VIDEO2BOOK_POST_OVERFLOW_FIX_HOOK}\"; "
 fi

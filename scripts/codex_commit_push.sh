@@ -69,7 +69,7 @@ EOF
 }
 
 fallback_commit_push() {
-  git -C "$repo_path" add -- "${pathspecs[@]}"
+  git -C "$repo_path" add -f -- "${pathspecs[@]}"
   if git -C "$repo_path" diff --cached --quiet -- "${pathspecs[@]}"; then
     echo "No changes to commit for step: $commit_message"
     return 0
@@ -98,6 +98,7 @@ fi
   echo
   echo "Required actions:"
   echo "1. Stage only the listed pathspecs."
+  echo "   - If a listed path is ignored, use \`git add -f -- ...\` for that exact path."
   echo "2. If staging is empty, print: No changes to commit for step: $commit_message"
   echo "3. Otherwise run:"
   echo "   - git commit -m \"$commit_message\""

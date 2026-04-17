@@ -89,11 +89,33 @@ if [[ -z "$source_dir" ]]; then
   source_dir="$host_root/generated_course_notes"
 fi
 
+latest_course_from_log() {
+  local worker_log="${VIDEO2BOOK_WORKER_LOG_PATH:-}"
+  if [[ -z "$worker_log" || ! -f "$worker_log" ]]; then
+    return 0
+  fi
+  python3 - "$worker_log" <<'PY'
+from pathlib import Path
+import re
+import sys
+
+course = ""
+for line in Path(sys.argv[1]).read_text(encoding="utf-8", errors="replace").splitlines():
+    match = re.match(r"^==> fixing (.+?) \[", line)
+    if match:
+        course = match.group(1)
+print(course)
+PY
+}
+
 if [[ -z "$course" && -z "$start_course" && -f "$state_file" ]]; then
   # shellcheck disable=SC1090
   source "$state_file"
   if [[ "${STATE_STATUS:-}" != "finished" ]]; then
-    if [[ -n "${CURRENT_COURSE:-}" ]]; then
+    log_resume_course="$(latest_course_from_log)"
+    if [[ -n "$log_resume_course" ]]; then
+      start_course="$log_resume_course"
+    elif [[ -n "${CURRENT_COURSE:-}" ]]; then
       start_course="$CURRENT_COURSE"
     elif [[ -n "${NEXT_COURSE:-}" ]]; then
       start_course="$NEXT_COURSE"
