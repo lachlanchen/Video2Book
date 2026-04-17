@@ -143,7 +143,7 @@ if [[ -n "${VIDEO2BOOK_REFERENCE_PDF_DIR:-}" ]]; then
   env_exports+="export VIDEO2BOOK_REFERENCE_PDF_DIR=\"${VIDEO2BOOK_REFERENCE_PDF_DIR}\"; "
 fi
 
-tmux new-session -d -s "$session" -c "$repo_root" "bash -lc 'cd \"$repo_root\" && ${env_exports}${cmd[*]} 2>&1 | tee \"$log_path\"'"
+tmux new-session -d -s "$session" -c "$repo_root" "bash -lc 'cd \"$repo_root\" && set -o pipefail && ${env_exports}${cmd[*]} 2>&1 | tee \"$log_path\"; status=\${PIPESTATUS[0]}; echo; echo \"notes worker exit status: \$status\"; echo \"tmux session kept open for inspection; exit the shell to close it.\"; exec bash'"
 tmux rename-window -t "$session:0" "notes"
 tmux set-option -t "$session" -g mouse on
 

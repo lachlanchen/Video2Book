@@ -16,12 +16,14 @@ export VIDEO2BOOK_REFERENCE_PDF_DIR="${VIDEO2BOOK_REFERENCE_PDF_DIR:-$HOST_REPO_
 
 note_monitor_model="${NOTE_MONITOR_MODEL:-$NOTE_MONITOR_MODEL_DEFAULT}"
 note_monitor_reasoning="${NOTE_MONITOR_REASONING:-$NOTE_MONITOR_REASONING_DEFAULT}"
+note_monitor_interval="${NOTE_MONITOR_INTERVAL:-$NOTE_MONITOR_INTERVAL_DEFAULT}"
 note_session_scope="${NOTE_CODEX_SESSION_SCOPE:-$NOTE_SESSION_SCOPE_DEFAULT}"
 
 cd "$HOST_REPO_ROOT"
 exec bash "$VIDEO2BOOK_ROOT/scripts/start_course_notes_monitor_tmux.sh" \
   --session "$NOTES_MONITOR_SESSION" \
   --target-session "$NOTES_SESSION" \
+  --interval "$note_monitor_interval" \
   --model "$note_monitor_model" \
   --reasoning "$note_monitor_reasoning" \
   --course "$COURSE_REL" \

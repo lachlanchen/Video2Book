@@ -1368,6 +1368,7 @@ def normalize_latex_metadata_text(text: str) -> str:
     normalized = unicodedata.normalize("NFKC", text)
     normalized = normalized.replace("\u00a0", " ").replace("\u2009", " ").replace("\u202f", " ")
     normalized = normalized.replace("–", "-").replace("—", "-").replace("−", "-")
+    normalized = normalized.replace("⧸", "/").replace("⁄", "/")
     normalized = normalized.replace("“", '"').replace("”", '"').replace("‘", "'").replace("’", "'")
     normalized = re.sub(r"\s+", " ", normalized).strip()
     return "".join(LATEX_METADATA_ESCAPES.get(ch, ch) for ch in normalized)
@@ -1895,10 +1896,11 @@ def compile_tex(tex_name: str, cwd: Path, runtime_dir: Path, log_prefix: str, pa
     stderr_file = runtime_dir / f"{log_prefix}.stderr.log"
     stdout_file.write_text("", encoding="utf-8")
     stderr_file.write_text("", encoding="utf-8")
+    latex_cmd = "xelatex" if shutil.which("xelatex") else "pdflatex"
     for _ in range(passes):
         completed = run_command(
             [
-                "pdflatex",
+                latex_cmd,
                 "-interaction=nonstopmode",
                 "-halt-on-error",
                 "-file-line-error",
