@@ -124,7 +124,7 @@ for line in Path(sys.argv[1]).read_text(encoding="utf-8", errors="replace").spli
     if not line.startswith("| "):
         continue
     parts = [part.strip() for part in line.strip().strip("|").split("|")]
-    if len(parts) < 5 or parts[0] == "Width":
+    if len(parts) < 5 or parts[0] in {"Width", "---"} or parts[1] in {"File", "---"}:
         continue
     print(parts[1])
     break
@@ -225,7 +225,7 @@ fi
 iteration=1
 while [[ "$iteration" -le "$max_iterations" ]]; do
   focus_file="$(extract_first_actionable_file "$report_path")"
-  if [[ -z "$focus_file" ]]; then
+  if [[ -z "$focus_file" || ! -f "$focus_file" ]]; then
     echo "No actionable file found in $report_path" >&2
     exit 1
   fi
