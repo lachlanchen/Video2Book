@@ -1606,6 +1606,20 @@ def markdown_body_excerpt(path: Path, limit: int = 260) -> str:
     return trim_excerpt(" ".join(lines), limit=limit)
 
 
+def asset_names_from_metadata(meta: dict) -> list[str]:
+    names: list[str] = []
+    for asset in meta.get("assets", []):
+        candidate = ""
+        if isinstance(asset, dict):
+            candidate = str(asset.get("name") or asset.get("path") or "").strip()
+        elif asset is not None:
+            candidate = str(asset).strip()
+        if not candidate:
+            continue
+        names.append(Path(candidate).name)
+    return names
+
+
 def course_corpus_snapshot(course_root: Path) -> str:
     entries: list[str] = []
     for metadata_file in sorted((course_root / "chapters").glob("lecture_*/metadata.json")):
@@ -1614,7 +1628,7 @@ def course_corpus_snapshot(course_root: Path) -> str:
         lecture_number = int(meta.get("lecture_number") or 0)
         lecture_slug = str(meta.get("lecture_slug") or chapter_dir.name)
         lecture_title = str(meta.get("lecture_title") or chapter_dir.name)
-        assets = [Path(asset).name for asset in meta.get("assets", []) if str(asset).strip()]
+        assets = asset_names_from_metadata(meta)
         analysis_excerpt = markdown_body_excerpt(chapter_dir / "analysis.md", limit=240)
         narrative_excerpt = markdown_body_excerpt(chapter_dir / "narrative_map.md", limit=220)
         math_excerpt = markdown_body_excerpt(chapter_dir / "math_bank.md", limit=180)
@@ -1635,7 +1649,7 @@ def course_figure_inventory(course_root: Path) -> str:
     for metadata_file in sorted((course_root / "chapters").glob("lecture_*/metadata.json")):
         chapter_dir = metadata_file.parent
         meta = json.loads(metadata_file.read_text(encoding="utf-8"))
-        assets = [Path(asset).name for asset in meta.get("assets", []) if str(asset).strip()]
+        assets = asset_names_from_metadata(meta)
         if not assets:
             continue
         lecture_number = int(meta.get("lecture_number") or 0)
