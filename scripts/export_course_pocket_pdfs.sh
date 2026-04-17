@@ -17,7 +17,7 @@ Options:
   --source-dir <path>         Source directory containing generated courses (default: <host-root>/generated_course_notes)
   --output-dir <path>         Destination directory for pocket PDFs (default: <host-root>/all_notes/pocket_books if exists, else <host-root>/pocket_books)
   --size <preset>             Output preset: penguin (6x9, default), a5 (5.83x8.27), custom
-  --font-mode <mode>          Font preset: normal (default) or double (temp compile as extbook 20pt)
+  --font-mode <mode>          Font preset: normal (default), onehalf (extbook 17pt), or double (extbook 20pt)
   --paper-width <size>        Custom width for --size custom, e.g. 6in
   --paper-height <size>       Custom height for --size custom, e.g. 9in
   --margin <size>             Custom geometry margin for --size custom, e.g. 0.55in
@@ -142,7 +142,7 @@ case "$size_preset" in
 esac
 
 case "$font_mode" in
-  normal|double)
+  normal|onehalf|double)
     ;;
   *)
     echo "Unknown font mode: $font_mode" >&2
@@ -236,18 +236,37 @@ apply_pocket_layout_tuning() {
   local tex_path="$1"
   local tuned_path="${tex_path}.tuned"
   local stretch="2em"
+  local tolerance="2000"
+  local hbadness="2000"
+  local hfuzz="1pt"
 
-  if [[ "$font_mode" == "double" ]]; then
-    stretch="4em"
-  fi
+  case "$font_mode" in
+    normal)
+      ;;
+    onehalf)
+      stretch="4em"
+      tolerance="4000"
+      hbadness="4000"
+      hfuzz="2pt"
+      ;;
+    double)
+      stretch="6em"
+      tolerance="7000"
+      hbadness="7000"
+      hfuzz="3pt"
+      ;;
+  esac
 
-  awk -v geom="$geometry_option" -v stretch="$stretch" '
+  awk -v geom="$geometry_option" -v stretch="$stretch" -v tolerance="$tolerance" -v hbadness="$hbadness" -v hfuzz="$hfuzz" '
     /^\\input\{common_preamble\.tex\}$/ && !done {
       print "\\PassOptionsToPackage{" geom "}{geometry}";
       print $0;
       print "\\AtBeginDocument{";
       print "  \\setlength{\\emergencystretch}{" stretch "}";
-      print "  \\setlength{\\hfuzz}{1pt}";
+      print "  \\setlength{\\hfuzz}{" hfuzz "}";
+      print "  \\pretolerance=1000";
+      print "  \\tolerance=" tolerance;
+      print "  \\hbadness=" hbadness;
       print "  \\allowdisplaybreaks[2]";
       print "  \\sloppy";
       print "}";
@@ -297,9 +316,16 @@ while IFS= read -r -d '' tex_path; do
 
   apply_pocket_layout_tuning "$tmp_dir/course.tex"
 
-  if [[ "$font_mode" == "double" ]]; then
-    perl -0pi -e 's/\\documentclass\[(.*?)\]\{book\}/\\documentclass[20pt,$1]{extbook}/s' "$tmp_dir/course.tex"
-  fi
+  case "$font_mode" in
+    normal)
+      ;;
+    onehalf)
+      perl -0pi -e 's/\\documentclass\[(.*?)\]\{book\}/\\documentclass[17pt,$1]{extbook}/s' "$tmp_dir/course.tex"
+      ;;
+    double)
+      perl -0pi -e 's/\\documentclass\[(.*?)\]\{book\}/\\documentclass[20pt,$1]{extbook}/s' "$tmp_dir/course.tex"
+      ;;
+  esac
 
   mkdir -p "$tmp_dir/build"
   if ! run_tex_compile "$tmp_dir" "$tmp_dir/build"; then
