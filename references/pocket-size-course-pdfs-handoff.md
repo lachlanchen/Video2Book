@@ -44,6 +44,34 @@ to `pocket_books`. It also writes a Markdown overflow report that maps actionabl
 - logfile: `<output-dir>/pocket_export.log`
 - sync target: `/home/lachlan/Nutstore Files/Projects/LazyingArtBooks/pocket_books`
 
+## Pocket Heading Style Rules
+
+The pocket exporter now applies two separate layout rules for headings:
+
+- chapter-opening pages keep a large, uppercase italic title treatment
+- the chapter block is moved upward into the existing top white space instead of
+  being solved by aggressive font shrinking
+
+Running headers use a different rule:
+
+- keep the lighter italic look rather than the small bold sans style
+- reserve real box height for wrapped two-line headers
+- keep explicit clearance above the header rule so wrapped headers do not cross
+  the horizontal line
+
+This matters because an earlier implementation raised the running-header box
+with zero reported height. That looked acceptable for one-line headers but could
+make two-line headers collide with the headrule. The current implementation
+raises the header while still reporting its true box height and subtracts a
+clearance band from the available header area.
+
+When adjusting these values later, preserve this priority:
+
+1. use the existing top white space first
+2. preserve the older book-like visual style
+3. avoid font shrinkage unless the style is still unreadable
+4. never let wrapped headers overlap the headrule
+
 ## Recommended Running Sequence for a Host Repo
 
 From host repo root (example: `/home/lachlan/ProjectsLFS/leonardsusskind`):

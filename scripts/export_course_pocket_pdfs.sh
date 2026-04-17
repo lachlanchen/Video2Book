@@ -322,6 +322,7 @@ apply_pocket_layout_tuning() {
   local header_font="small"
   local header_width_ratio="0.74"
   local header_raise="8pt"
+  local header_clearance="5pt"
   local headheight="30pt"
   local chapter_top_shift="-16pt"
 
@@ -342,6 +343,7 @@ apply_pocket_layout_tuning() {
       header_font="small"
       header_width_ratio="0.76"
       header_raise="9pt"
+      header_clearance="6pt"
       headheight="34pt"
       chapter_top_shift="-14pt"
       ;;
@@ -359,6 +361,7 @@ apply_pocket_layout_tuning() {
       header_font="scriptsize"
       header_width_ratio="0.74"
       header_raise="10pt"
+      header_clearance="6pt"
       headheight="38pt"
       chapter_top_shift="-12pt"
       ;;
@@ -376,6 +379,7 @@ apply_pocket_layout_tuning() {
       header_font="tiny"
       header_width_ratio="0.76"
       header_raise="12pt"
+      header_clearance="7pt"
       headheight="44pt"
       chapter_top_shift="-10pt"
       ;;
@@ -399,6 +403,7 @@ apply_pocket_layout_tuning() {
       -v header_font="$header_font" \
       -v header_width_ratio="$header_width_ratio" \
       -v header_raise="$header_raise" \
+      -v header_clearance="$header_clearance" \
       -v headheight="$headheight" \
       -v chapter_top_shift="$chapter_top_shift" '
     /^\\input\{common_preamble\.tex\}$/ && !done {
@@ -429,8 +434,10 @@ apply_pocket_layout_tuning() {
       print "  \\def\\pocket@headerfont{\\normalfont\\" header_font "\\itshape}";
       print "  \\def\\pocket@pagefont{\\normalfont\\" header_font "}";
       print "  \\def\\pocket@headerraise{" header_raise "}";
-      print "  \\newcommand{\\pocket@oddheadbox}[1]{\\raisebox{\\pocket@headerraise}[0pt][0pt]{\\parbox[t]{" header_width_ratio "\\textwidth}{\\raggedright\\pocket@headerfont\\strut #1\\strut}}}";
-      print "  \\newcommand{\\pocket@evenheadbox}[1]{\\raisebox{\\pocket@headerraise}[0pt][0pt]{\\parbox[t]{" header_width_ratio "\\textwidth}{\\raggedleft\\pocket@headerfont\\strut #1\\strut}}}";
+      print "  \\newlength{\\pocket@headerboxheight}";
+      print "  \\setlength{\\pocket@headerboxheight}{\\dimexpr\\headheight-\\pocket@headerraise-" header_clearance "\\relax}";
+      print "  \\newcommand{\\pocket@oddheadbox}[1]{\\raisebox{\\pocket@headerraise}{\\parbox[t][\\pocket@headerboxheight][t]{" header_width_ratio "\\textwidth}{\\raggedright\\pocket@headerfont\\strut #1\\strut}}}";
+      print "  \\newcommand{\\pocket@evenheadbox}[1]{\\raisebox{\\pocket@headerraise}{\\parbox[t][\\pocket@headerboxheight][t]{" header_width_ratio "\\textwidth}{\\raggedleft\\pocket@headerfont\\strut #1\\strut}}}";
       print "  \\renewcommand{\\chaptermark}[1]{\\markboth{\\MakeUppercase{\\chaptername\\ \\thechapter.\\ #1}}{}}";
       print "  \\renewcommand{\\sectionmark}[1]{\\markright{\\MakeUppercase{\\thesection\\hspace{0.4em}#1}}}";
       print "  \\fancyhf{}";
