@@ -313,15 +313,17 @@ apply_pocket_layout_tuning() {
   local tolerance="2000"
   local hbadness="2000"
   local hfuzz="1pt"
-  local chapter_number_font="small"
-  local chapter_title_font="large"
+  local chapter_number_font="Large"
+  local chapter_title_font="LARGE"
   local section_font="normalsize"
   local subsection_font="small"
   local section_afterskip="0.9ex"
   local subsection_afterskip="0.7ex"
-  local header_font="footnotesize"
-  local header_width_ratio="0.70"
+  local header_font="small"
+  local header_width_ratio="0.74"
+  local header_raise="8pt"
   local headheight="30pt"
+  local chapter_top_shift="-16pt"
 
   case "$font_mode" in
     normal)
@@ -331,15 +333,17 @@ apply_pocket_layout_tuning() {
       tolerance="3200"
       hbadness="3200"
       hfuzz="1.5pt"
-      chapter_number_font="footnotesize"
-      chapter_title_font="normalsize"
+      chapter_number_font="large"
+      chapter_title_font="Large"
       section_font="small"
       subsection_font="footnotesize"
       section_afterskip="0.75ex"
       subsection_afterskip="0.55ex"
-      header_font="scriptsize"
-      header_width_ratio="0.72"
+      header_font="small"
+      header_width_ratio="0.76"
+      header_raise="9pt"
       headheight="34pt"
+      chapter_top_shift="-14pt"
       ;;
     onehalf)
       stretch_ratio="0.030"
@@ -354,7 +358,9 @@ apply_pocket_layout_tuning() {
       subsection_afterskip="0.45ex"
       header_font="scriptsize"
       header_width_ratio="0.74"
+      header_raise="10pt"
       headheight="38pt"
+      chapter_top_shift="-12pt"
       ;;
     double)
       stretch_ratio="0.036"
@@ -369,7 +375,9 @@ apply_pocket_layout_tuning() {
       subsection_afterskip="0.35ex"
       header_font="tiny"
       header_width_ratio="0.76"
+      header_raise="12pt"
       headheight="44pt"
+      chapter_top_shift="-10pt"
       ;;
   esac
 
@@ -390,7 +398,9 @@ apply_pocket_layout_tuning() {
       -v subsection_afterskip="$subsection_afterskip" \
       -v header_font="$header_font" \
       -v header_width_ratio="$header_width_ratio" \
-      -v headheight="$headheight" '
+      -v header_raise="$header_raise" \
+      -v headheight="$headheight" \
+      -v chapter_top_shift="$chapter_top_shift" '
     /^\\input\{common_preamble\.tex\}$/ && !done {
       print "\\PassOptionsToPackage{" geom "}{geometry}";
       print $0;
@@ -412,29 +422,31 @@ apply_pocket_layout_tuning() {
       print "  \\allowdisplaybreaks[2]";
       print "  \\sloppy";
       print "  \\makeatletter";
-      print "  \\def\\pocket@chapternumberfont{\\" chapter_num_font "\\bfseries}";
-      print "  \\def\\pocket@chaptertitlefont{\\" chapter_title_font "\\bfseries}";
+      print "  \\def\\pocket@chapternumberfont{\\normalfont\\" chapter_num_font "\\scshape}";
+      print "  \\def\\pocket@chaptertitlefont{\\normalfont\\" chapter_title_font "\\itshape}";
       print "  \\def\\pocket@sectionfont{\\" section_font "\\bfseries}";
       print "  \\def\\pocket@subsectionfont{\\" subsection_font "\\bfseries}";
-      print "  \\def\\pocket@headerfont{\\sffamily\\" header_font "\\bfseries}";
-      print "  \\def\\pocket@pagefont{\\sffamily\\" header_font "}";
-      print "  \\newcommand{\\pocket@oddheadbox}[1]{\\parbox[t]{" header_width_ratio "\\textwidth}{\\raggedright\\pocket@headerfont\\strut #1\\strut}}";
-      print "  \\newcommand{\\pocket@evenheadbox}[1]{\\parbox[t]{" header_width_ratio "\\textwidth}{\\raggedleft\\pocket@headerfont\\strut #1\\strut}}";
-      print "  \\renewcommand{\\chaptermark}[1]{\\markboth{\\chaptername\\ \\thechapter.\\ #1}{}}";
-      print "  \\renewcommand{\\sectionmark}[1]{\\markright{\\thesection\\hspace{0.4em}#1}}";
+      print "  \\def\\pocket@headerfont{\\normalfont\\" header_font "\\itshape}";
+      print "  \\def\\pocket@pagefont{\\normalfont\\" header_font "}";
+      print "  \\def\\pocket@headerraise{" header_raise "}";
+      print "  \\newcommand{\\pocket@oddheadbox}[1]{\\raisebox{\\pocket@headerraise}[0pt][0pt]{\\parbox[t]{" header_width_ratio "\\textwidth}{\\raggedright\\pocket@headerfont\\strut #1\\strut}}}";
+      print "  \\newcommand{\\pocket@evenheadbox}[1]{\\raisebox{\\pocket@headerraise}[0pt][0pt]{\\parbox[t]{" header_width_ratio "\\textwidth}{\\raggedleft\\pocket@headerfont\\strut #1\\strut}}}";
+      print "  \\renewcommand{\\chaptermark}[1]{\\markboth{\\MakeUppercase{\\chaptername\\ \\thechapter.\\ #1}}{}}";
+      print "  \\renewcommand{\\sectionmark}[1]{\\markright{\\MakeUppercase{\\thesection\\hspace{0.4em}#1}}}";
       print "  \\fancyhf{}";
       print "  \\fancyhead[LE,RO]{\\pocket@pagefont\\thepage}";
       print "  \\fancyhead[LO]{\\nouppercase{\\pocket@oddheadbox{\\rightmark}}}";
       print "  \\fancyhead[RE]{\\nouppercase{\\pocket@evenheadbox{\\leftmark}}}";
-      print "  \\renewcommand{\\headrulewidth}{0.4pt}";
+      print "  \\renewcommand{\\headrulewidth}{0.5pt}";
       print "  \\pagestyle{fancy}";
       print "  \\renewcommand{\\@makechapterhead}[1]{%";
       print "    {\\parindent\\z@\\normalfont";
+      print "      \\vspace*{" chapter_top_shift "}";
       print "      \\ifnum \\c@secnumdepth >\\m@ne";
       print "        \\if@mainmatter";
       print "          \\noindent\\parbox[t]{\\textwidth}{\\raggedright";
       print "            {\\pocket@chapternumberfont \\MakeUppercase{\\@chapapp\\space \\thechapter}}\\\\[0.4em]";
-      print "            {\\pocket@chaptertitlefont #1\\par}";
+      print "            {\\pocket@chaptertitlefont \\MakeUppercase{#1}\\par}";
       print "          }\\par\\nobreak";
       print "          \\vskip 14\\p@";
       print "        \\fi";
@@ -443,8 +455,9 @@ apply_pocket_layout_tuning() {
       print "    }}";
       print "  \\renewcommand{\\@makeschapterhead}[1]{%";
       print "    {\\parindent\\z@\\normalfont";
+      print "      \\vspace*{" chapter_top_shift "}";
       print "      \\interlinepenalty\\@M";
-      print "      \\noindent\\parbox[t]{\\textwidth}{\\raggedright{\\pocket@chaptertitlefont #1\\par}}\\par\\nobreak";
+      print "      \\noindent\\parbox[t]{\\textwidth}{\\raggedright{\\pocket@chaptertitlefont \\MakeUppercase{#1}\\par}}\\par\\nobreak";
       print "      \\vskip 14\\p@";
       print "    }}";
       print "  \\renewcommand\\section{\\@startsection{section}{1}{\\z@}{-2.2ex \\@plus -0.8ex \\@minus -.2ex}{" section_afterskip " \\@plus .15ex}{\\normalfont\\raggedright\\pocket@sectionfont}}";
