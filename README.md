@@ -199,6 +199,7 @@ That default is just a working example. The code is structured so other host rep
 - [subtitles2notes](subtitles2notes)
 - [scripts](scripts)
 - [Pocket export handoff](references/pocket-size-course-pdfs-handoff.md)
+- [LaTeX overflow fixer handoff](references/latex-overflow-fixer-handoff.md)
 - [EPUB export handoff](references/tex-to-epub-handoff.md)
 
 ## 📚 Host Adaptation Notes
@@ -206,6 +207,7 @@ That default is just a working example. The code is structured so other host rep
 - [references/lazylearn-course-adaptation.md](references/lazylearn-course-adaptation.md)
 - [references/lazyearn-yale-financial-markets-adaptation.md](references/lazyearn-yale-financial-markets-adaptation.md)
 - [references/nanobanana-2-book-cover-handoff.md](references/nanobanana-2-book-cover-handoff.md)
+- [references/latex-overflow-fixer-handoff.md](references/latex-overflow-fixer-handoff.md)
 - [references/tex-book-translation-workflow.md](references/tex-book-translation-workflow.md)
 - [references/tex-to-epub-handoff.md](references/tex-to-epub-handoff.md)
 
