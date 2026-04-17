@@ -321,9 +321,9 @@ apply_pocket_layout_tuning() {
   local subsection_afterskip="0.7ex"
   local header_font="small"
   local header_width_ratio="0.74"
-  local header_raise="8pt"
-  local header_clearance="5pt"
-  local headheight="30pt"
+  local header_raise="12pt"
+  local header_clearance="10pt"
+  local headheight="38pt"
   local chapter_top_shift="-16pt"
 
   case "$font_mode" in
@@ -342,9 +342,9 @@ apply_pocket_layout_tuning() {
       subsection_afterskip="0.55ex"
       header_font="small"
       header_width_ratio="0.76"
-      header_raise="9pt"
-      header_clearance="6pt"
-      headheight="34pt"
+      header_raise="14pt"
+      header_clearance="12pt"
+      headheight="42pt"
       chapter_top_shift="-14pt"
       ;;
     onehalf)
@@ -360,9 +360,9 @@ apply_pocket_layout_tuning() {
       subsection_afterskip="0.45ex"
       header_font="scriptsize"
       header_width_ratio="0.74"
-      header_raise="10pt"
-      header_clearance="6pt"
-      headheight="38pt"
+      header_raise="15pt"
+      header_clearance="12pt"
+      headheight="44pt"
       chapter_top_shift="-12pt"
       ;;
     double)
@@ -378,9 +378,9 @@ apply_pocket_layout_tuning() {
       subsection_afterskip="0.35ex"
       header_font="tiny"
       header_width_ratio="0.76"
-      header_raise="12pt"
-      header_clearance="7pt"
-      headheight="44pt"
+      header_raise="16pt"
+      header_clearance="13pt"
+      headheight="48pt"
       chapter_top_shift="-10pt"
       ;;
   esac
