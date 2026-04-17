@@ -313,6 +313,12 @@ apply_pocket_layout_tuning() {
   local tolerance="2000"
   local hbadness="2000"
   local hfuzz="1pt"
+  local chapter_number_font="\\Large"
+  local chapter_title_font="\\LARGE"
+  local section_font="\\large"
+  local subsection_font="\\normalsize"
+  local heading_rightskip="0pt plus 1.75em"
+  local heading_afterskip="1.1ex"
 
   case "$font_mode" in
     normal)
@@ -322,25 +328,54 @@ apply_pocket_layout_tuning() {
       tolerance="3200"
       hbadness="3200"
       hfuzz="1.5pt"
+      chapter_number_font="\\large"
+      chapter_title_font="\\Large"
+      section_font="\\normalsize"
+      subsection_font="\\normalsize"
+      heading_rightskip="0pt plus 2.25em"
+      heading_afterskip="0.9ex"
       ;;
     onehalf)
       stretch_ratio="0.030"
       tolerance="4300"
       hbadness="4300"
       hfuzz="2pt"
+      chapter_number_font="\\normalsize"
+      chapter_title_font="\\large"
+      section_font="\\normalsize"
+      subsection_font="\\small"
+      heading_rightskip="0pt plus 2.5em"
+      heading_afterskip="0.8ex"
       ;;
     double)
       stretch_ratio="0.036"
       tolerance="6500"
       hbadness="6500"
       hfuzz="3pt"
+      chapter_number_font="\\normalsize"
+      chapter_title_font="\\normalsize"
+      section_font="\\small"
+      subsection_font="\\small"
+      heading_rightskip="0pt plus 3em"
+      heading_afterskip="0.75ex"
       ;;
   esac
 
   local stretch
   stretch="$(compute_stretch_dimension "$stretch_ratio")"
 
-  awk -v geom="$geometry_option" -v stretch="$stretch" -v tolerance="$tolerance" -v hbadness="$hbadness" -v hfuzz="$hfuzz" -v fontmode="$font_mode" '
+  awk -v geom="$geometry_option" \
+      -v stretch="$stretch" \
+      -v tolerance="$tolerance" \
+      -v hbadness="$hbadness" \
+      -v hfuzz="$hfuzz" \
+      -v fontmode="$font_mode" \
+      -v chapter_num_font="$chapter_number_font" \
+      -v chapter_title_font="$chapter_title_font" \
+      -v section_font="$section_font" \
+      -v subsection_font="$subsection_font" \
+      -v heading_rightskip="$heading_rightskip" \
+      -v heading_afterskip="$heading_afterskip" '
     /^\\input\{common_preamble\.tex\}$/ && !done {
       print "\\PassOptionsToPackage{" geom "}{geometry}";
       print $0;
@@ -348,7 +383,6 @@ apply_pocket_layout_tuning() {
         print "\\usepackage{scrextend}";
         print "\\changefontsizes[16pt]{13.2pt}";
       }
-      print "\\AtBeginDocument{";
       print "  \\microtypesetup{protrusion=true,expansion=true}";
       print "  \\UseMicrotypeSet[protrusion]{basicmath}";
       print "  \\setlength{\\emergencystretch}{" stretch "}";
@@ -356,15 +390,100 @@ apply_pocket_layout_tuning() {
       print "  \\pretolerance=1000";
       print "  \\tolerance=" tolerance;
       print "  \\hbadness=" hbadness;
+      print "  \\hyphenpenalty=150";
+      print "  \\exhyphenpenalty=100";
       print "  \\allowdisplaybreaks[2]";
       print "  \\sloppy";
-      print "}";
+      print "  \\makeatletter";
+      print "  \\def\\pocket@headingrightskip{" heading_rightskip "}";
+      print "  \\def\\pocket@headingafter{" heading_afterskip "}";
+      print "  \\def\\pocket@headingstyle{\\rightskip=\\pocket@headingrightskip\\parfillskip=0pt plus 1fil\\relax}";
+      print "  \\def\\pocket@chapternumberfont{" chapter_num_font "\\bfseries}";
+      print "  \\def\\pocket@chaptertitlefont{" chapter_title_font "\\bfseries}";
+      print "  \\def\\pocket@sectionfont{" section_font "\\bfseries}";
+      print "  \\def\\pocket@subsectionfont{" subsection_font "\\bfseries}";
+      print "  \\renewcommand{\\@makechapterhead}[1]{%";
+      print "    {\\parindent\\z@\\normalfont\\pocket@headingstyle";
+      print "      \\ifnum \\c@secnumdepth >\\m@ne";
+      print "        \\if@mainmatter";
+      print "          \\pocket@chapternumberfont \\@chapapp\\space \\thechapter\\par\\nobreak";
+      print "          \\vskip 8\\p@";
+      print "        \\fi";
+      print "      \\fi";
+      print "      \\interlinepenalty\\@M";
+      print "      \\pocket@chaptertitlefont #1\\par\\nobreak";
+      print "      \\vskip 18\\p@";
+      print "    }}";
+      print "  \\renewcommand{\\@makeschapterhead}[1]{%";
+      print "    {\\parindent\\z@\\normalfont\\pocket@headingstyle";
+      print "      \\interlinepenalty\\@M";
+      print "      \\pocket@chaptertitlefont #1\\par\\nobreak";
+      print "      \\vskip 18\\p@";
+      print "    }}";
+      print "  \\renewcommand\\section{\\@startsection{section}{1}{\\z@}{-2.2ex \\@plus -0.8ex \\@minus -.2ex}{\\pocket@headingafter}{\\normalfont\\pocket@sectionfont\\pocket@headingstyle}}";
+      print "  \\renewcommand\\subsection{\\@startsection{subsection}{2}{\\z@}{-1.8ex \\@plus -0.6ex \\@minus -.2ex}{0.8ex \\@plus .15ex}{\\normalfont\\pocket@subsectionfont\\pocket@headingstyle}}";
+      print "  \\renewcommand\\subsubsection{\\@startsection{subsubsection}{3}{\\z@}{-1.6ex \\@plus -0.5ex \\@minus -.2ex}{0.7ex \\@plus .1ex}{\\normalfont\\normalsize\\bfseries\\pocket@headingstyle}}";
+      print "  \\makeatother";
       done = 1;
       next;
     }
     { print }
   ' "$tex_path" > "$tuned_path"
   mv "$tuned_path" "$tex_path"
+}
+
+apply_pocket_cover_tuning() {
+  local tex_path="$1"
+  local cover_font_size="20"
+  local cover_font_baseline="23"
+  local cover_title_width_ratio="0.84"
+  local credit_width_ratio="0.74"
+
+  case "$font_mode" in
+    normal)
+      ;;
+    onepointtwo)
+      cover_font_size="18"
+      cover_font_baseline="21"
+      cover_title_width_ratio="0.86"
+      credit_width_ratio="0.78"
+      ;;
+    onehalf)
+      cover_font_size="17"
+      cover_font_baseline="20"
+      cover_title_width_ratio="0.88"
+      credit_width_ratio="0.80"
+      ;;
+    double)
+      cover_font_size="16"
+      cover_font_baseline="19"
+      cover_title_width_ratio="0.90"
+      credit_width_ratio="0.82"
+      ;;
+  esac
+
+  python3 - "$tex_path" "$cover_font_size" "$cover_font_baseline" "$cover_title_width_ratio" "$credit_width_ratio" <<'PY'
+from pathlib import Path
+import sys
+
+path = Path(sys.argv[1])
+cover_font_size = sys.argv[2]
+cover_font_baseline = sys.argv[3]
+cover_title_width_ratio = sys.argv[4]
+credit_width_ratio = sys.argv[5]
+
+text = path.read_text()
+text = text.replace("text width=0.78\\paperwidth", f"text width={cover_title_width_ratio}\\paperwidth")
+text = text.replace("text width=0.68\\paperwidth", f"text width={credit_width_ratio}\\paperwidth")
+text = text.replace(
+    "{\\fontsize{30}{33}\\selectfont\\bfseries",
+    f"{{\\fontsize{{{cover_font_size}}}{{{cover_font_baseline}}}\\selectfont\\bfseries",
+)
+text = text.replace("{\\large\\color{black!72}", "{\\normalsize\\color{black!72}")
+text = text.replace("{\\normalsize\\color{black!78}", "{\\small\\color{black!78}")
+text = text.replace("{\\small\\color{black!72}", "{\\footnotesize\\color{black!72}")
+path.write_text(text)
+PY
 }
 
 geometry_option="paperwidth=$paper_width,paperheight=$paper_height,margin=$geometry_margin"
@@ -413,6 +532,7 @@ while IFS= read -r -d '' tex_path; do
   fi
 
   apply_pocket_layout_tuning "$tmp_dir/course.tex"
+  apply_pocket_cover_tuning "$tmp_dir/course.tex"
 
   case "$font_mode" in
     normal)
