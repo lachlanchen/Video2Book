@@ -16,6 +16,7 @@ Defaults:
 
 Options:
   --course <relpath>      Course path under generated_course_notes (optional; default is all courses one by one)
+  --start-course <relpath> Start from this course in sorted order
   --session <name>        tmux session name
   --model <name>          Codex model
   --reasoning <level>     low|medium|high|xhigh
@@ -32,6 +33,7 @@ module_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 repo_root="${NOTES_REPO_ROOT:-$(pwd)}"
 session="susskind-pocket-fix"
 course=""
+start_course=""
 model="${NOTE_MODEL:-gpt-5.4}"
 reasoning="${NOTE_REASONING:-medium}"
 size_preset="penguin"
@@ -44,6 +46,10 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     --course)
       course="${2:-}"
+      shift 2
+      ;;
+    --start-course)
+      start_course="${2:-}"
       shift 2
       ;;
     --session)
@@ -124,8 +130,14 @@ cmd=(
 if [[ -n "$course" ]]; then
   cmd+=(--course "$course")
 fi
+if [[ -n "$start_course" ]]; then
+  cmd+=(--start-course "$start_course")
+fi
 
 env_exports="export NOTES_REPO_ROOT=\"$repo_root\"; export NOTE_TMUX_SESSION_NAME=\"$session\"; "
+if [[ -n "${VIDEO2BOOK_POST_OVERFLOW_FIX_HOOK:-}" ]]; then
+  env_exports+="export VIDEO2BOOK_POST_OVERFLOW_FIX_HOOK=\"${VIDEO2BOOK_POST_OVERFLOW_FIX_HOOK}\"; "
+fi
 
 tmux new-session -d -s "$session" -c "$repo_root" "bash -lc 'cd \"$repo_root\" && ${env_exports}${cmd[*]} 2>&1 | tee \"$log_path\"'"
 tmux rename-window -t "$session:0" "overflow-fix"

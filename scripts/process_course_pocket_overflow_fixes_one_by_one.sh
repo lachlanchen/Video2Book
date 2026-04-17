@@ -11,6 +11,7 @@ Options:
   --host-root <path>        Host repo root (default: current working directory)
   --source-dir <path>       generated_course_notes root
   --course <relpath>        Restrict to one course
+  --start-course <relpath>  Start from this course in sorted order
   --size <preset>           penguin|a5|custom (default: penguin)
   --font-mode <mode>        normal|onepointtwo|onehalf|double (default: onepointtwo)
   --model <name>            Codex model (default: gpt-5.4)
@@ -24,11 +25,13 @@ module_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 host_root="${HOST_ROOT:-$(pwd)}"
 source_dir=""
 course=""
+start_course=""
 size_preset="penguin"
 font_mode="onepointtwo"
 model="${NOTE_MODEL:-gpt-5.4}"
 reasoning="${NOTE_REASONING:-medium}"
 max_iterations=4
+post_fix_hook="${VIDEO2BOOK_POST_OVERFLOW_FIX_HOOK:-}"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -42,6 +45,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --course)
       course="${2:-}"
+      shift 2
+      ;;
+    --start-course)
+      start_course="${2:-}"
       shift 2
       ;;
     --size)
@@ -99,6 +106,20 @@ else
   )
 fi
 
+if [[ -n "$start_course" && -z "$course" ]]; then
+  filtered=()
+  reached=0
+  for rel in "${courses[@]}"; do
+    if [[ "$reached" -eq 0 && "$rel" == "$start_course" ]]; then
+      reached=1
+    fi
+    if [[ "$reached" -eq 1 ]]; then
+      filtered+=("$rel")
+    fi
+  done
+  courses=("${filtered[@]}")
+fi
+
 if [[ "${#courses[@]}" -eq 0 ]]; then
   echo "No eligible courses found."
   exit 0
@@ -115,4 +136,7 @@ for rel in "${courses[@]}"; do
     --model "$model" \
     --reasoning "$reasoning" \
     --max-iterations "$max_iterations"
+  if [[ -n "$post_fix_hook" ]]; then
+    "$post_fix_hook" --repo-root "$host_root" --course "$rel"
+  fi
 done

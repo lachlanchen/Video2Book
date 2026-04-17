@@ -214,6 +214,18 @@ PY
     "$rel_path" >/dev/null
 }
 
+snapshot_project_dir() {
+  local backup_dir="$1"
+  rm -rf "$backup_dir"
+  mkdir -p "$backup_dir"
+  rsync -a --delete "$project_root/" "$backup_dir/"
+}
+
+restore_project_dir() {
+  local backup_dir="$1"
+  rsync -a --delete "$backup_dir/" "$project_root/"
+}
+
 run_compile 0
 run_report 0 >/dev/null
 best_count="$(extract_actionable_count "$report_path")"
@@ -229,24 +241,46 @@ while [[ "$iteration" -le "$max_iterations" ]]; do
     echo "No actionable file found in $report_path" >&2
     exit 1
   fi
+  backup_dir="$logs_dir/backup_iteration_${iteration}"
+  snapshot_project_dir "$backup_dir"
   echo "iteration=$iteration focus_file=$focus_file actionable_overfulls=$best_count"
-  run_codex_fix "$iteration" "$focus_file"
-  maybe_commit
-  run_compile "$iteration"
+  if ! run_codex_fix "$iteration" "$focus_file"; then
+    echo "Codex edit failed on iteration $iteration; restoring previous project state."
+    restore_project_dir "$backup_dir"
+    run_compile "restore_${iteration}" >/dev/null 2>&1 || true
+    run_report "restore_${iteration}" >/dev/null 2>&1 || true
+    exit 1
+  fi
+  if ! run_compile "$iteration"; then
+    echo "Compile failed on iteration $iteration; restoring previous project state."
+    restore_project_dir "$backup_dir"
+    run_compile "restore_${iteration}" >/dev/null 2>&1 || true
+    run_report "restore_${iteration}" >/dev/null 2>&1 || true
+    exit 1
+  fi
   run_report "$iteration" >/dev/null
   new_count="$(extract_actionable_count "$report_path")"
   if [[ -z "$new_count" ]]; then
+    restore_project_dir "$backup_dir"
+    run_compile "restore_${iteration}" >/dev/null 2>&1 || true
+    run_report "restore_${iteration}" >/dev/null 2>&1 || true
     echo "Could not parse updated actionable count." >&2
     exit 1
   fi
   if [[ "$new_count" -eq 0 ]]; then
+    maybe_commit
     echo "Resolved all actionable overfulls."
     exit 0
   fi
   if [[ "$new_count" -ge "$best_count" ]]; then
+    echo "No improvement after iteration $iteration; restoring previous project state."
+    restore_project_dir "$backup_dir"
+    run_compile "restore_${iteration}" >/dev/null 2>&1 || true
+    run_report "restore_${iteration}" >/dev/null 2>&1 || true
     echo "No improvement after iteration $iteration; stopping."
     exit 0
   fi
+  maybe_commit
   best_count="$new_count"
   iteration=$((iteration + 1))
 done

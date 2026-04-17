@@ -301,6 +301,18 @@ maybe_commit() {
     "generated_course_notes/$course" >/dev/null
 }
 
+snapshot_course_dir() {
+  local backup_dir="$1"
+  rm -rf "$backup_dir"
+  mkdir -p "$backup_dir"
+  rsync -a --delete "$course_dir/" "$backup_dir/"
+}
+
+restore_course_dir() {
+  local backup_dir="$1"
+  rsync -a --delete "$backup_dir/" "$course_dir/"
+}
+
 echo "course=$course"
 echo "host_root=$host_root"
 echo "work_dir=$run_dir"
@@ -337,19 +349,35 @@ while [[ "$iteration" -le "$max_iterations" ]]; do
     echo "No actionable file could be extracted from $report_path"
     exit 1
   fi
+  backup_dir="$logs_dir/backup_iteration_${iteration}"
+  snapshot_course_dir "$backup_dir"
   echo "iteration=$iteration start"
   echo "iteration=$iteration focus_file=$focus_file"
-  run_codex_fix "$iteration" "$report_path" "$focus_file"
-  maybe_commit "$iteration"
-  run_export "$iteration"
+  if ! run_codex_fix "$iteration" "$report_path" "$focus_file"; then
+    echo "Codex edit failed on iteration $iteration; restoring previous course state."
+    restore_course_dir "$backup_dir"
+    run_export "restore_${iteration}" >/dev/null
+    exit 1
+  fi
+
+  if ! run_export "$iteration"; then
+    echo "Compile/export failed on iteration $iteration; restoring previous course state."
+    restore_course_dir "$backup_dir"
+    run_export "restore_${iteration}" >/dev/null
+    exit 1
+  fi
 
   new_report_path="$(latest_report_path)"
   if [[ -z "$new_report_path" || ! -f "$new_report_path" ]]; then
+    restore_course_dir "$backup_dir"
+    run_export "restore_${iteration}" >/dev/null
     echo "Iteration $iteration did not produce a report." >&2
     exit 1
   fi
   new_count="$(extract_actionable_count "$new_report_path")"
   if [[ -z "$new_count" ]]; then
+    restore_course_dir "$backup_dir"
+    run_export "restore_${iteration}" >/dev/null
     echo "Could not parse actionable count from $new_report_path" >&2
     exit 1
   fi
@@ -362,10 +390,14 @@ while [[ "$iteration" -le "$max_iterations" ]]; do
   fi
 
   if [[ "$new_count" -ge "$best_count" ]]; then
+    echo "No improvement after iteration $iteration; restoring previous course state."
+    restore_course_dir "$backup_dir"
+    run_export "restore_${iteration}" >/dev/null
     echo "No improvement after iteration $iteration; stopping to avoid churn."
     exit 0
   fi
 
+  maybe_commit "$iteration"
   best_count="$new_count"
   report_path="$new_report_path"
   iteration=$((iteration + 1))
