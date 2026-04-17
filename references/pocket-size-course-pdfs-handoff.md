@@ -5,6 +5,11 @@ Date: 2026-04-17
 This note documents the handoff flow for generating compact "pocket" PDFs after
 course notes are fully authored.
 
+For the shared full-size A4/letter header fix and the combined reuse pattern
+for host repos, also read:
+
+- `references/a4-and-pocket-pdf-layout-handoff.md`
+
 Scope:
 
 - input: `generated_course_notes/<scope>/<course>/course.tex` plus companion figures/assets

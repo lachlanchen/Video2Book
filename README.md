@@ -22,6 +22,8 @@
 - Convert completed transcript sets into structured TeX notes and merged course PDFs.
 - Run long jobs in `tmux` with queue scripts and monitor/guard scripts.
 - Export compact pocket-format companion PDFs from finished course LaTeX.
+- Reuse the same wrapped-header and figure-refresh workflow for both normal
+  full-size PDFs and pocket PDFs across host repos.
 
 ## 🧪 Working Host Repos
 
@@ -79,9 +81,11 @@ If you are running these repos from a shared parent directory (for example `/hom
 | 2 | `videos2subtitles/` | Transcribe the archived media into `subtitles/` and `markdown/`. |
 | 3 | `subtitles2notes/` | Turn completed transcripts into chapter TeX, lecture PDFs, and merged course PDFs. |
 | 4 | `scripts/export_course_pocket_pdfs.sh` | Rebuild finished `course.tex` outputs into pocket/A5 variants for publishing packages and emit mapped overfull reports. |
-| 5 | `scripts/fix_course_pocket_overfulls.sh` | Iterate on one course variant: export, report, Codex patch, and re-export until actionable overfulls drop. |
-| 6 | `scripts/fix_latex_project_overfulls.sh` | Generic LaTeX overflow fixer for any repo/project that can build with `pdflatex` or a custom compile command. |
-| 7 | `scripts/export_course_epubs.sh` | Rebuild finished `course.tex` outputs directly into EPUB3. |
+| 5 | `subtitles2notes/templates/lecture_notes_common_preamble.tex` | Shared normal-size course-PDF header/layout source used by generated books. |
+| 6 | `scripts/fix_course_pocket_overfulls.sh` | Iterate on one course variant: export, report, Codex patch, and re-export until actionable overfulls drop. |
+| 7 | `scripts/fix_latex_project_overfulls.sh` | Generic LaTeX overflow fixer for any repo/project that can build with `pdflatex` or a custom compile command. |
+| 8 | `scripts/recheck_course_figures.py` | Re-audit screenshot-like lecture figures against transcript context and replacement video frames. |
+| 9 | `scripts/export_course_epubs.sh` | Rebuild finished `course.tex` outputs directly into EPUB3. |
 
 ## 🚀 Quick Start
 
@@ -199,6 +203,7 @@ That default is just a working example. The code is structured so other host rep
 - [subtitles2notes](subtitles2notes)
 - [scripts](scripts)
 - [Pocket export handoff](references/pocket-size-course-pdfs-handoff.md)
+- [A4 and pocket layout handoff](references/a4-and-pocket-pdf-layout-handoff.md)
 - [LaTeX overflow fixer handoff](references/latex-overflow-fixer-handoff.md)
 - [EPUB export handoff](references/tex-to-epub-handoff.md)
 
@@ -207,6 +212,7 @@ That default is just a working example. The code is structured so other host rep
 - [references/lazylearn-course-adaptation.md](references/lazylearn-course-adaptation.md)
 - [references/lazyearn-yale-financial-markets-adaptation.md](references/lazyearn-yale-financial-markets-adaptation.md)
 - [references/nanobanana-2-book-cover-handoff.md](references/nanobanana-2-book-cover-handoff.md)
+- [references/a4-and-pocket-pdf-layout-handoff.md](references/a4-and-pocket-pdf-layout-handoff.md)
 - [references/latex-overflow-fixer-handoff.md](references/latex-overflow-fixer-handoff.md)
 - [references/tex-book-translation-workflow.md](references/tex-book-translation-workflow.md)
 - [references/tex-to-epub-handoff.md](references/tex-to-epub-handoff.md)
