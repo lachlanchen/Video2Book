@@ -72,6 +72,33 @@ When adjusting these values later, preserve this priority:
 3. avoid font shrinkage unless the style is still unreadable
 4. never let wrapped headers overlap the headrule
 
+## Reuse In Other Host Repos
+
+This pocket-layout behavior is not specific to `leonardsusskind`.
+
+You can tell other host repos such as `LazyEarn` and `LazyLearn` to use the
+same exporter and expect the same core behavior:
+
+- chapter-opening blocks stay book-like instead of collapsing into tiny text
+- wrapped running headers move upward into the available header area
+- extra headroom is reserved so multi-line headers do not touch the headrule
+- the fix is applied at export time, so the host repo does not need to rewrite
+  its base LaTeX templates just to get pocket-friendly headers
+
+The intended integration pattern is:
+
+1. keep the host repo's normal `course.tex` and full-size PDF workflow
+2. call `scripts/export_course_pocket_pdfs.sh` from `Video2Book`
+3. publish the generated pocket PDFs into the host repo's canonical output
+   locations
+
+If a host repo wants a different visual identity, it should still preserve the
+same technical rule:
+
+- use vertical header space before shrinking typography
+- reserve explicit clearance above the headrule
+- validate a real wrapped two-line header page, not only a one-line sample
+
 ## Recommended Running Sequence for a Host Repo
 
 From host repo root (example: `/home/lachlan/ProjectsLFS/leonardsusskind`):
