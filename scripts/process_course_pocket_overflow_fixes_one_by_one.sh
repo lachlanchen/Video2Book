@@ -33,6 +33,7 @@ reasoning="${NOTE_REASONING:-medium}"
 max_iterations=4
 post_fix_hook="${VIDEO2BOOK_POST_OVERFLOW_FIX_HOOK:-}"
 state_file="${VIDEO2BOOK_POCKET_OVERFLOW_STATE_FILE:-$host_root/.lecture-notes-work/pocket_overflow_fix/queue_state.env}"
+failures_file="${VIDEO2BOOK_POCKET_OVERFLOW_FAILURES_FILE:-$host_root/.lecture-notes-work/pocket_overflow_fix/course_failures.tsv}"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -88,6 +89,18 @@ if [[ -z "$source_dir" ]]; then
   source_dir="$host_root/generated_course_notes"
 fi
 
+if [[ -z "$course" && -z "$start_course" && -f "$state_file" ]]; then
+  # shellcheck disable=SC1090
+  source "$state_file"
+  if [[ "${STATE_STATUS:-}" != "finished" ]]; then
+    if [[ -n "${CURRENT_COURSE:-}" ]]; then
+      start_course="$CURRENT_COURSE"
+    elif [[ -n "${NEXT_COURSE:-}" ]]; then
+      start_course="$NEXT_COURSE"
+    fi
+  fi
+fi
+
 if [[ ! -d "$source_dir" ]]; then
   echo "Missing source_dir: $source_dir" >&2
   exit 1
@@ -128,8 +141,11 @@ fi
 
 mkdir -p "$(dirname "$state_file")"
 last_completed_course=""
+last_failed_course=""
 current_course=""
 next_course=""
+mkdir -p "$(dirname "$failures_file")"
+touch "$failures_file"
 
 write_state() {
   local status="$1"
@@ -138,7 +154,9 @@ write_state() {
     printf 'STATE_STATUS=%q\n' "$status"
     printf 'CURRENT_COURSE=%q\n' "$current_course"
     printf 'LAST_COMPLETED_COURSE=%q\n' "$last_completed_course"
+    printf 'LAST_FAILED_COURSE=%q\n' "$last_failed_course"
     printf 'NEXT_COURSE=%q\n' "$next_course"
+    printf 'FAILURES_FILE=%q\n' "$failures_file"
     printf 'START_COURSE=%q\n' "$start_course"
     printf 'FONT_MODE=%q\n' "$font_mode"
     printf 'SIZE_PRESET=%q\n' "$size_preset"
@@ -160,7 +178,8 @@ for idx in "${!courses[@]}"; do
   fi
   write_state "running"
   echo "==> fixing $rel [$font_mode/$size_preset]"
-  if ! bash "$module_root/scripts/fix_course_pocket_overfulls.sh" \
+  status=0
+  if bash "$module_root/scripts/fix_course_pocket_overfulls.sh" \
     --host-root "$host_root" \
     --source-dir "$source_dir" \
     --course "$rel" \
@@ -169,13 +188,26 @@ for idx in "${!courses[@]}"; do
     --model "$model" \
     --reasoning "$reasoning" \
     --max-iterations "$max_iterations"; then
-    write_state "failed"
-    exit 1
+    status=0
+  else
+    status=$?
+  fi
+  if [[ "$status" -ne 0 ]]; then
+    printf '%s\tfix\t%s\tstatus=%s\n' "$(date --iso-8601=seconds)" "$rel" "$status" >> "$failures_file"
+    echo "skip course after fixer failure: $rel (status=$status)"
+    last_failed_course="$rel"
+    current_course=""
+    write_state "course_failed"
+    continue
   fi
   if [[ -n "$post_fix_hook" ]]; then
     if ! "$post_fix_hook" --repo-root "$host_root" --course "$rel"; then
-      write_state "failed_hook"
-      exit 1
+      printf '%s\thook\t%s\tstatus=1\n' "$(date --iso-8601=seconds)" "$rel" >> "$failures_file"
+      echo "skip publish hook failure and continue: $rel"
+      last_failed_course="$rel"
+      current_course=""
+      write_state "hook_failed"
+      continue
     fi
   fi
   last_completed_course="$rel"

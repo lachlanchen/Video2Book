@@ -44,6 +44,7 @@ geometry_margin=""
 model="${NOTE_MODEL:-gpt-5.4}"
 reasoning="${NOTE_REASONING:-medium}"
 max_iterations=4
+max_repair_attempts=2
 do_commit=1
 session_file=""
 session_doc=""
@@ -215,6 +216,10 @@ latest_report_path() {
   find "$report_dir" -maxdepth 1 -type f -name '*_overflow.md' -print | sort | tail -n 1
 }
 
+latest_compile_failure_log() {
+  find "$pdf_dir" -maxdepth 1 -type f -name '*_compile_failure.log' -print | sort | tail -n 1
+}
+
 run_export() {
   local iteration="$1"
   local log_path="$logs_dir/export_iteration_${iteration}.log"
@@ -278,6 +283,48 @@ Preferred fix patterns:
 Success goal:
 - Reduce actionable overfull warnings for this variant.
 - If a warning is clearly the report's page-builder noise, ignore it.
+
+Stop after editing. The outer script will recompile and measure the result.
+EOF
+
+  bash "$module_root/scripts/codex_prompt_to_file.sh" \
+    "$host_root" \
+    "$prompt_file" \
+    "$output_file" \
+    "$model" \
+    "$reasoning" >/dev/null
+}
+
+run_codex_compile_repair() {
+  local iteration="$1"
+  local repair_attempt="$2"
+  local focus_file="$3"
+  local failure_log="$4"
+  local prompt_file="$logs_dir/fix_iteration_${iteration}_repair_${repair_attempt}.prompt.md"
+  local output_file="$logs_dir/fix_iteration_${iteration}_repair_${repair_attempt}.codex.md"
+  cat > "$prompt_file" <<EOF
+You are repairing a LaTeX compile failure introduced while fixing pocket-size overflow issues.
+
+Work only inside:
+- \`$course_dir\`
+
+Edit only this file on this repair pass:
+- \`$focus_file\`
+
+Read this compile failure log first:
+- \`$failure_log\`
+
+Target build:
+- course: \`$course\`
+- size preset: \`$size_preset\`
+- font mode: \`$font_mode\`
+
+Required editing policy:
+1. Fix the compile failure first.
+2. Keep the earlier overflow-oriented intent if possible.
+3. Make the smallest local change that restores compilation.
+4. Do not edit generated PDFs, build folders, README files, or unrelated courses.
+5. Do not run git commands.
 
 Stop after editing. The outer script will recompile and measure the result.
 EOF
@@ -357,14 +404,34 @@ while [[ "$iteration" -le "$max_iterations" ]]; do
     echo "Codex edit failed on iteration $iteration; restoring previous course state."
     restore_course_dir "$backup_dir"
     run_export "restore_${iteration}" >/dev/null
-    exit 1
+    exit 10
   fi
 
   if ! run_export "$iteration"; then
-    echo "Compile/export failed on iteration $iteration; restoring previous course state."
-    restore_course_dir "$backup_dir"
-    run_export "restore_${iteration}" >/dev/null
-    exit 1
+    repair_attempt=1
+    repair_succeeded=0
+    while [[ "$repair_attempt" -le "$max_repair_attempts" ]]; do
+      failure_log="$(latest_compile_failure_log)"
+      if [[ -z "$failure_log" || ! -f "$failure_log" ]]; then
+        break
+      fi
+      echo "iteration=$iteration compile_repair_attempt=$repair_attempt focus_file=$focus_file failure_log=$failure_log"
+      if ! run_codex_compile_repair "$iteration" "$repair_attempt" "$focus_file" "$failure_log"; then
+        break
+      fi
+      if run_export "${iteration}_repair_${repair_attempt}"; then
+        repair_succeeded=1
+        break
+      fi
+      repair_attempt=$((repair_attempt + 1))
+    done
+
+    if [[ "$repair_succeeded" -ne 1 ]]; then
+      echo "Compile/export failed on iteration $iteration and repairs did not recover; restoring previous course state."
+      restore_course_dir "$backup_dir"
+      run_export "restore_${iteration}" >/dev/null
+      exit 10
+    fi
   fi
 
   new_report_path="$(latest_report_path)"
@@ -372,14 +439,14 @@ while [[ "$iteration" -le "$max_iterations" ]]; do
     restore_course_dir "$backup_dir"
     run_export "restore_${iteration}" >/dev/null
     echo "Iteration $iteration did not produce a report." >&2
-    exit 1
+    exit 10
   fi
   new_count="$(extract_actionable_count "$new_report_path")"
   if [[ -z "$new_count" ]]; then
     restore_course_dir "$backup_dir"
     run_export "restore_${iteration}" >/dev/null
     echo "Could not parse actionable count from $new_report_path" >&2
-    exit 1
+    exit 10
   fi
 
   echo "iteration=$iteration actionable_overfulls=$new_count previous_best=$best_count report=$new_report_path"

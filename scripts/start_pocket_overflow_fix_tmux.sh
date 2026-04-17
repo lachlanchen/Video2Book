@@ -119,7 +119,7 @@ if tmux has-session -t "$session" 2>/dev/null; then
 fi
 
 cmd=(
-  bash "$module_root/scripts/process_course_pocket_overflow_fixes_one_by_one.sh"
+  bash "$module_root/scripts/run_pocket_overflow_fix_worker.sh"
   --model "$model"
   --reasoning "$reasoning"
   --size "$size_preset"
