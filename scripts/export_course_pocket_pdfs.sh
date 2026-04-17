@@ -17,6 +17,7 @@ Options:
   --source-dir <path>         Source directory containing generated courses (default: <host-root>/generated_course_notes)
   --output-dir <path>         Destination directory for pocket PDFs (default: <host-root>/all_notes/pocket_books if exists, else <host-root>/pocket_books)
   --size <preset>             Output preset: penguin (6x9, default), a5 (5.83x8.27), custom
+  --font-mode <mode>          Font preset: normal (default) or double (temp compile as extbook 20pt)
   --paper-width <size>        Custom width for --size custom, e.g. 6in
   --paper-height <size>       Custom height for --size custom, e.g. 9in
   --margin <size>             Custom geometry margin for --size custom, e.g. 0.55in
@@ -33,6 +34,7 @@ source_dir=""
 output_dir=""
 nutstore_dir="/home/lachlan/Nutstore Files/Projects/LazyingArtBooks/pocket_books"
 size_preset="penguin"
+font_mode="normal"
 paper_width="6in"
 paper_height="9in"
 geometry_margin="0.55in"
@@ -55,6 +57,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --size)
       size_preset="$2"
+      shift 2
+      ;;
+    --font-mode)
+      font_mode="$2"
       shift 2
       ;;
     --paper-width)
@@ -131,6 +137,15 @@ case "$size_preset" in
     ;;
   *)
     echo "Unknown size preset: $size_preset" >&2
+    exit 1
+    ;;
+esac
+
+case "$font_mode" in
+  normal|double)
+    ;;
+  *)
+    echo "Unknown font mode: $font_mode" >&2
     exit 1
     ;;
 esac
@@ -217,13 +232,41 @@ run_tex_compile() {
   return 0
 }
 
+apply_pocket_layout_tuning() {
+  local tex_path="$1"
+  local tuned_path="${tex_path}.tuned"
+  local stretch="2em"
+
+  if [[ "$font_mode" == "double" ]]; then
+    stretch="4em"
+  fi
+
+  awk -v geom="$geometry_option" -v stretch="$stretch" '
+    /^\\input\{common_preamble\.tex\}$/ && !done {
+      print "\\PassOptionsToPackage{" geom "}{geometry}";
+      print $0;
+      print "\\AtBeginDocument{";
+      print "  \\setlength{\\emergencystretch}{" stretch "}";
+      print "  \\setlength{\\hfuzz}{1pt}";
+      print "  \\allowdisplaybreaks[2]";
+      print "  \\sloppy";
+      print "}";
+      done = 1;
+      next;
+    }
+    { print }
+  ' "$tex_path" > "$tuned_path"
+  mv "$tuned_path" "$tex_path"
+}
+
 geometry_option="paperwidth=$paper_width,paperheight=$paper_height,margin=$geometry_margin"
-log_file="$output_dir/pocket_export.log"
+log_file="$output_dir/${name_suffix}_export.log"
 
 printf '[pocket] host_root=%s\n' "$host_root" | tee "$log_file"
 printf '[pocket] source=%s\n' "$source_dir" | tee -a "$log_file"
 printf '[pocket] output=%s\n' "$output_dir" | tee -a "$log_file"
 printf '[pocket] size=%s (%s x %s, margin=%s)\n' "$size_preset" "$paper_width" "$paper_height" "$geometry_margin" | tee -a "$log_file"
+printf '[pocket] font_mode=%s\n' "$font_mode" | tee -a "$log_file"
 printf '[pocket] start %s\n' "$(date -Iseconds)" | tee -a "$log_file"
 
 export_count=0
@@ -252,9 +295,11 @@ while IFS= read -r -d '' tex_path; do
     continue
   fi
 
-  awk -v geom="$geometry_option" '/^\\input\{common_preamble\.tex\}$/ && !done {print "\\PassOptionsToPackage{" geom "}{geometry}"; done=1} { print }' \
-    "$tmp_dir/course.tex" > "$tmp_dir/.course-pocket.tex"
-  mv "$tmp_dir/.course-pocket.tex" "$tmp_dir/course.tex"
+  apply_pocket_layout_tuning "$tmp_dir/course.tex"
+
+  if [[ "$font_mode" == "double" ]]; then
+    perl -0pi -e 's/\\documentclass\[(.*?)\]\{book\}/\\documentclass[20pt,$1]{extbook}/s' "$tmp_dir/course.tex"
+  fi
 
   mkdir -p "$tmp_dir/build"
   if ! run_tex_compile "$tmp_dir" "$tmp_dir/build"; then
