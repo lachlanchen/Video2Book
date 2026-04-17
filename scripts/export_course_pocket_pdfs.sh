@@ -16,12 +16,15 @@ Options:
   --host-root <path>          Host repo root (default: parent folder of Video2Book)
   --source-dir <path>         Source directory containing generated courses (default: <host-root>/generated_course_notes)
   --output-dir <path>         Destination directory for pocket PDFs (default: <host-root>/all_notes/pocket_books if exists, else <host-root>/pocket_books)
+  --course <relpath>          Limit export to one course path under generated_course_notes
   --size <preset>             Output preset: penguin (6x9, default), a5 (5.83x8.27), custom
   --font-mode <mode>          Font preset: normal (default), onepointtwo (13.2pt via scrextend), onehalf (extbook 17pt), or double (extbook 20pt)
   --paper-width <size>        Custom width for --size custom, e.g. 6in
   --paper-height <size>       Custom height for --size custom, e.g. 9in
   --margin <size>             Custom geometry margin for --size custom, e.g. 0.55in
   --suffix <suffix>           Output filename suffix (default: pocket)
+  --overflow-report-dir <dir> Destination for Markdown overflow reports (default: <output-dir>/overflow_reports)
+  --no-overflow-report        Skip LaTeX overflow report generation
   --nutstore-dir <dir>        Destination directory for Nutstore sync (default: /home/lachlan/Nutstore Files/Projects/LazyingArtBooks/pocket_books)
   --no-rsync                  Skip Nutstore sync
   -h, --help                  Show this help text
@@ -32,6 +35,8 @@ module_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 host_root="${HOST_ROOT:-$(cd "$module_root/.." && pwd)}"
 source_dir=""
 output_dir=""
+course_filter=""
+overflow_report_dir=""
 nutstore_dir="/home/lachlan/Nutstore Files/Projects/LazyingArtBooks/pocket_books"
 size_preset="penguin"
 font_mode="normal"
@@ -40,6 +45,8 @@ paper_height="9in"
 geometry_margin="0.55in"
 name_suffix="pocket"
 do_rsync=1
+do_overflow_report=1
+overflow_reporter="$module_root/scripts/report_latex_overfulls.py"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -53,6 +60,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --output-dir)
       output_dir="$2"
+      shift 2
+      ;;
+    --course)
+      course_filter="$2"
       shift 2
       ;;
     --size)
@@ -78,6 +89,14 @@ while [[ $# -gt 0 ]]; do
     --suffix)
       name_suffix="$2"
       shift 2
+      ;;
+    --overflow-report-dir)
+      overflow_report_dir="$2"
+      shift 2
+      ;;
+    --no-overflow-report)
+      do_overflow_report=0
+      shift
       ;;
     --nutstore-dir)
       nutstore_dir="$2"
@@ -118,6 +137,10 @@ if [[ -z "$output_dir" ]]; then
   fi
 fi
 
+if [[ -z "$overflow_report_dir" ]]; then
+  overflow_report_dir="$output_dir/overflow_reports"
+fi
+
 case "$size_preset" in
   penguin)
     paper_width="6in"
@@ -150,14 +173,22 @@ case "$font_mode" in
     ;;
 esac
 
-for command in pdflatex rsync awk; do
+for command in pdflatex rsync awk python3; do
   if ! command -v "$command" >/dev/null 2>&1; then
     echo "Required command not found: $command" >&2
     exit 1
   fi
 done
 
+if [[ "$do_overflow_report" -eq 1 && ! -f "$overflow_reporter" ]]; then
+  echo "Overflow reporter not found: $overflow_reporter" >&2
+  exit 1
+fi
+
 mkdir -p "$output_dir"
+if [[ "$do_overflow_report" -eq 1 ]]; then
+  mkdir -p "$overflow_report_dir"
+fi
 
 declare -A CANONICAL_OUTPUTS=(
   [core/classical_mechanics/2011_fall_modern_physics_stanford_partial]=classical_mechanics_stanford_partial.pdf
@@ -232,10 +263,53 @@ run_tex_compile() {
   return 0
 }
 
+compute_stretch_dimension() {
+  local ratio="$1"
+  python3 - "$paper_width" "$geometry_margin" "$ratio" <<'PY'
+import re
+import sys
+
+paper_width, margin, ratio = sys.argv[1], sys.argv[2], float(sys.argv[3])
+UNITS = {
+    "pt": 1.0,
+    "bp": 72.27 / 72.0,
+    "in": 72.27,
+    "cm": 72.27 / 2.54,
+    "mm": 72.27 / 25.4,
+}
+
+def parse_dim(raw: str) -> float:
+    match = re.fullmatch(r"\s*([0-9]+(?:\.[0-9]+)?)\s*(pt|bp|in|cm|mm)\s*", raw)
+    if not match:
+        raise SystemExit(f"unsupported dimension: {raw}")
+    value = float(match.group(1))
+    unit = match.group(2)
+    return value * UNITS[unit]
+
+paper_pt = parse_dim(paper_width)
+margin_pt = parse_dim(margin)
+text_width_pt = max(72.0, paper_pt - 2.0 * margin_pt)
+stretch_pt = max(10.0, text_width_pt * ratio)
+print(f"{stretch_pt:.2f}pt")
+PY
+}
+
+copy_failure_log() {
+  local tmp_dir="$1"
+  local course_rel="$2"
+  local failure_path="$output_dir/${course_rel//\//__}_${name_suffix}_compile_failure.log"
+  if [[ -f "$tmp_dir/build/pdflatex.log" ]]; then
+    cp "$tmp_dir/build/pdflatex.log" "$failure_path"
+    printf '%s\n' "$failure_path"
+    return 0
+  fi
+  return 1
+}
+
 apply_pocket_layout_tuning() {
   local tex_path="$1"
   local tuned_path="${tex_path}.tuned"
-  local stretch="2em"
+  local stretch_ratio="0.022"
   local tolerance="2000"
   local hbadness="2000"
   local hfuzz="1pt"
@@ -244,24 +318,27 @@ apply_pocket_layout_tuning() {
     normal)
       ;;
     onepointtwo)
-      stretch="3em"
+      stretch_ratio="0.026"
       tolerance="3200"
       hbadness="3200"
       hfuzz="1.5pt"
       ;;
     onehalf)
-      stretch="4em"
-      tolerance="4000"
-      hbadness="4000"
+      stretch_ratio="0.030"
+      tolerance="4300"
+      hbadness="4300"
       hfuzz="2pt"
       ;;
     double)
-      stretch="6em"
-      tolerance="7000"
-      hbadness="7000"
+      stretch_ratio="0.036"
+      tolerance="6500"
+      hbadness="6500"
       hfuzz="3pt"
       ;;
   esac
+
+  local stretch
+  stretch="$(compute_stretch_dimension "$stretch_ratio")"
 
   awk -v geom="$geometry_option" -v stretch="$stretch" -v tolerance="$tolerance" -v hbadness="$hbadness" -v hfuzz="$hfuzz" -v fontmode="$font_mode" '
     /^\\input\{common_preamble\.tex\}$/ && !done {
@@ -272,6 +349,8 @@ apply_pocket_layout_tuning() {
         print "\\changefontsizes[16pt]{13.2pt}";
       }
       print "\\AtBeginDocument{";
+      print "  \\microtypesetup{protrusion=true,expansion=true}";
+      print "  \\UseMicrotypeSet[protrusion]{basicmath}";
       print "  \\setlength{\\emergencystretch}{" stretch "}";
       print "  \\setlength{\\hfuzz}{" hfuzz "}";
       print "  \\pretolerance=1000";
@@ -296,6 +375,12 @@ printf '[pocket] source=%s\n' "$source_dir" | tee -a "$log_file"
 printf '[pocket] output=%s\n' "$output_dir" | tee -a "$log_file"
 printf '[pocket] size=%s (%s x %s, margin=%s)\n' "$size_preset" "$paper_width" "$paper_height" "$geometry_margin" | tee -a "$log_file"
 printf '[pocket] font_mode=%s\n' "$font_mode" | tee -a "$log_file"
+if [[ -n "$course_filter" ]]; then
+  printf '[pocket] course=%s\n' "$course_filter" | tee -a "$log_file"
+fi
+if [[ "$do_overflow_report" -eq 1 ]]; then
+  printf '[pocket] overflow_report_dir=%s\n' "$overflow_report_dir" | tee -a "$log_file"
+fi
 printf '[pocket] start %s\n' "$(date -Iseconds)" | tee -a "$log_file"
 
 export_count=0
@@ -310,6 +395,9 @@ while IFS= read -r -d '' tex_path; do
   fi
 
   course_rel="${course_dir#${source_dir}/}"
+  if [[ -n "$course_filter" && "$course_rel" != "$course_filter" ]]; then
+    continue
+  fi
   output_basename="$(get_output_name "$course_rel")"
   output_path="$output_dir/${output_basename%.pdf}_${name_suffix}.pdf"
 
@@ -343,7 +431,12 @@ while IFS= read -r -d '' tex_path; do
   if ! run_tex_compile "$tmp_dir" "$tmp_dir/build"; then
     failures+=("$course_rel: pdflatex")
     ((failed_count += 1))
-    printf '[pocket] ERROR compile failed: %s\n' "$course_rel" | tee -a "$log_file"
+    failure_log_path="$(copy_failure_log "$tmp_dir" "$course_rel" || true)"
+    if [[ -n "${failure_log_path:-}" ]]; then
+      printf '[pocket] ERROR compile failed: %s (log: %s)\n' "$course_rel" "$failure_log_path" | tee -a "$log_file"
+    else
+      printf '[pocket] ERROR compile failed: %s\n' "$course_rel" | tee -a "$log_file"
+    fi
     rm -rf "$tmp_dir"
     continue
   fi
@@ -364,6 +457,16 @@ while IFS= read -r -d '' tex_path; do
   else
     ((export_count += 1))
     printf '[pocket] OK %s -> %s\n' "$course_rel" "$(basename "$output_path")" | tee -a "$log_file"
+    if [[ "$do_overflow_report" -eq 1 ]]; then
+      report_path="$overflow_report_dir/${output_basename%.pdf}_${name_suffix}_overflow.md"
+      report_summary="$(python3 "$overflow_reporter" \
+        --log "$tmp_dir/build/pdflatex.log" \
+        --compile-root "$tmp_dir" \
+        --display-root "$course_dir" \
+        --output "$report_path" \
+        --variant-label "$name_suffix (${font_mode}, ${paper_width} x ${paper_height}, margin ${geometry_margin})")"
+      printf '[pocket] overflow-report %s\n' "$report_summary" | tee -a "$log_file"
+    fi
   fi
 
   rm -rf "$tmp_dir"

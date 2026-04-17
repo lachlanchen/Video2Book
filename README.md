@@ -78,8 +78,10 @@ If you are running these repos from a shared parent directory (for example `/hom
 | 1 | `playlist2videos/` | Download or refresh a playlist with `yt-dlp`, keep logs, and skip already archived items. |
 | 2 | `videos2subtitles/` | Transcribe the archived media into `subtitles/` and `markdown/`. |
 | 3 | `subtitles2notes/` | Turn completed transcripts into chapter TeX, lecture PDFs, and merged course PDFs. |
-| 4 | `scripts/export_course_pocket_pdfs.sh` | Rebuild finished `course.tex` outputs into pocket/A5 variants for publishing packages. |
-| 5 | `scripts/export_course_epubs.sh` | Rebuild finished `course.tex` outputs directly into EPUB3. |
+| 4 | `scripts/export_course_pocket_pdfs.sh` | Rebuild finished `course.tex` outputs into pocket/A5 variants for publishing packages and emit mapped overfull reports. |
+| 5 | `scripts/fix_course_pocket_overfulls.sh` | Iterate on one course variant: export, report, Codex patch, and re-export until actionable overfulls drop. |
+| 6 | `scripts/fix_latex_project_overfulls.sh` | Generic LaTeX overflow fixer for any repo/project that can build with `pdflatex` or a custom compile command. |
+| 7 | `scripts/export_course_epubs.sh` | Rebuild finished `course.tex` outputs directly into EPUB3. |
 
 ## 🚀 Quick Start
 
@@ -138,6 +140,36 @@ Export compact PDFs for all completed courses (for example in `leonardsusskind`)
 
 ```bash
 ./Video2Book/scripts/export_course_pocket_pdfs.sh --host-root /home/lachlan/ProjectsLFS/leonardsusskind
+```
+
+Run the Codex-driven overflow fixer for one narrow-layout course variant:
+
+```bash
+./Video2Book/scripts/start_pocket_overflow_fix_tmux.sh \
+  --course core/statistical_mechanics/2013_spring_theoretical_minimum \
+  --font-mode onepointtwo \
+  --model gpt-5.4 \
+  --reasoning medium
+```
+
+Run the queue in tmux across all completed Susskind courses, one course at a time:
+
+```bash
+./Video2Book/scripts/start_pocket_overflow_fix_tmux.sh \
+  --font-mode onepointtwo \
+  --model gpt-5.4 \
+  --reasoning medium
+```
+
+Run the generic LaTeX fixer on any project:
+
+```bash
+./Video2Book/scripts/fix_latex_project_overfulls.sh \
+  --repo-root /path/to/repo \
+  --project-root /path/to/repo/book \
+  --main-tex main.tex \
+  --model gpt-5.4 \
+  --reasoning medium
 ```
 
 Export EPUB3 directly from TeX for all completed courses:

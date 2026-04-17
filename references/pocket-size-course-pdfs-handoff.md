@@ -14,6 +14,10 @@ Scope:
 ## Files Added for Reuse
 
 - `scripts/export_course_pocket_pdfs.sh`
+- `scripts/report_latex_overfulls.py`
+- `scripts/fix_course_pocket_overfulls.sh`
+- `scripts/process_course_pocket_overflow_fixes_one_by_one.sh`
+- `scripts/start_pocket_overflow_fix_tmux.sh`
 - this handoff document: `references/pocket-size-course-pdfs-handoff.md`
 
 ## Why This Matters
@@ -28,7 +32,8 @@ PDFs. The pocket export pass creates a second production flavor suitable for:
 The implementation injects geometry options directly into `course.tex` at build
 time (`\PassOptionsToPackage{paperwidth=...,paperheight=...,margin=...}{geometry}`),
 runs `pdflatex` in an isolated temp copy, then moves the resulting compact PDF
-to `pocket_books`.
+to `pocket_books`. It also writes a Markdown overflow report that maps actionable
+`\hbox` warnings back to the course source lines that triggered them.
 
 ## Defaults Used for Susskind Books
 
@@ -61,6 +66,19 @@ Optional:
 ./scripts/export_course_pocket_pdfs.sh \
   --host-root /home/lachlan/ProjectsLFS/leonardsusskind \
   --no-rsync
+
+# drive Codex to patch one course until actionable overfulls drop
+./scripts/start_pocket_overflow_fix_tmux.sh \
+  --course core/statistical_mechanics/2013_spring_theoretical_minimum \
+  --font-mode onepointtwo \
+  --model gpt-5.4 \
+  --reasoning medium
+
+# or queue every completed course one by one in tmux
+./scripts/start_pocket_overflow_fix_tmux.sh \
+  --font-mode onepointtwo \
+  --model gpt-5.4 \
+  --reasoning medium
 ```
 
 ## What to Capture in Handoff Logs
@@ -68,6 +86,7 @@ Optional:
 When sharing this to another model/session, include:
 
 - `scripts/export_course_pocket_pdfs.sh` output
+- the generated `overflow_reports/*.md`
 - location of generated PDFs
 - commit that contains the run (`git rev-parse HEAD` in host and Video2Book)
 - the final `pocket_export.log`
@@ -88,6 +107,7 @@ Unknown paths fall back to `<subject>_<variant>.pdf` with `_pocket` suffix.
 - script exits `0`
 - `pocket_export.log` shows `completed exports=<n> failures=0`
 - output PDFs exist at expected paths
+- overflow reports exist for the target variant
 - optional sync completes without error
 
 ## Hand-Off for Another Codex Session
