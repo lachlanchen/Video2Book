@@ -26,35 +26,21 @@ $dynamic_book_structure_target
 Processed lectures so far:
 $processed_lectures_text
 
-Course memory for the whole series:
-$course_memory_text
-
 Course-wide figure inventory:
 $course_figure_inventory_text
 
 Current lecture asset list:
 $asset_list
 
-Figure markdown:
-$figures_markdown_text
-
-Visual notes:
-$visual_notes_text
-
-Narrative map:
-$narrative_map_text
-
-Math / detail bank:
-$math_bank_text
-
-Chapter analysis for the current lecture:
-$analysis_text
-
-Current lecture chapter TeX:
-$current_chapter_tex
-
-Existing dynamic book TeX:
-$existing_dynamic_book_tex
+Read these repo files before writing:
+- Existing dynamic book TeX: $existing_dynamic_book_tex_path
+- Course memory for the whole series: $course_memory_path
+- Current lecture chapter TeX: $current_chapter_tex_path
+- Chapter analysis: $analysis_path
+- Figure markdown: $figures_markdown_path
+- Visual notes: $visual_notes_path
+- Narrative map: $narrative_map_path
+- Math / detail bank: $math_bank_path
 
 Write only the new LaTeX fragment that should be appended to the current dynamic book.
 

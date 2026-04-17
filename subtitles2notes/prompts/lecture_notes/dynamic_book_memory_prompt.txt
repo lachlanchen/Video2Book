@@ -24,26 +24,14 @@ $course_figure_inventory_text
 Current lecture asset list:
 $asset_list
 
-Current lecture figure notes:
-$figures_markdown_text
-
-Current lecture visual notes:
-$visual_notes_text
-
-Current lecture narrative map:
-$narrative_map_text
-
-Current lecture math / business detail bank:
-$math_bank_text
-
-Current lecture chapter analysis:
-$analysis_text
-
-Current lecture chapter TeX:
-$current_chapter_tex
-
-Existing course memory:
-$existing_course_memory_text
+Read these repo files before writing:
+- Existing course memory: $existing_course_memory_path
+- Current lecture chapter TeX: $current_chapter_tex_path
+- Current lecture chapter analysis: $analysis_path
+- Current lecture figure notes: $figures_markdown_path
+- Current lecture visual notes: $visual_notes_path
+- Current lecture narrative map: $narrative_map_path
+- Current lecture math / business detail bank: $math_bank_path
 
 Write only the new Markdown block that should be appended to the existing course memory.
 

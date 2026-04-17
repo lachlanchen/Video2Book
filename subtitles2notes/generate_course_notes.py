@@ -1606,6 +1606,21 @@ def markdown_body_excerpt(path: Path, limit: int = 260) -> str:
     return trim_excerpt(" ".join(lines), limit=limit)
 
 
+def tail_excerpt(text: str, limit: int) -> str:
+    text = text.strip()
+    if len(text) <= limit:
+        return text
+    omitted = len(text) - limit
+    return f"[... omitted {omitted} earlier characters ...]\n{text[-limit:]}"
+
+
+def prompt_path(repo_root: Path, path: Path) -> str:
+    try:
+        return str(path.relative_to(repo_root))
+    except ValueError:
+        return str(path)
+
+
 def asset_names_from_metadata(meta: dict) -> list[str]:
     names: list[str] = []
     for asset in meta.get("assets", []):
@@ -1620,9 +1635,16 @@ def asset_names_from_metadata(meta: dict) -> list[str]:
     return names
 
 
-def course_corpus_snapshot(course_root: Path) -> str:
+def recent_metadata_files(course_root: Path, limit: int | None = None) -> list[Path]:
+    files = sorted((course_root / "chapters").glob("lecture_*/metadata.json"))
+    if limit is None or limit <= 0:
+        return files
+    return files[-limit:]
+
+
+def course_corpus_snapshot(course_root: Path, recent_limit: int | None = None) -> str:
     entries: list[str] = []
-    for metadata_file in sorted((course_root / "chapters").glob("lecture_*/metadata.json")):
+    for metadata_file in recent_metadata_files(course_root, recent_limit):
         chapter_dir = metadata_file.parent
         meta = json.loads(metadata_file.read_text(encoding="utf-8"))
         lecture_number = int(meta.get("lecture_number") or 0)
@@ -1644,9 +1666,9 @@ def course_corpus_snapshot(course_root: Path) -> str:
     return "\n\n".join(entries) or "- No processed lecture corpus yet."
 
 
-def course_figure_inventory(course_root: Path) -> str:
+def course_figure_inventory(course_root: Path, recent_limit: int | None = None) -> str:
     entries: list[str] = []
-    for metadata_file in sorted((course_root / "chapters").glob("lecture_*/metadata.json")):
+    for metadata_file in recent_metadata_files(course_root, recent_limit):
         chapter_dir = metadata_file.parent
         meta = json.loads(metadata_file.read_text(encoding="utf-8"))
         assets = asset_names_from_metadata(meta)
@@ -1688,12 +1710,15 @@ def update_dynamic_book_memory(
 ) -> str:
     dynamic_root = course_root / "dynamic_book"
     dynamic_root.mkdir(parents=True, exist_ok=True)
+    chapter_dir = course_root / "chapters" / lecture.lecture_slug
     memory_path = dynamic_root / "course_memory.md"
     existing_memory_text = (
         memory_path.read_text(encoding="utf-8")
         if memory_path.exists()
         else "# Course Memory\n"
     )
+    if not memory_path.exists():
+        memory_path.write_text(existing_memory_text, encoding="utf-8")
     memory_fragment_path = runtime_dir / "dynamic_book_memory_fragment.md"
     prompt = read_template(prompt_root / "dynamic_book_memory_prompt.txt").substitute(
         task_context=build_task_context(lecture, course_config),
@@ -1706,16 +1731,16 @@ def update_dynamic_book_memory(
         lecture_title=lecture.lecture_title,
         lecture_number=lecture.lecture_number,
         processed_lectures_text=processed_lecture_summary(course_root),
-        course_corpus_text=course_corpus_snapshot(course_root),
-        course_figure_inventory_text=course_figure_inventory(course_root),
+        course_corpus_text=course_corpus_snapshot(course_root, recent_limit=8),
+        course_figure_inventory_text=course_figure_inventory(course_root, recent_limit=12),
         asset_list=asset_list_text,
-        figures_markdown_text=figures_markdown_text,
-        visual_notes_text=visual_notes_text,
-        narrative_map_text=narrative_map_text,
-        math_bank_text=math_bank_text,
-        analysis_text=analysis_text,
-        current_chapter_tex=current_chapter_tex,
-        existing_course_memory_text=existing_memory_text,
+        figures_markdown_path=prompt_path(repo_root, chapter_dir / "figures_markdown.md"),
+        visual_notes_path=prompt_path(repo_root, chapter_dir / "visual_notes.md"),
+        narrative_map_path=prompt_path(repo_root, chapter_dir / "narrative_map.md"),
+        math_bank_path=prompt_path(repo_root, chapter_dir / "math_bank.md"),
+        analysis_path=prompt_path(repo_root, chapter_dir / "analysis.md"),
+        current_chapter_tex_path=prompt_path(repo_root, chapter_dir / "content.tex"),
+        existing_course_memory_path=prompt_path(repo_root, memory_path),
     )
     run_codex_prompt(
         repo_root=repo_root,
@@ -1756,6 +1781,7 @@ def update_dynamic_book(
 
     dynamic_root = course_root / "dynamic_book"
     dynamic_root.mkdir(parents=True, exist_ok=True)
+    chapter_dir = course_root / "chapters" / lecture.lecture_slug
     course_memory_text = update_dynamic_book_memory(
         repo_root=repo_root,
         course_root=course_root,
@@ -1788,6 +1814,8 @@ def update_dynamic_book(
             course_config=course_config,
         )
     )
+    if not tex_path.exists():
+        tex_path.write_text(existing_dynamic_book_tex, encoding="utf-8")
     fragment_path = runtime_dir / "dynamic_book_fragment.tex"
 
     prompt = read_template(prompt_root / "dynamic_book_prompt.txt").substitute(
@@ -1808,15 +1836,15 @@ def update_dynamic_book(
         lecture_number=lecture.lecture_number,
         processed_lectures_text=processed_lecture_summary(course_root),
         asset_list=asset_list_text,
-        figures_markdown_text=figures_markdown_text,
-        course_figure_inventory_text=course_figure_inventory(course_root),
-        visual_notes_text=visual_notes_text,
-        narrative_map_text=narrative_map_text,
-        math_bank_text=math_bank_text,
-        analysis_text=analysis_text,
-        current_chapter_tex=current_chapter_tex,
-        course_memory_text=course_memory_text,
-        existing_dynamic_book_tex=existing_dynamic_book_tex,
+        course_figure_inventory_text=course_figure_inventory(course_root, recent_limit=12),
+        figures_markdown_path=prompt_path(repo_root, chapter_dir / "figures_markdown.md"),
+        visual_notes_path=prompt_path(repo_root, chapter_dir / "visual_notes.md"),
+        narrative_map_path=prompt_path(repo_root, chapter_dir / "narrative_map.md"),
+        math_bank_path=prompt_path(repo_root, chapter_dir / "math_bank.md"),
+        analysis_path=prompt_path(repo_root, chapter_dir / "analysis.md"),
+        current_chapter_tex_path=prompt_path(repo_root, chapter_dir / "content.tex"),
+        course_memory_path=prompt_path(repo_root, dynamic_root / "course_memory.md"),
+        existing_dynamic_book_tex_path=prompt_path(repo_root, tex_path),
     )
     run_codex_prompt(
         repo_root=repo_root,
