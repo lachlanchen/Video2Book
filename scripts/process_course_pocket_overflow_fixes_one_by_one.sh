@@ -32,6 +32,7 @@ model="${NOTE_MODEL:-gpt-5.4}"
 reasoning="${NOTE_REASONING:-medium}"
 max_iterations=4
 post_fix_hook="${VIDEO2BOOK_POST_OVERFLOW_FIX_HOOK:-}"
+state_file="${VIDEO2BOOK_POCKET_OVERFLOW_STATE_FILE:-$host_root/.lecture-notes-work/pocket_overflow_fix/queue_state.env}"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -125,9 +126,41 @@ if [[ "${#courses[@]}" -eq 0 ]]; then
   exit 0
 fi
 
-for rel in "${courses[@]}"; do
+mkdir -p "$(dirname "$state_file")"
+last_completed_course=""
+current_course=""
+next_course=""
+
+write_state() {
+  local status="$1"
+  {
+    printf 'STATE_UPDATED_AT=%q\n' "$(date --iso-8601=seconds)"
+    printf 'STATE_STATUS=%q\n' "$status"
+    printf 'CURRENT_COURSE=%q\n' "$current_course"
+    printf 'LAST_COMPLETED_COURSE=%q\n' "$last_completed_course"
+    printf 'NEXT_COURSE=%q\n' "$next_course"
+    printf 'START_COURSE=%q\n' "$start_course"
+    printf 'FONT_MODE=%q\n' "$font_mode"
+    printf 'SIZE_PRESET=%q\n' "$size_preset"
+    printf 'MODEL=%q\n' "$model"
+    printf 'REASONING=%q\n' "$reasoning"
+    printf 'MAX_ITERATIONS=%q\n' "$max_iterations"
+  } > "$state_file"
+}
+
+write_state "starting"
+
+for idx in "${!courses[@]}"; do
+  rel="${courses[$idx]}"
+  current_course="$rel"
+  if (( idx + 1 < ${#courses[@]} )); then
+    next_course="${courses[$((idx + 1))]}"
+  else
+    next_course=""
+  fi
+  write_state "running"
   echo "==> fixing $rel [$font_mode/$size_preset]"
-  bash "$module_root/scripts/fix_course_pocket_overfulls.sh" \
+  if ! bash "$module_root/scripts/fix_course_pocket_overfulls.sh" \
     --host-root "$host_root" \
     --source-dir "$source_dir" \
     --course "$rel" \
@@ -135,8 +168,19 @@ for rel in "${courses[@]}"; do
     --font-mode "$font_mode" \
     --model "$model" \
     --reasoning "$reasoning" \
-    --max-iterations "$max_iterations"
-  if [[ -n "$post_fix_hook" ]]; then
-    "$post_fix_hook" --repo-root "$host_root" --course "$rel"
+    --max-iterations "$max_iterations"; then
+    write_state "failed"
+    exit 1
   fi
+  if [[ -n "$post_fix_hook" ]]; then
+    if ! "$post_fix_hook" --repo-root "$host_root" --course "$rel"; then
+      write_state "failed_hook"
+      exit 1
+    fi
+  fi
+  last_completed_course="$rel"
+  current_course=""
+  write_state "completed"
 done
+
+write_state "finished"

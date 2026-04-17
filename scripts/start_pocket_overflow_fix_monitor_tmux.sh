@@ -3,36 +3,32 @@ set -euo pipefail
 
 usage() {
   cat <<'USAGE'
-Usage: scripts/start_pocket_overflow_fix_tmux.sh [options]
+Usage: scripts/start_pocket_overflow_fix_monitor_tmux.sh [options]
 
-Starts a tmux session that runs the Codex-driven pocket-overflow fixer.
-
-Defaults:
-- session name: susskind-pocket-fix
-- model: gpt-5.4
-- reasoning: medium
-- font mode: onepointtwo
-- size: penguin
+Starts a tmux monitor session for the pocket-overflow worker.
 
 Options:
-  --course <relpath>      Course path under generated_course_notes (optional; default is all courses one by one)
-  --start-course <relpath> Start from this course in sorted order
-  --session <name>        tmux session name
-  --model <name>          Codex model
-  --reasoning <level>     low|medium|high|xhigh
-  --size <preset>         penguin|a5|custom
-  --font-mode <mode>      normal|onepointtwo|onehalf|double
-  --max-iterations <n>    Maximum Codex edit passes
-  --kill                  Kill any existing session with the same name
-  --no-attach             Do not attach after startup
-  -h, --help              Show this help
+  --session <name>          Monitor tmux session name (default: susskind-pocket-fix-monitor)
+  --worker-session <name>   Worker tmux session name (default: susskind-pocket-fix)
+  --interval <seconds>      Monitor poll interval (default: 300)
+  --host-root <path>        Host repo root (default: current directory)
+  --start-course <relpath>  Initial fallback start course
+  --model <name>            Codex model for worker restarts
+  --reasoning <level>       Codex reasoning for worker restarts
+  --size <preset>           penguin|a5|custom (default: penguin)
+  --font-mode <mode>        normal|onepointtwo|onehalf|double (default: onepointtwo)
+  --max-iterations <n>      Max iterations per course (default: 4)
+  --kill                    Kill existing monitor session before starting
+  --no-attach               Do not attach after startup
+  -h, --help                Show this help
 USAGE
 }
 
 module_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 repo_root="${NOTES_REPO_ROOT:-$(pwd)}"
-session="susskind-pocket-fix"
-course=""
+session="susskind-pocket-fix-monitor"
+worker_session="susskind-pocket-fix"
+interval=300
 start_course=""
 model="${NOTE_MODEL:-gpt-5.4}"
 reasoning="${NOTE_REASONING:-medium}"
@@ -44,16 +40,24 @@ attach=1
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --course)
-      course="${2:-}"
+    --session)
+      session="${2:-}"
+      shift 2
+      ;;
+    --worker-session)
+      worker_session="${2:-}"
+      shift 2
+      ;;
+    --interval)
+      interval="${2:-300}"
+      shift 2
+      ;;
+    --host-root)
+      repo_root="${2:-}"
       shift 2
       ;;
     --start-course)
       start_course="${2:-}"
-      shift 2
-      ;;
-    --session)
-      session="${2:-}"
       shift 2
       ;;
     --model)
@@ -119,22 +123,21 @@ if tmux has-session -t "$session" 2>/dev/null; then
 fi
 
 cmd=(
-  bash "$module_root/scripts/process_course_pocket_overflow_fixes_one_by_one.sh"
+  bash "$module_root/scripts/monitor_pocket_overflow_fix.sh"
+  --session "$worker_session"
+  --interval "$interval"
+  --host-root "$repo_root"
   --model "$model"
   --reasoning "$reasoning"
   --size "$size_preset"
   --font-mode "$font_mode"
   --max-iterations "$max_iterations"
 )
-
-if [[ -n "$course" ]]; then
-  cmd+=(--course "$course")
-fi
 if [[ -n "$start_course" ]]; then
   cmd+=(--start-course "$start_course")
 fi
 
-env_exports="export NOTES_REPO_ROOT=\"$repo_root\"; export NOTE_TMUX_SESSION_NAME=\"$session\"; "
+env_exports="export NOTES_REPO_ROOT=\"$repo_root\"; "
 if [[ -n "${VIDEO2BOOK_POST_OVERFLOW_FIX_HOOK:-}" ]]; then
   env_exports+="export VIDEO2BOOK_POST_OVERFLOW_FIX_HOOK=\"${VIDEO2BOOK_POST_OVERFLOW_FIX_HOOK}\"; "
 fi
@@ -143,10 +146,10 @@ if [[ -n "${VIDEO2BOOK_POCKET_OVERFLOW_STATE_FILE:-}" ]]; then
 fi
 
 tmux new-session -d -s "$session" -c "$repo_root" "bash -lc 'cd \"$repo_root\" && ${env_exports}${cmd[*]} 2>&1 | tee \"$log_path\"'"
-tmux rename-window -t "$session:0" "overflow-fix"
+tmux rename-window -t "$session:0" "monitor"
 tmux set-option -t "$session" -g mouse on
 
-echo "tmux session: $session"
+echo "tmux monitor session: $session"
 echo "log: $log_path"
 echo "attach: tmux attach -t $session"
 
