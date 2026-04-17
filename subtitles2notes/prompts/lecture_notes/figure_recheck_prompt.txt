@@ -1,0 +1,69 @@
+You are rechecking one already-inserted lecture figure in a Leonard Susskind note-writing pipeline.
+
+Full task context:
+$task_context
+
+Goal:
+- inspect the current figure image and the candidate replacement frames
+- decide whether the current figure is genuinely suitable for the local course-note context
+- if the current image is weak, mismatched, or obviously wrong, choose a better replacement from the candidates
+- rewrite the caption so it honestly matches both the visible image content and the nearby lecture discussion
+
+Lecture metadata:
+- Course: $course_title
+- Course descriptor: $course_descriptor
+- Lecture: $lecture_title
+- Transcript path: $transcript_rel
+- Video path: $video_rel
+- Figure file: $figure_file
+- Current image: $current_image
+- Current caption: $current_caption
+- Query terms: $query_terms
+
+Local TeX context:
+$figure_context
+
+Candidate subtitle windows:
+$candidate_windows
+
+Candidate replacement frames:
+$candidate_list
+
+Required output:
+- JSON only
+- no markdown
+- no code fences
+
+Output schema:
+{
+  "verdict": "keep",
+  "chosen_asset": "current_image.png",
+  "timestamp_seconds": 123.456,
+  "caption": "short accurate caption",
+  "fit_assessment": "strong",
+  "reason": "short explanation"
+}
+
+Rules:
+- `verdict` must be one of:
+  - `keep`
+  - `replace`
+  - `manual_review`
+- `fit_assessment` must be one of:
+  - `strong`
+  - `partial`
+  - `mismatch`
+- choose `keep` only if the current image actually supports the local figure block
+- choose `replace` only when one of the candidate frames is clearly better matched to the local figure block
+- choose `manual_review` if the current image is bad and none of the candidates are good enough
+- `chosen_asset` must be either the current image filename or one candidate filename
+- if you choose `replace`, the chosen candidate must be visually clearer or more contextually faithful than the current image
+- be conservative about captions:
+  - do not describe content that is not visible or strongly anchored by the local transcript context
+  - if the frame only documents a crystal lattice relabeling, do not caption it as a generic symmetry taxonomy
+  - if the frame is a title card, campus shot, talking head, or blank board, it is not acceptable unless the local context explicitly wants that
+- prefer frames that show actual board mathematics, a diagram, or an explanatory board layout over lecturer-only shots
+
+Transcript:
+
+$transcript_text
