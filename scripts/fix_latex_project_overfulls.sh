@@ -16,7 +16,7 @@ Options:
   --compile-command <cmd>    Custom shell build command run inside project root
   --work-dir <path>          Working directory for logs and reports
   --model <name>             Codex model (default: gpt-5.4)
-  --reasoning <level>        low|medium|high|xhigh (default: medium)
+  --reasoning <level>        low|medium|high|xhigh (default: high)
   --max-iterations <n>       Max Codex edit passes (default: 4)
   --skip-commit              Do not commit/push after each successful pass
   -h, --help                 Show this help
@@ -30,7 +30,7 @@ main_tex=""
 compile_command=""
 work_dir=""
 model="${NOTE_MODEL:-gpt-5.4}"
-reasoning="${NOTE_REASONING:-medium}"
+reasoning="${NOTE_REASONING:-high}"
 max_iterations=4
 do_commit=1
 

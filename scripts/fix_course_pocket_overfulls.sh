@@ -22,7 +22,7 @@ Options:
   --paper-height <size>         For --size custom
   --margin <size>               For --size custom
   --model <name>                Codex model (default: gpt-5.4)
-  --reasoning <level>           low|medium|high|xhigh (default: medium)
+  --reasoning <level>           low|medium|high|xhigh (default: high)
   --max-iterations <n>          Maximum Codex edit passes (default: 4)
   --session-file <path>         Shared Codex session id file
   --session-doc <path>          Shared Codex session metadata doc
@@ -42,7 +42,7 @@ paper_width=""
 paper_height=""
 geometry_margin=""
 model="${NOTE_MODEL:-gpt-5.4}"
-reasoning="${NOTE_REASONING:-medium}"
+reasoning="${NOTE_REASONING:-high}"
 max_iterations=4
 max_repair_attempts=2
 do_commit=1
@@ -169,7 +169,8 @@ run_dir="$work_dir/$slug"
 pdf_dir="$run_dir/pdfs"
 report_dir="$run_dir/reports"
 logs_dir="$run_dir/logs"
-mkdir -p "$pdf_dir" "$report_dir" "$logs_dir"
+images_dir="$run_dir/images"
+mkdir -p "$pdf_dir" "$report_dir" "$logs_dir" "$images_dir"
 
 if [[ -z "$session_file" ]]; then
   session_file="$host_root/.lecture-notes-work/codex_sessions/pocket-overflow-fixer.session_id"
@@ -220,6 +221,77 @@ latest_compile_failure_log() {
   find "$pdf_dir" -maxdepth 1 -type f -name '*_compile_failure.log' -print | sort | tail -n 1
 }
 
+latest_pdf_path() {
+  find "$pdf_dir" -maxdepth 1 -type f -name "*.pdf" -print | sort | tail -n 1
+}
+
+latest_audit_json_path() {
+  find "$report_dir" -maxdepth 1 -type f -name '*_audit.json' -print | sort | tail -n 1
+}
+
+latest_audit_report_path() {
+  find "$report_dir" -maxdepth 1 -type f -name '*_audit.md' -print | sort | tail -n 1
+}
+
+extract_audit_issue_count() {
+  python3 - "$1" <<'PY'
+from pathlib import Path
+import json
+import sys
+
+payload = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
+print(payload.get("issue_count", ""))
+PY
+}
+
+select_focus_file_from_audit() {
+  python3 - "$1" "$course_dir" <<'PY'
+from pathlib import Path
+import json
+import re
+import sys
+
+audit_json = Path(sys.argv[1])
+course_dir = Path(sys.argv[2])
+payload = json.loads(audit_json.read_text(encoding="utf-8"))
+issues = payload.get("issues", [])
+if not issues:
+    print(course_dir / "course.tex")
+    raise SystemExit(0)
+
+excerpt = str(issues[0].get("excerpt", ""))
+words = [
+    word.lower()
+    for word in re.findall(r"[A-Za-z][A-Za-z0-9'-]{3,}", excerpt)
+    if word.lower() not in {"question", "answer", "chapter", "contents", "footnotesize", "normalsize", "scriptsize"}
+]
+words = words[:10]
+best_path = course_dir / "course.tex"
+best_score = -1
+for tex_path in sorted(course_dir.rglob("*.tex")):
+    try:
+        text = tex_path.read_text(encoding="utf-8", errors="replace").lower()
+    except OSError:
+        continue
+    score = sum(1 for word in words if word in text)
+    if score > best_score:
+        best_score = score
+        best_path = tex_path
+if best_score <= 0:
+    best_path = course_dir / "course.tex"
+print(best_path)
+PY
+}
+
+combined_score() {
+  python3 - "$1" "$2" <<'PY'
+import sys
+overfull = int(sys.argv[1])
+audit = int(sys.argv[2])
+print(overfull * 1000 + audit)
+PY
+}
+
 run_export() {
   local iteration="$1"
   local log_path="$logs_dir/export_iteration_${iteration}.log"
@@ -243,10 +315,46 @@ run_export() {
   "${cmd[@]}" 2>&1 | tee "$log_path"
 }
 
+run_pdf_audit() {
+  local iteration="$1"
+  local pdf_path
+  pdf_path="$(latest_pdf_path)"
+  if [[ -z "$pdf_path" || ! -f "$pdf_path" ]]; then
+    echo "No exported PDF found to audit." >&2
+    return 1
+  fi
+  local stem
+  stem="$(basename "${pdf_path%.pdf}")"
+  python3 "$module_root/scripts/audit_pocket_pdf.py" \
+    --pdf "$pdf_path" \
+    --output "$report_dir/${stem}_audit.md" \
+    --json-output "$report_dir/${stem}_audit.json" \
+    --pages-output "$report_dir/${stem}_audit.pages"
+}
+
+render_audit_issue_images() {
+  local pdf_path="$1"
+  local audit_json="$2"
+  local iteration="$3"
+  python3 - "$audit_json" <<'PY'
+from pathlib import Path
+import json
+import sys
+
+payload = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
+pages = payload.get("issue_pages", [])[:3]
+for page in pages:
+    print(page)
+PY
+}
+
 run_codex_fix() {
   local iteration="$1"
   local report_path="$2"
-  local focus_file="$3"
+  local audit_report_path="$3"
+  local focus_file="$4"
+  shift 4
+  local images=("$@")
   local prompt_file="$logs_dir/fix_iteration_${iteration}.prompt.md"
   local output_file="$logs_dir/fix_iteration_${iteration}.codex.md"
   cat > "$prompt_file" <<EOF
@@ -266,6 +374,9 @@ Target build:
 Read this report first:
 - \`$report_path\`
 
+Also read this rendered-PDF audit:
+- \`$audit_report_path\`
+
 Required editing policy:
 1. Edit only \`$focus_file\` on this pass.
 2. Prefer small, local fixes instead of broad global changes.
@@ -278,10 +389,11 @@ Preferred fix patterns:
 - Move wide inline math into display form when that reduces line pressure.
 - Scale TikZ or figures to \`\\linewidth\` when the warning is figure-driven.
 - Shorten or restructure captions and paragraphs that contain unbreakable spans.
+- Fix rendered typography artifacts that the PDF audit exposes, including leaked TeX font-size tokens and broken heading text.
 - Avoid introducing visually ugly manual hacks unless they are local and necessary.
 
 Success goal:
-- Reduce actionable overfull warnings for this variant.
+- Reduce actionable overfull warnings and rendered-PDF audit issues for this variant.
 - If a warning is clearly the report's page-builder noise, ignore it.
 
 Stop after editing. The outer script will recompile and measure the result.
@@ -292,7 +404,8 @@ EOF
     "$prompt_file" \
     "$output_file" \
     "$model" \
-    "$reasoning" >/dev/null
+    "$reasoning" \
+    "${images[@]}" >/dev/null
 }
 
 run_codex_compile_repair() {
@@ -383,27 +496,68 @@ if [[ -z "$best_count" ]]; then
   exit 1
 fi
 echo "initial_actionable_overfulls=$best_count report=$report_path"
+run_pdf_audit 0 >/dev/null
+audit_report_path="$(latest_audit_report_path)"
+audit_json_path="$(latest_audit_json_path)"
+if [[ -z "$audit_json_path" || ! -f "$audit_json_path" ]]; then
+  echo "No PDF audit report produced." >&2
+  exit 1
+fi
+best_audit_count="$(extract_audit_issue_count "$audit_json_path")"
+if [[ -z "$best_audit_count" ]]; then
+  echo "Could not parse audit issue count from $audit_json_path" >&2
+  exit 1
+fi
+best_score="$(combined_score "$best_count" "$best_audit_count")"
+echo "initial_audit_issues=$best_audit_count audit=$audit_report_path"
 
-if [[ "$best_count" -eq 0 ]]; then
-  echo "No actionable overfulls remain for $course [$font_mode/$size_preset]."
+if [[ "$best_count" -eq 0 && "$best_audit_count" -eq 0 ]]; then
+  echo "No actionable overfulls or PDF audit issues remain for $course [$font_mode/$size_preset]."
   exit 0
 fi
 
 iteration=1
 while [[ "$iteration" -le "$max_iterations" ]]; do
-  focus_file="$(extract_first_actionable_file "$report_path")"
+  focus_file=""
+  if [[ "$best_count" -gt 0 ]]; then
+    focus_file="$(extract_first_actionable_file "$report_path")"
+  fi
+  if [[ -z "$focus_file" && "$best_audit_count" -gt 0 ]]; then
+    focus_file="$(select_focus_file_from_audit "$audit_json_path")"
+  fi
   if [[ -z "$focus_file" || ! -f "$focus_file" ]]; then
-    echo "No actionable file could be extracted from $report_path"
+    echo "No actionable file could be extracted from reports for $course"
     exit 1
   fi
   backup_dir="$logs_dir/backup_iteration_${iteration}"
   snapshot_course_dir "$backup_dir"
   echo "iteration=$iteration start"
   echo "iteration=$iteration focus_file=$focus_file"
-  if ! run_codex_fix "$iteration" "$report_path" "$focus_file"; then
+  pdf_path="$(latest_pdf_path)"
+  audit_images=()
+  while IFS= read -r page; do
+    [[ -n "$page" ]] || continue
+    image_prefix="$images_dir/iteration_${iteration}_page_${page}"
+    pdftoppm -f "$page" -l "$page" -png "$pdf_path" "$image_prefix" >/dev/null 2>&1 || true
+    rendered_image="$(printf '%s\n' "${image_prefix}"-*.png | head -n 1)"
+    if [[ -f "$rendered_image" ]]; then
+      audit_images+=("$rendered_image")
+    fi
+  done < <(python3 - "$audit_json_path" <<'PY'
+from pathlib import Path
+import json
+import sys
+
+payload = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
+for page in payload.get("issue_pages", [])[:3]:
+    print(page)
+PY
+)
+  if ! run_codex_fix "$iteration" "$report_path" "$audit_report_path" "$focus_file" "${audit_images[@]}"; then
     echo "Codex edit failed on iteration $iteration; restoring previous course state."
     restore_course_dir "$backup_dir"
     run_export "restore_${iteration}" >/dev/null
+    run_pdf_audit "restore_${iteration}" >/dev/null 2>&1 || true
     exit 10
   fi
 
@@ -430,6 +584,7 @@ while [[ "$iteration" -le "$max_iterations" ]]; do
       echo "Compile/export failed on iteration $iteration and repairs did not recover; restoring previous course state."
       restore_course_dir "$backup_dir"
       run_export "restore_${iteration}" >/dev/null
+      run_pdf_audit "restore_${iteration}" >/dev/null 2>&1 || true
       exit 10
     fi
   fi
@@ -449,25 +604,37 @@ while [[ "$iteration" -le "$max_iterations" ]]; do
     exit 10
   fi
 
-  echo "iteration=$iteration actionable_overfulls=$new_count previous_best=$best_count report=$new_report_path"
+  run_pdf_audit "$iteration" >/dev/null
+  new_audit_report_path="$(latest_audit_report_path)"
+  new_audit_json_path="$(latest_audit_json_path)"
+  new_audit_count="$(extract_audit_issue_count "$new_audit_json_path")"
+  new_score="$(combined_score "$new_count" "$new_audit_count")"
 
-  if [[ "$new_count" -eq 0 ]]; then
-    echo "Resolved all actionable overfulls for $course [$font_mode/$size_preset]."
+  echo "iteration=$iteration actionable_overfulls=$new_count previous_best=$best_count report=$new_report_path"
+  echo "iteration=$iteration audit_issues=$new_audit_count previous_audit=$best_audit_count audit=$new_audit_report_path"
+
+  if [[ "$new_count" -eq 0 && "$new_audit_count" -eq 0 ]]; then
+    echo "Resolved actionable overfulls and PDF audit issues for $course [$font_mode/$size_preset]."
     exit 0
   fi
 
-  if [[ "$new_count" -ge "$best_count" ]]; then
+  if [[ "$new_score" -ge "$best_score" ]]; then
     echo "No improvement after iteration $iteration; restoring previous course state."
     restore_course_dir "$backup_dir"
     run_export "restore_${iteration}" >/dev/null
+    run_pdf_audit "restore_${iteration}" >/dev/null 2>&1 || true
     echo "No improvement after iteration $iteration; stopping to avoid churn."
     exit 0
   fi
 
   maybe_commit "$iteration"
   best_count="$new_count"
+  best_audit_count="$new_audit_count"
+  best_score="$new_score"
   report_path="$new_report_path"
+  audit_report_path="$new_audit_report_path"
+  audit_json_path="$new_audit_json_path"
   iteration=$((iteration + 1))
 done
 
-echo "Reached max iterations with actionable_overfulls=$best_count"
+echo "Reached max iterations with actionable_overfulls=$best_count audit_issues=$best_audit_count"

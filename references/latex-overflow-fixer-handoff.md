@@ -14,9 +14,10 @@ The workflow is:
 
 1. compile a target variant
 2. parse the LaTeX log
-3. map actionable warnings back to source files and line numbers
-4. ask Codex to patch only the first flagged source file
-5. recompile and measure whether the actionable count improved
+3. audit the rendered PDF for obvious formatting leaks
+4. map actionable warnings back to source files and line numbers
+5. ask Codex to patch only the first flagged source file, with the report and flagged PDF page images attached
+6. recompile and measure whether the actionable count and audit issue count improved
 
 That loop is intentionally conservative. It is meant to work across different
 font sizes and page sizes, not just one Susskind pocket preset.
@@ -27,6 +28,10 @@ font sizes and page sizes, not just one Susskind pocket preset.
   - parses a LaTeX log and emits a Markdown report
   - dedupes repeated warnings across multiple `pdflatex` passes
   - separates source-mapped warnings from page-builder noise
+- `scripts/audit_pocket_pdf.py`
+  - inspects rendered pocket PDFs with `pdftotext -layout`
+  - flags obvious TeX token leaks such as `ormalsize` / `ootnotesize`
+  - emits a Markdown audit plus machine-readable JSON/page lists
 - `scripts/fix_course_pocket_overfulls.sh`
   - Susskind-specific course fixer for `generated_course_notes/.../course.tex`
 - `scripts/process_course_pocket_overflow_fixes_one_by_one.sh`
@@ -41,10 +46,11 @@ font sizes and page sizes, not just one Susskind pocket preset.
 The intended unattended default is:
 
 - model: `gpt-5.4`
-- reasoning: `medium`
+- reasoning: `high`
 
-That is strong enough for targeted TeX rewrites without paying the latency cost
-of a heavier reasoning mode on every iteration.
+That is the current preferred setting for pocket-size cleanup because the prompt
+now receives richer context: the source-mapped overflow report, the rendered-PDF
+audit, and screenshots of the flagged PDF pages.
 
 ## Why The Workflow Is Conservative
 
@@ -63,6 +69,7 @@ Preferred local fixes:
 - move long inline math into display mode
 - scale figures or TikZ to `\linewidth`
 - shorten unbreakable captions or prose spans
+- repair rendered typography artifacts exposed by the PDF audit
 
 ## Susskind Queue Usage
 

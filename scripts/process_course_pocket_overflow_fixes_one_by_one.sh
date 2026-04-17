@@ -15,7 +15,7 @@ Options:
   --size <preset>           penguin|a5|custom (default: penguin)
   --font-mode <mode>        normal|onepointtwo|onehalf|double (default: onepointtwo)
   --model <name>            Codex model (default: gpt-5.4)
-  --reasoning <level>       low|medium|high|xhigh (default: medium)
+  --reasoning <level>       low|medium|high|xhigh (default: high)
   --max-iterations <n>      Max Codex edit passes per course (default: 4)
   -h, --help                Show this help
 USAGE
@@ -29,7 +29,7 @@ start_course=""
 size_preset="penguin"
 font_mode="onepointtwo"
 model="${NOTE_MODEL:-gpt-5.4}"
-reasoning="${NOTE_REASONING:-medium}"
+reasoning="${NOTE_REASONING:-high}"
 max_iterations=4
 post_fix_hook="${VIDEO2BOOK_POST_OVERFLOW_FIX_HOOK:-}"
 state_file="${VIDEO2BOOK_POCKET_OVERFLOW_STATE_FILE:-$host_root/.lecture-notes-work/pocket_overflow_fix/queue_state.env}"
