@@ -5,11 +5,15 @@ Book title: $dynamic_book_title
 Compile log:
 $compile_log
 
-Current manuscript:
-$current_tex
+Current manuscript path:
+$current_tex_path
 
 Requirements:
 - Output only corrected LaTeX.
+- Output the full manuscript from first line to last line, not a fragment.
+- The first line must begin with `\documentclass`.
+- The final non-empty line must be `\end{document}`.
+- Read the manuscript from the repo path above and treat that file as the source of truth.
 - Keep the same book content and structure.
 - Fix only what is needed to make the manuscript compile cleanly.
 - Keep `\documentclass`, `\input{../common_preamble.tex}`, and the overall front matter intact.

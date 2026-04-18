@@ -1286,6 +1286,17 @@ def strip_full_document_wrappers(fragment: str) -> str:
     return normalize_text_block(fragment)
 
 
+def looks_like_full_latex_document(text: str) -> bool:
+    stripped = text.strip()
+    if not stripped.startswith("\\documentclass"):
+        return False
+    if "\\begin{document}" not in stripped:
+        return False
+    if "\\end{document}" not in stripped:
+        return False
+    return stripped.rstrip().endswith("\\end{document}")
+
+
 def dynamic_book_placeholder_comment(lecture: LectureInfo) -> str:
     return f"% no new dynamic book material from lecture {lecture.lecture_number}"
 
@@ -1858,20 +1869,27 @@ def update_dynamic_book(
     tex_path.write_text(merged_dynamic_book_tex, encoding="utf-8")
 
     if not compile_tex(tex_path.name, dynamic_root, runtime_dir, "dynamic_book_compile"):
+        fix_output_path = runtime_dir / "dynamic_book_fix_output.tex"
         fix_prompt = read_template(prompt_root / "dynamic_book_compile_fix_prompt.txt").substitute(
             dynamic_book_title=book_title,
             compile_log=compile_log_excerpt(runtime_dir, "dynamic_book_compile"),
-            current_tex=tex_path.read_text(encoding="utf-8"),
+            current_tex_path=prompt_path(repo_root, tex_path),
         )
         run_codex_prompt(
             repo_root=repo_root,
             prompt_text=fix_prompt,
-            output_path=tex_path,
+            output_path=fix_output_path,
             runtime_dir=runtime_dir,
             log_prefix="dynamic_book_fix",
             model=model,
             reasoning=reasoning,
         )
+        fixed_dynamic_book_tex = fix_output_path.read_text(encoding="utf-8")
+        if not looks_like_full_latex_document(fixed_dynamic_book_tex):
+            raise RuntimeError(
+                "Dynamic book compile fix returned a fragment instead of a full manuscript."
+            )
+        tex_path.write_text(fixed_dynamic_book_tex, encoding="utf-8")
         if not compile_tex(tex_path.name, dynamic_root, runtime_dir, "dynamic_book_compile_retry"):
             raise RuntimeError(f"Failed to compile dynamic book for {lecture.course_rel}")
 
