@@ -65,6 +65,15 @@ def translation_source_dir(repo_root: Path, book_root_rel: str) -> Path:
     return repo_root / book_root_rel / ".translation-work" / "source_units"
 
 
+def translated_main_filename(book_root_rel: str, source_main: Path, language: str) -> str:
+    stem = Path(book_root_rel).name if source_main.stem == "main" else source_main.stem
+    return f"{stem}_{language}{source_main.suffix}"
+
+
+def translated_pdf_filename(book_root_rel: str, source_main: Path, language: str) -> str:
+    return Path(translated_main_filename(book_root_rel, source_main, language)).with_suffix(".pdf").name
+
+
 def ensure_book_gitignore(repo_root: Path, book_root_rel: str) -> Path:
     gitignore_path = repo_root / book_root_rel / ".gitignore"
     existing = read_text(gitignore_path).splitlines() if gitignore_path.exists() else []
@@ -348,7 +357,7 @@ def build_manifest(repo_root: Path, book_root_rel: str, language: str) -> dict:
     chapters = parsed["chapters"]
     source_dir = translation_source_dir(repo_root, book_root_rel)
     source_book = source_dir / "book_main_source.tex"
-    target_main = language_dir / source_main.name
+    target_main = language_dir / translated_main_filename(book_root_rel, source_main, language)
     manifest = {
         "book_root_rel": book_root_rel,
         "language": language,
@@ -357,7 +366,7 @@ def build_manifest(repo_root: Path, book_root_rel: str, language: str) -> dict:
         "source_main_rel": rel_to_repo(source_main, repo_root),
         "language_dir_rel": rel_to_repo(language_dir, repo_root),
         "target_main_rel": rel_to_repo(target_main, repo_root),
-        "target_pdf_rel": rel_to_repo(language_dir / source_main.with_suffix(".pdf").name, repo_root),
+        "target_pdf_rel": rel_to_repo(language_dir / translated_pdf_filename(book_root_rel, source_main, language), repo_root),
         "units": [],
     }
     manifest["units"].append(
@@ -418,9 +427,15 @@ def init_language(repo_root: Path, book_root_rel: str, language: str) -> Path:
     manifest = build_manifest(repo_root, book_root_rel, language)
     existing = manifest_path(repo_root, book_root_rel, language)
     existing_units = {}
+    prior_target_main = None
+    prior_target_pdf = None
     if existing.exists():
         prior = json.loads(read_text(existing))
         existing_units = {unit["key"]: unit for unit in prior.get("units", [])}
+        if prior.get("target_main_rel"):
+            prior_target_main = repo_root / prior["target_main_rel"]
+        if prior.get("target_pdf_rel"):
+            prior_target_pdf = repo_root / prior["target_pdf_rel"]
     manifest["initialized_at"] = now_iso()
     manifest["updated_at"] = now_iso()
     language_dir = repo_root / manifest["language_dir_rel"]
@@ -436,9 +451,14 @@ def init_language(repo_root: Path, book_root_rel: str, language: str) -> Path:
     source_dir = translation_source_dir(repo_root, book_root_rel)
     write_text(source_dir / "book_main_source.tex", initial_main)
     target_main = repo_root / manifest["target_main_rel"]
+    if prior_target_main and prior_target_main != target_main and prior_target_main.exists() and not target_main.exists():
+        shutil.move(str(prior_target_main), str(target_main))
     prior_book = existing_units.get("book", {})
     if prior_book.get("status") != "done":
         write_text(target_main, initial_main)
+    target_pdf = repo_root / manifest["target_pdf_rel"]
+    if prior_target_pdf and prior_target_pdf != target_pdf and prior_target_pdf.exists() and not target_pdf.exists():
+        shutil.move(str(prior_target_pdf), str(target_pdf))
 
     source_assets_dir = source_main.parent / "assets"
     target_assets_dir = language_dir / "assets"

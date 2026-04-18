@@ -35,8 +35,8 @@ For a book rooted at `how-to-speak-and-write/`, the translated editions live at:
 
 Each folder contains:
 
-- `how-to-speak-and-write.tex`
-- `how-to-speak-and-write.pdf`
+- `how-to-speak-and-write_zh.tex` or `how-to-speak-and-write_jp.tex`
+- matching suffixed PDF such as `how-to-speak-and-write_zh.pdf`
 - `translated_common_preamble.tex`
 - `translation_manifest.json`
 - `chapters/<chapter-key>/content.tex`
@@ -90,6 +90,7 @@ Do the same for Japanese:
 
 - the translated editions compile with `xelatex`, not `pdflatex`
 - the build directory stays under the translated language folder
+- when the source book is rooted at `main.tex`, the translated top-level file is renamed to `<book>_<lang>.tex`
 - the manager is idempotent, so rerunning `init` is safe
 - the loop uses one shared Codex session per language so terminology and style
   stay more consistent across chapters
