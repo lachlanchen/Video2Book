@@ -241,6 +241,13 @@ if font_mode == "onepointtwo":
     header_raise = "14pt"
     header_clearance = "12pt"
     header_width = "0.76"
+    chapter_number_font = "large"
+    chapter_title_font = "Large"
+    section_font = "small"
+    subsection_font = "footnotesize"
+    section_afterskip = "0.75ex"
+    subsection_afterskip = "0.55ex"
+    chapter_top_shift = "-14pt"
     cover_font_size = "18"
     cover_font_baseline = "21"
     title_width = "0.86"
@@ -256,6 +263,13 @@ else:
     header_raise = "12pt"
     header_clearance = "10pt"
     header_width = "0.74"
+    chapter_number_font = "Large"
+    chapter_title_font = "LARGE"
+    section_font = "normalsize"
+    subsection_font = "small"
+    section_afterskip = "0.9ex"
+    subsection_afterskip = "0.7ex"
+    chapter_top_shift = "-16pt"
     cover_font_size = "20"
     cover_font_baseline = "23"
     title_width = "0.84"
@@ -316,6 +330,45 @@ tuning_block = f"""
 \\providecommand{{\\allowdisplaybreaks}}[1][]{{}}
 \\allowdisplaybreaks[2]
 \\sloppy
+\\makeatletter
+\\def\\bookpocket@chapternumberfont{{\\normalfont\\{chapter_number_font}\\scshape}}
+\\def\\bookpocket@chaptertitlefont{{\\normalfont\\{chapter_title_font}\\itshape}}
+\\def\\bookpocket@sectionfont{{\\{section_font}\\bfseries}}
+\\def\\bookpocket@subsectionfont{{\\{subsection_font}\\bfseries}}
+\\def\\bookpocket@headerfont{{\\normalfont\\small\\itshape}}
+\\def\\bookpocket@pagefont{{\\normalfont\\small}}
+\\renewcommand{{\\chaptermark}}[1]{{\\markboth{{\\MakeUppercase{{\\chaptername\\ \\thechapter.\\ #1}}}}{{}}}}
+\\renewcommand{{\\sectionmark}}[1]{{\\markright{{\\MakeUppercase{{\\thesection\\hspace{{0.4em}}#1}}}}}}
+\\@ifundefined{{chapter}}{{}}{{%
+  \\renewcommand{{\\@makechapterhead}}[1]{{%
+    {{\\parindent\\z@\\normalfont
+      \\vspace*{{{chapter_top_shift}}}
+      \\ifnum \\c@secnumdepth >\\m@ne
+        \\if@mainmatter
+          \\noindent\\parbox[t]{{\\textwidth}}{{\\raggedright
+            {{\\bookpocket@chapternumberfont \\MakeUppercase{{\\@chapapp\\space \\thechapter}}}}\\\\[0.4em]
+            {{\\bookpocket@chaptertitlefont \\MakeUppercase{{#1}}\\par}}
+          }}\\par\\nobreak
+          \\vskip 14\\p@
+        \\fi
+      \\fi
+      \\interlinepenalty\\@M
+    }}%
+  }}
+  \\renewcommand{{\\@makeschapterhead}}[1]{{%
+    {{\\parindent\\z@\\normalfont
+      \\vspace*{{{chapter_top_shift}}}
+      \\interlinepenalty\\@M
+      \\noindent\\parbox[t]{{\\textwidth}}{{\\raggedright{{\\bookpocket@chaptertitlefont \\MakeUppercase{{#1}}\\par}}}}\\par\\nobreak
+      \\vskip 14\\p@
+    }}%
+  }}
+}}
+\\renewcommand\\section{{\\@startsection{{section}}{{1}}{{\\z@}}{{-2.2ex \\@plus -0.8ex \\@minus -.2ex}}{{{section_afterskip} \\@plus .15ex}}{{\\normalfont\\raggedright\\bookpocket@sectionfont}}}}
+\\renewcommand\\subsection{{\\@startsection{{subsection}}{{2}}{{\\z@}}{{-1.8ex \\@plus -0.6ex \\@minus -.2ex}}{{{subsection_afterskip} \\@plus .1ex}}{{\\normalfont\\raggedright\\bookpocket@subsectionfont}}}}
+\\renewcommand\\subsubsection{{\\@startsection{{subsubsection}}{{3}}{{\\z@}}{{-1.5ex \\@plus -0.4ex \\@minus -.2ex}}{{0.4ex \\@plus .08ex}}{{\\normalfont\\raggedright\\footnotesize\\bfseries}}}}
+\\@ifpackageloaded{{caption}}{{\\captionsetup{{font=small,justification=raggedright,singlelinecheck=false}}}}{{}}
+\\makeatother
 """
 
 if "\\usepackage{fancyhdr}" in text or "\\pagestyle{fancy}" in text:
