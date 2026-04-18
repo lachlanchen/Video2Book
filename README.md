@@ -255,6 +255,7 @@ The translation loop:
 
 - initializes a XeLaTeX-ready translated edition
 - translates the main book file first, then each chapter
+- supports both split-chapter books and single-file `main.tex` books with inline `\chapter{...}` blocks
 - recompiles after every unit
 - can commit and push the translated folder after each completed unit
 

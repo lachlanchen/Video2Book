@@ -4,11 +4,16 @@
 folders such as `zh/` and `jp/`, one unit at a time, while preserving LaTeX,
 figures, equations, and chapter order.
 
+It supports both:
+
+- books whose `main.tex` uses `\input{.../content.tex}` chapter files
+- books whose chapters are written inline inside a single `main.tex`
+
 ## What The Tool Does
 
 - initializes a translated edition next to the source book
 - creates a XeLaTeX-ready `translated_common_preamble.tex` with CJK fonts
-- copies each chapter into `zh/chapters/...` or `jp/chapters/...`
+- copies or extracts each chapter into `zh/chapters/...` or `jp/chapters/...`
 - translates one unit at a time with Codex:
   - first the main book TeX file
   - then each chapter `content.tex`

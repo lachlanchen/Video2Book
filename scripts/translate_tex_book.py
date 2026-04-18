@@ -29,6 +29,10 @@ LANGUAGES = {
 }
 
 
+CHAPTER_RE = re.compile(r"\\chapter(?:\[[^\]]*\])?\{(.+?)\}")
+PART_RE = re.compile(r"\\part(?:\[[^\]]*\])?\{(.+?)\}")
+
+
 def now_iso() -> str:
     return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
 
@@ -50,7 +54,59 @@ def rel_to_repo(path: Path, repo_root: Path) -> str:
     return path.relative_to(repo_root).as_posix()
 
 
-def parse_source_main(source_main: Path) -> list[dict[str, str]]:
+def chapter_unit_key(index: int, title: str) -> str:
+    slug = re.sub(r"[^a-z0-9]+", "-", title.lower()).strip("-")
+    if not slug:
+        slug = f"chapter-{index:02d}"
+    return f"chapter-{index:02d}-{slug}"
+
+
+def translation_source_dir(repo_root: Path, book_root_rel: str) -> Path:
+    return repo_root / book_root_rel / ".translation-work" / "source_units"
+
+
+def ensure_book_gitignore(repo_root: Path, book_root_rel: str) -> Path:
+    gitignore_path = repo_root / book_root_rel / ".gitignore"
+    existing = read_text(gitignore_path).splitlines() if gitignore_path.exists() else []
+    required = [
+        ".translation-work/",
+        "zh/build/",
+        "jp/build/",
+    ]
+    changed = False
+    for item in required:
+        if item not in existing:
+            existing.append(item)
+            changed = True
+    if changed or not gitignore_path.exists():
+        text = "\n".join(line for line in existing if line.strip()) + "\n"
+        write_text(gitignore_path, text)
+    return gitignore_path
+
+
+def detect_source_main(book_root: Path) -> Path:
+    expected = book_root / f"{book_root.name}.tex"
+    if expected.exists():
+        return expected.resolve()
+
+    fallback = book_root / "main.tex"
+    if fallback.exists():
+        return fallback.resolve()
+
+    candidates = []
+    for path in sorted(book_root.glob("*.tex")):
+        if path.name in {"common_preamble.tex", "translated_common_preamble.tex"}:
+            continue
+        text = read_text(path)
+        if r"\documentclass" in text:
+            candidates.append(path.resolve())
+
+    if len(candidates) == 1:
+        return candidates[0]
+    raise SystemExit(f"Source main TeX file not found under {book_root}")
+
+
+def parse_source_main_inputs(source_main: Path) -> list[dict[str, str]]:
     lines = read_text(source_main).splitlines()
     current_part = ""
     in_mainmatter = False
@@ -60,7 +116,7 @@ def parse_source_main(source_main: Path) -> list[dict[str, str]]:
         if stripped == r"\mainmatter":
             in_mainmatter = True
             continue
-        part_match = re.match(r"\\part\{(.+)\}", stripped)
+        part_match = PART_RE.match(stripped)
         if part_match:
             current_part = part_match.group(1)
             continue
@@ -72,13 +128,14 @@ def parse_source_main(source_main: Path) -> list[dict[str, str]]:
         input_rel = input_match.group(1)
         source_chapter = (source_main.parent / input_rel).resolve()
         chapter_text = read_text(source_chapter)
-        chapter_match = re.search(r"\\chapter\{(.+?)\}", chapter_text)
+        chapter_match = CHAPTER_RE.search(chapter_text)
         title = chapter_match.group(1) if chapter_match else source_chapter.parent.name
         chapters.append(
             {
                 "key": source_chapter.parent.name,
                 "title": title,
                 "part": current_part,
+                "appendix": False,
                 "source_abs": str(source_chapter),
                 "source_input_rel": input_rel,
             }
@@ -86,6 +143,72 @@ def parse_source_main(source_main: Path) -> list[dict[str, str]]:
     if not chapters:
         raise SystemExit(f"No chapter inputs found in {source_main}")
     return chapters
+
+
+def parse_source_main_inline(source_main: Path) -> list[dict[str, object]]:
+    lines = read_text(source_main).splitlines(keepends=True)
+    current_part = ""
+    in_mainmatter = False
+    in_appendix = False
+    chapters: list[dict[str, object]] = []
+    i = 0
+    while i < len(lines):
+        stripped = lines[i].strip()
+        if stripped == r"\mainmatter":
+            in_mainmatter = True
+            i += 1
+            continue
+        if stripped == r"\appendix":
+            in_appendix = True
+            i += 1
+            continue
+        part_match = PART_RE.match(stripped)
+        if part_match:
+            current_part = part_match.group(1)
+            i += 1
+            continue
+        if not in_mainmatter:
+            i += 1
+            continue
+        chapter_match = CHAPTER_RE.match(stripped)
+        if not chapter_match:
+            i += 1
+            continue
+
+        start = i
+        title = chapter_match.group(1)
+        j = i + 1
+        while j < len(lines):
+            probe = lines[j].strip()
+            if CHAPTER_RE.match(probe) or PART_RE.match(probe) or probe in {r"\appendix", r"\backmatter", r"\end{document}"}:
+                break
+            j += 1
+
+        key = chapter_unit_key(len(chapters) + 1, title)
+        chapters.append(
+            {
+                "key": key,
+                "title": title,
+                "part": current_part,
+                "appendix": in_appendix,
+                "start_line": start,
+                "end_line": j,
+                "source_text": "".join(lines[start:j]),
+            }
+        )
+        i = j
+
+    if not chapters:
+        raise SystemExit(f"No inline chapters found in {source_main}")
+    return chapters
+
+
+def parse_source_main(source_main: Path) -> dict[str, object]:
+    source_text = read_text(source_main)
+    has_input_chapters = bool(re.search(r"\\input\{(.+/content\.tex)\}", source_text))
+    if has_input_chapters:
+        return {"layout": "inputs", "chapters": parse_source_main_inputs(source_main)}
+    return {"layout": "inline", "chapters": parse_source_main_inline(source_main)}
 
 
 def rewrite_graphicspath_line(line: str, source_dir: Path, target_dir: Path) -> str:
@@ -106,13 +229,13 @@ def rewrite_graphicspath_line(line: str, source_dir: Path, target_dir: Path) -> 
     return "\\graphicspath{" + "".join(f"{{{item}}}" for item in rewritten) + "}\n"
 
 
-def render_initial_main(source_main: Path, language_dir: Path, chapters: list[dict[str, str]]) -> str:
+def render_initial_main_inputs(source_main: Path, language_dir: Path, chapters: list[dict[str, object]]) -> str:
     source_text = read_text(source_main)
     chapter_lookup = {chapter["source_input_rel"]: chapter["key"] for chapter in chapters}
     out_lines: list[str] = []
     for line in source_text.splitlines(keepends=True):
         stripped = line.strip()
-        if re.fullmatch(r"\\input\{.+common_preamble\.tex\}", stripped):
+        if re.fullmatch(r"\\input\{.*common_preamble\.tex\}", stripped):
             out_lines.append(r"\input{translated_common_preamble.tex}" + "\n")
             continue
         if stripped.startswith(r"\graphicspath{"):
@@ -126,6 +249,36 @@ def render_initial_main(source_main: Path, language_dir: Path, chapters: list[di
             continue
         out_lines.append(line)
     return "".join(out_lines)
+
+
+def render_initial_main_inline(source_main: Path, language_dir: Path, chapters: list[dict[str, object]]) -> str:
+    lines = read_text(source_main).splitlines(keepends=True)
+    chapter_by_start = {int(chapter["start_line"]): chapter for chapter in chapters}
+    out_lines: list[str] = []
+    i = 0
+    while i < len(lines):
+        chapter = chapter_by_start.get(i)
+        if chapter is not None:
+            out_lines.append(f"\\input{{chapters/{chapter['key']}/content.tex}}\n")
+            i = int(chapter["end_line"])
+            continue
+        line = lines[i]
+        stripped = line.strip()
+        if re.fullmatch(r"\\input\{.*common_preamble\.tex\}", stripped):
+            out_lines.append(r"\input{translated_common_preamble.tex}" + "\n")
+        elif stripped.startswith(r"\graphicspath{"):
+            out_lines.append(rewrite_graphicspath_line(line, source_main.parent, language_dir))
+        else:
+            out_lines.append(line)
+        i += 1
+    return "".join(out_lines)
+
+
+def render_initial_main(source_main: Path, language_dir: Path, parsed: dict[str, object]) -> str:
+    chapters = parsed["chapters"]
+    if parsed["layout"] == "inputs":
+        return render_initial_main_inputs(source_main, language_dir, chapters)
+    return render_initial_main_inline(source_main, language_dir, chapters)
 
 
 def render_translated_preamble(language: str) -> str:
@@ -189,16 +342,18 @@ def render_translated_preamble(language: str) -> str:
 
 
 def build_manifest(repo_root: Path, book_root_rel: str, language: str) -> dict:
-    source_main = (repo_root / book_root_rel / f"{Path(book_root_rel).name}.tex").resolve()
-    if not source_main.exists():
-        raise SystemExit(f"Source main TeX file not found: {source_main}")
+    source_main = detect_source_main((repo_root / book_root_rel).resolve())
     language_dir = (repo_root / book_root_rel / language).resolve()
-    chapters = parse_source_main(source_main)
+    parsed = parse_source_main(source_main)
+    chapters = parsed["chapters"]
+    source_dir = translation_source_dir(repo_root, book_root_rel)
+    source_book = source_dir / "book_main_source.tex"
     target_main = language_dir / source_main.name
     manifest = {
         "book_root_rel": book_root_rel,
         "language": language,
         "language_name": LANGUAGES[language]["name"],
+        "source_layout": parsed["layout"],
         "source_main_rel": rel_to_repo(source_main, repo_root),
         "language_dir_rel": rel_to_repo(language_dir, repo_root),
         "target_main_rel": rel_to_repo(target_main, repo_root),
@@ -211,7 +366,8 @@ def build_manifest(repo_root: Path, book_root_rel: str, language: str) -> dict:
             "kind": "book",
             "title": Path(book_root_rel).name,
             "part": "",
-            "source_rel": manifest["source_main_rel"],
+            "appendix": False,
+            "source_rel": rel_to_repo(source_book, repo_root),
             "target_rel": manifest["target_main_rel"],
             "status": "pending",
             "sha256": "",
@@ -219,7 +375,10 @@ def build_manifest(repo_root: Path, book_root_rel: str, language: str) -> dict:
         }
     )
     for chapter in chapters:
-        source_abs = Path(chapter["source_abs"])
+        if parsed["layout"] == "inputs":
+            source_abs = Path(chapter["source_abs"])
+        else:
+            source_abs = source_dir / f"{chapter['key']}.tex"
         target_abs = language_dir / "chapters" / chapter["key"] / "content.tex"
         manifest["units"].append(
             {
@@ -227,6 +386,7 @@ def build_manifest(repo_root: Path, book_root_rel: str, language: str) -> dict:
                 "kind": "chapter",
                 "title": chapter["title"],
                 "part": chapter["part"],
+                "appendix": bool(chapter.get("appendix", False)),
                 "source_rel": rel_to_repo(source_abs, repo_root),
                 "target_rel": rel_to_repo(target_abs, repo_root),
                 "status": "pending",
@@ -265,12 +425,16 @@ def init_language(repo_root: Path, book_root_rel: str, language: str) -> Path:
     manifest["updated_at"] = now_iso()
     language_dir = repo_root / manifest["language_dir_rel"]
     language_dir.mkdir(parents=True, exist_ok=True)
+    ensure_book_gitignore(repo_root, book_root_rel)
     preamble_path = language_dir / "translated_common_preamble.tex"
     write_text(preamble_path, render_translated_preamble(language))
 
     source_main = repo_root / manifest["source_main_rel"]
-    chapters = parse_source_main(source_main)
-    initial_main = render_initial_main(source_main, language_dir, chapters)
+    parsed = parse_source_main(source_main)
+    chapters = parsed["chapters"]
+    initial_main = render_initial_main(source_main, language_dir, parsed)
+    source_dir = translation_source_dir(repo_root, book_root_rel)
+    write_text(source_dir / "book_main_source.tex", initial_main)
     target_main = repo_root / manifest["target_main_rel"]
     prior_book = existing_units.get("book", {})
     if prior_book.get("status") != "done":
@@ -295,6 +459,9 @@ def init_language(repo_root: Path, book_root_rel: str, language: str) -> Path:
             if prior_book.get("status") != "done":
                 write_text(target_path, initial_main)
         else:
+            if manifest["source_layout"] == "inline":
+                source_text = next(chapter["source_text"] for chapter in chapters if chapter["key"] == unit["key"])
+                write_text(repo_root / unit["source_rel"], source_text)
             if not target_path.exists():
                 source_text = read_text(repo_root / unit["source_rel"])
                 write_text(target_path, source_text)
@@ -319,16 +486,16 @@ def next_pending_unit(manifest: dict) -> dict | None:
 def render_translation_prompt(repo_root: Path, manifest: dict, unit: dict) -> str:
     language_name = LANGUAGES[manifest["language"]]["name"]
     if unit["kind"] == "book":
-        chapters = parse_source_main(repo_root / manifest["source_main_rel"])
-        source_text = render_initial_main(
-            repo_root / manifest["source_main_rel"],
-            repo_root / manifest["language_dir_rel"],
-            chapters,
-        )
-        scope_line = "This file contains the cover page text, title metadata, part titles, and chapter includes for the translated edition."
+        source_text = read_text(repo_root / unit["source_rel"])
+        if manifest.get("source_layout") == "inline":
+            scope_line = "This file contains the translated-edition skeleton for a single-file TeX book: cover page text, front matter, part titles, appendix markers, and chapter include lines."
+        else:
+            scope_line = "This file contains the cover page text, title metadata, part titles, and chapter includes for the translated edition."
     else:
         source_text = read_text(repo_root / unit["source_rel"])
         scope_line = f'This file is one chapter from part "{unit["part"]}" with the chapter title "{unit["title"]}".'
+        if unit.get("appendix"):
+            scope_line += " It belongs to the appendix section of the book."
     return f"""Translate the following LaTeX file into {language_name}.
 
 Goal:
