@@ -9,8 +9,8 @@ Export a standalone LaTeX book/article into a compact pocket-size PDF.
 
 Options:
   --repo-root <path>         Host repo root (required)
-  --project-root <path>      Directory containing the TeX project (required)
-  --main-tex <file>          Main TeX file relative to project root (required)
+  --project-root <path>      Project root containing the TeX sources and relative assets (required)
+  --main-tex <file>          Main TeX file relative to project root; may live in a subdirectory such as zh/book_zh.tex (required)
   --output-pdf <path>        Destination PDF in the host repo (default: <project-root>/<base>_<suffix>.pdf)
   --docs-output-pdf <path>   Optional docs mirror PDF path
   --overflow-report <path>   Optional Markdown overflow report path
@@ -174,6 +174,14 @@ if [[ ! -f "$project_root/$main_tex" ]]; then
 fi
 
 base_name="$(basename "${main_tex%.tex}")"
+main_dir_rel="$(dirname "$main_tex")"
+if [[ "$main_dir_rel" == "." ]]; then
+  main_dir_rel=""
+fi
+project_compile_root="$project_root"
+if [[ -n "$main_dir_rel" ]]; then
+  project_compile_root="$project_root/$main_dir_rel"
+fi
 
 if [[ -z "$output_pdf" ]]; then
   output_pdf="$project_root/${base_name}_${suffix}.pdf"
@@ -204,8 +212,13 @@ tmp_dir="$(mktemp -d)"
 trap 'rm -rf "$tmp_dir"' EXIT
 
 cp -a "$project_root"/. "$tmp_dir"/
-tmp_tex="$tmp_dir/$(basename "$main_tex")"
-build_dir="$tmp_dir/build"
+tmp_tex="$tmp_dir/$main_tex"
+tmp_compile_root="$tmp_dir"
+if [[ -n "$main_dir_rel" ]]; then
+  tmp_compile_root="$tmp_dir/$main_dir_rel"
+fi
+tmp_main_basename="$(basename "$main_tex")"
+build_dir="$tmp_compile_root/build"
 mkdir -p "$build_dir"
 
 python3 - "$tmp_tex" "$font_mode" "$paper_width" "$paper_height" "$geometry_margin" <<'PY'
@@ -252,18 +265,39 @@ else:
 
 text = path.read_text(encoding="utf-8")
 
-text = re.sub(
+geometry_replaced = False
+updated = re.sub(
     r"\\geometry\{[^}]*\}",
     rf"\\geometry{{paperwidth={paper_width},paperheight={paper_height},margin={margin}}}",
     text,
     count=1,
 )
-text = re.sub(
-    r"\\usepackage(\[[^\]]*\])?\{geometry\}",
-    rf"\\usepackage[paperwidth={paper_width},paperheight={paper_height},margin={margin}]{{geometry}}",
-    text,
-    count=1,
-)
+if updated != text:
+    text = updated
+    geometry_replaced = True
+else:
+    updated = re.sub(
+        r"\\usepackage(\[[^\]]*\])?\{geometry\}",
+        rf"\\usepackage[paperwidth={paper_width},paperheight={paper_height},margin={margin}]{{geometry}}",
+        text,
+        count=1,
+    )
+    if updated != text:
+        text = updated
+        geometry_replaced = True
+
+if not geometry_replaced:
+    preamble_match = re.search(r"(?m)^\\input\{[^}]*preamble[^}]*\.tex\}\s*$", text)
+    if preamble_match:
+        text = text[:preamble_match.start()] + rf"\PassOptionsToPackage{{paperwidth={paper_width},paperheight={paper_height},margin={margin}}}{{geometry}}" + "\n" + text[preamble_match.start():]
+        geometry_replaced = True
+
+if not geometry_replaced:
+    text = text.replace(
+        "\\begin{document}",
+        rf"\PassOptionsToPackage{{paperwidth={paper_width},paperheight={paper_height},margin={margin}}}{{geometry}}" + "\n\\begin{document}",
+        1,
+    )
 
 if font_mode == "onepointtwo" and "\\changefontsizes" not in text:
     geom_pattern = re.compile(r"(\\(?:usepackage(?:\[[^\]]*\])?\{geometry\}|geometry\{[^}]*\})[^\n]*\n)", re.MULTILINE)
@@ -359,15 +393,15 @@ PY
 
 compile_log="$build_dir/${base_name}.log"
 if ! (
-  cd "$tmp_dir"
-  "$compile_engine" -interaction=nonstopmode -halt-on-error -file-line-error -output-directory="$build_dir" "$(basename "$main_tex")" >/tmp/export_tex_book_pocket_pdf.out 2>&1
+  cd "$tmp_compile_root"
+  "$compile_engine" -interaction=nonstopmode -halt-on-error -file-line-error -output-directory="$build_dir" "$tmp_main_basename" >/tmp/export_tex_book_pocket_pdf.out 2>&1
 ); then
   cat /tmp/export_tex_book_pocket_pdf.out >&2
   exit 1
 fi
 if ! (
-  cd "$tmp_dir"
-  "$compile_engine" -interaction=nonstopmode -halt-on-error -file-line-error -output-directory="$build_dir" "$(basename "$main_tex")" >/tmp/export_tex_book_pocket_pdf.out 2>&1
+  cd "$tmp_compile_root"
+  "$compile_engine" -interaction=nonstopmode -halt-on-error -file-line-error -output-directory="$build_dir" "$tmp_main_basename" >/tmp/export_tex_book_pocket_pdf.out 2>&1
 ); then
   cat /tmp/export_tex_book_pocket_pdf.out >&2
   exit 1
@@ -390,8 +424,8 @@ fi
 if [[ -f "$compile_log" ]]; then
   python3 "$module_root/scripts/report_latex_overfulls.py" \
     --log "$compile_log" \
-    --compile-root "$tmp_dir" \
-    --display-root "$project_root" \
+    --compile-root "$tmp_compile_root" \
+    --display-root "$project_compile_root" \
     --output "$overflow_report" \
     --variant-label "$(basename "$output_pdf")" >/dev/null
 fi
