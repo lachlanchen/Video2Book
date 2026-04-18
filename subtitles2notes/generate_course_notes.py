@@ -1488,24 +1488,20 @@ def build_course_cover_titlepage(
 \\begin{{titlepage}}
 \\thispagestyle{{empty}}
 \\begin{{tikzpicture}}[remember picture,overlay]
-  \\node[anchor=south west,inner sep=0] at (current page.south west) {{%
-    \\includegraphics[width=\\paperwidth,height=\\paperheight]{{assets/cover-art.png}}%
+  \\node[anchor=center,inner sep=0] at (current page.center) {{%
+    \\includegraphics[height=\\paperheight,keepaspectratio]{{assets/cover-art.png}}%
   }};
-  \\node[
-    anchor=north west,
-    inner sep=0,
-    minimum width=\\paperwidth,
-    minimum height=0.34\\paperheight,
-    fill=white,
-    fill opacity=1,
-    text opacity=1
-  ] at (current page.north west) {{}};
   \\node[
     anchor=north west,
     align=left,
     text width=0.78\\paperwidth,
-    inner sep=0pt
-  ] at ([xshift=0.08\\paperwidth,yshift=-0.10\\paperheight]current page.north west) {{%
+    fill=white,
+    fill opacity=0.9,
+    text opacity=1,
+    rounded corners=8pt,
+    inner xsep=10pt,
+    inner ysep=8pt
+  ] at ([xshift=0.08\\paperwidth,yshift=-0.06\\paperheight]current page.north west) {{%
     {{\\fontsize{{30}}{{33}}\\selectfont\\bfseries\\color{{black!88}} {title_course}\\\\[0.85em]}}
     {{\\large\\color{{black!72}} {subtitle}}}
   }};
