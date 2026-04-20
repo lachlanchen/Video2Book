@@ -129,6 +129,7 @@ class CourseConfig:
     course_rel: str | None = None
     course_title: str | None = None
     course_descriptor: str | None = None
+    lecture_order: list[int] = field(default_factory=list)
     dynamic_book_enabled: bool = False
     dynamic_book_title: str | None = None
     dynamic_book_descriptor: str | None = None
@@ -198,6 +199,17 @@ def load_course_config(path: Path | None) -> CourseConfig:
         return config
     raw = json.loads(config_path.read_text(encoding="utf-8"))
     config.dynamic_book_enabled = parse_bool(raw.get("dynamic_book_enabled"), config.dynamic_book_enabled)
+    lecture_order_raw = raw.get("lecture_order") or []
+    if isinstance(lecture_order_raw, list):
+        ordered_numbers: list[int] = []
+        for item in lecture_order_raw:
+            try:
+                number = int(item)
+            except (TypeError, ValueError):
+                continue
+            if number > 0 and number not in ordered_numbers:
+                ordered_numbers.append(number)
+        config.lecture_order = ordered_numbers
     for key in (
         "course_rel",
         "course_title",
@@ -433,6 +445,44 @@ def eligible_courses(source_root: Path, markdown_root: Path, subtitle_root: Path
     return eligible
 
 
+def lecture_order_rank_map(course_config: CourseConfig) -> dict[int, int]:
+    return {number: index for index, number in enumerate(course_config.lecture_order)}
+
+
+def ordered_transcripts_for_course(md_dir: Path, course_config: CourseConfig) -> list[Path]:
+    transcripts = sorted(md_dir.glob("*.md"))
+    if not course_config.lecture_order:
+        return transcripts
+
+    rank_map = lecture_order_rank_map(course_config)
+    fallback_base = len(rank_map)
+
+    def sort_key(path: Path) -> tuple[int, int, str]:
+        lecture_number = parse_lecture_number(path.stem)
+        if lecture_number in rank_map:
+            return (rank_map[lecture_number], lecture_number, path.name)
+        fallback_rank = fallback_base + (lecture_number if lecture_number > 0 else 10_000)
+        return (fallback_rank, lecture_number, path.name)
+
+    return sorted(transcripts, key=sort_key)
+
+
+def order_lecture_entries(lecture_entries: list[LectureInfo], course_config: CourseConfig) -> list[LectureInfo]:
+    if not course_config.lecture_order:
+        return sorted(lecture_entries, key=lambda item: (item.lecture_number, item.lecture_slug))
+
+    rank_map = lecture_order_rank_map(course_config)
+    fallback_base = len(rank_map)
+
+    def sort_key(item: LectureInfo) -> tuple[int, int, str]:
+        if item.lecture_number in rank_map:
+            return (rank_map[item.lecture_number], item.lecture_number, item.lecture_slug)
+        fallback_rank = fallback_base + (item.lecture_number if item.lecture_number > 0 else 10_000)
+        return (fallback_rank, item.lecture_number, item.lecture_slug)
+
+    return sorted(lecture_entries, key=sort_key)
+
+
 def lecture_complete(output_root: Path, transcript_rel: str) -> bool:
     lecture = lecture_from_transcript_rel(
         repo_root=output_root.parent,
@@ -456,6 +506,7 @@ def next_pending_transcript(
     output_root: Path,
     course_rel: str | None,
     allow_partial_course: bool,
+    course_config: CourseConfig,
 ) -> str:
     grouped = video_files_by_course(source_root)
     if course_rel:
@@ -471,7 +522,7 @@ def next_pending_transcript(
         md_dir = markdown_root / current_course
         if not md_dir.exists():
             continue
-        for transcript in sorted(md_dir.glob("*.md")):
+        for transcript in ordered_transcripts_for_course(md_dir, course_config):
             transcript_rel = str(transcript.relative_to(markdown_root))
             if not lecture_complete(output_root, transcript_rel):
                 return transcript_rel
@@ -2362,7 +2413,7 @@ def generate_one_lecture(
                 course_descriptor=lecture.course_descriptor,
             )
         )
-    lecture_entries.sort(key=lambda item: (item.lecture_number, item.lecture_slug))
+    lecture_entries = order_lecture_entries(lecture_entries, course_config)
     write_course_book(course_root, lecture_entries, course_config)
     if not compile_tex("course.tex", course_root, course_runtime, "course_compile"):
         fallback_merge_pdf(course_root)
@@ -2449,6 +2500,7 @@ def main() -> int:
             output_root=output_root,
             course_rel=args.course,
             allow_partial_course=args.allow_partial_course,
+            course_config=course_config,
         )
         if next_rel:
             print(next_rel)

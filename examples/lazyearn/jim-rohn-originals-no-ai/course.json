@@ -1,9 +1,10 @@
 {
   "course_rel": "lazyearn/jim-rohn-originals-no-ai",
-  "course_title": "Jim Rohn - Originals - No Ai",
-  "course_descriptor": "LazyEarn track, curated Jim Rohn compilation playlist",
+  "course_title": "How You Got Successful?",
+  "course_descriptor": "Jim Rohn originals reordered as a smoother lecture-by-lecture book",
+  "lecture_order": [1, 9, 7, 8, 6, 11, 13, 20, 12, 16, 17, 21, 10, 14, 15, 18, 5, 2, 3, 19, 4],
   "lecturer_name": "Jim Rohn",
-  "deliverable_target": "a faithful, source-conscious chapter for Jim Rohn - Originals - No Ai, plus a per-course compiled PDF book.",
+  "deliverable_target": "a faithful, source-conscious lecture-by-lecture chapter sequence for How You Got Successful?, plus a compiled book that follows a smoother pedagogical order than the raw playlist.",
   "visual_target": "selected frames are supporting evidence for titles, on-screen captions, seminar context, and speaker identity; do not let them override the spoken content.",
   "mathematical_standard": "preserve concrete claims and business details when present, but avoid inventing formal finance or economics exposition that is not in the source.",
   "style_target": "notes should read like a careful companion text for personal discipline, ambition, sales framing, and self-management, with explicit separation between anecdote, motivational rhetoric, and concrete mechanism.",
