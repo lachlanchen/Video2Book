@@ -254,6 +254,9 @@ if font_mode == "onepointtwo":
     note_width = "0.78"
     manuscript_title_size = "28"
     manuscript_title_baseline = "32"
+    tabcolsep = "3pt"
+    tikz_scale = "0.74"
+    display_math_font = "\\footnotesize"
 else:
     stretch = "1.2em"
     hfuzz = "1pt"
@@ -276,6 +279,9 @@ else:
     note_width = "0.74"
     manuscript_title_size = "30"
     manuscript_title_baseline = "34"
+    tabcolsep = "3.5pt"
+    tikz_scale = "0.78"
+    display_math_font = "\\small"
 
 text = path.read_text(encoding="utf-8")
 
@@ -328,7 +334,7 @@ if package_inject:
 tuning_block = f"""
 \\setlength{{\\emergencystretch}}{{{stretch}}}
 \\setlength{{\\hfuzz}}{{{hfuzz}}}
-\\setlength{{\\tabcolsep}}{{4pt}}
+\\setlength{{\\tabcolsep}}{{{tabcolsep}}}
 \\pretolerance=1000
 \\tolerance={tolerance}
 \\hbadness={hbadness}
@@ -414,6 +420,64 @@ for line in lines:
     patched_lines.append(line)
 text = "\n".join(patched_lines) + "\n"
 
+text = text.replace(
+    "\\begin{tabular}",
+    "\\begin{adjustbox}{max width=\\linewidth,center}\n\\begin{tabular}",
+)
+text = text.replace(
+    "\\end{tabular}",
+    "\\end{tabular}\n\\end{adjustbox}",
+)
+
+for env in ("align*", "align", "equation*", "equation", "gather*", "gather", "multline*", "multline"):
+    text = text.replace(
+        f"\\begin{{{env}}}",
+        f"\\begingroup{display_math_font}\n\\begin{{{env}}}",
+    )
+    text = text.replace(
+        f"\\end{{{env}}}",
+        f"\\end{{{env}}}\n\\endgroup",
+    )
+
+def pocketize_nodes(match):
+    options = match.group(1)
+    if "minimum width=" not in options or "text width=" in options:
+        return match.group(0)
+    width_match = re.search(r"minimum width\s*=\s*([0-9.]+)cm", options)
+    if not width_match:
+        return match.group(0)
+    width_cm = max(float(width_match.group(1)) - 0.45, 1.35)
+    wrapped_options = options.rstrip() + f", align=center, text width={width_cm:.2f}cm"
+    return f"\\node[{wrapped_options}]"
+
+text = re.sub(r"\\node\[([^\]]*minimum width[^\]]*)\]", pocketize_nodes, text)
+
+def wrap_arrow_equation(match):
+    env = match.group(1)
+    body = match.group(2).strip()
+    if body.count("\\to") < 3 or "\\\\" in body or "\\begin{" in body:
+        return match.group(0)
+    parts = [part.strip() for part in body.split("\\to")]
+    if len(parts) < 4:
+        return match.group(0)
+    lines = []
+    chunk_size = 3
+    for idx in range(0, len(parts), chunk_size):
+        chunk = parts[idx: idx + chunk_size]
+        line = " \\to ".join(chunk)
+        if idx:
+            line = "\\to " + line
+        lines.append(line)
+    aligned = " \\\\\n".join(lines)
+    return f"\\begin{{{env}}}\n\\begin{{aligned}}\n{aligned}\n\\end{{aligned}}\n\\end{{{env}}}"
+
+text = re.sub(
+    r"\\begin\{(equation\*?)\}(.*?)\\end\{\1\}",
+    wrap_arrow_equation,
+    text,
+    flags=re.S,
+)
+
 cover_replacements = {
     "text width=0.72\\paperwidth": f"text width={title_width}\\paperwidth",
     "text width=0.7\\paperwidth": f"text width={title_width}\\paperwidth",
@@ -447,7 +511,11 @@ text = text.replace("{\\normalsize\\color{black!78}", "{\\small\\color{black!78}
 text = text.replace("\\vspace*{2.2cm}", "\\vspace*{1.6cm}", 1)
 text = text.replace("\\vspace{1.6cm}", "\\vspace{1.15cm}", 1)
 text = text.replace("\\vspace{1.4cm}", "\\vspace{1.0cm}", 1)
-text = text.replace("\\mainmatter", "\\tikzset{every picture/.append style={scale=0.78,transform shape}}\n\\mainmatter", 1)
+text = text.replace(
+    "\\mainmatter",
+    f"\\tikzset{{every picture/.append style={{scale={tikz_scale},transform shape}}}}\n\\mainmatter",
+    1,
+)
 
 path.write_text(text, encoding="utf-8")
 PY
