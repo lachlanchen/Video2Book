@@ -41,6 +41,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--log", required=True, help="Path to the pdflatex log file.")
     parser.add_argument("--compile-root", help="Temporary compile root used to resolve relative paths.")
     parser.add_argument("--display-root", help="Canonical source root to display in the report.")
+    parser.add_argument("--actionable-root", help="Root path used to decide whether a warning is actionable.")
     parser.add_argument("--output", required=True, help="Destination Markdown report path.")
     parser.add_argument("--variant-label", default="", help="Human-readable build label for the report header.")
     return parser.parse_args()
@@ -69,6 +70,12 @@ def resolve_source_path(raw: str, compile_root: Path | None, display_root: Path 
     if resolved is not None and display_root is not None:
       if raw.startswith("./"):
         mapped = display_root / raw[2:]
+        return mapped, str(mapped)
+      if raw.startswith("../"):
+        mapped = (display_root / raw).resolve()
+        return mapped, str(mapped)
+      if not raw.startswith("/"):
+        mapped = (display_root / raw).resolve()
         return mapped, str(mapped)
       if raw.startswith("/"):
         try:
@@ -127,6 +134,16 @@ def markdown_escape(value: str) -> str:
     return value.replace("|", "\\|")
 
 
+def is_under_root(path: Path | None, root: Path | None) -> bool:
+    if path is None or root is None:
+        return True
+    try:
+        path.resolve().relative_to(root.resolve())
+        return True
+    except ValueError:
+        return False
+
+
 def build_warning(
     raw_path: str | None,
     amount: str,
@@ -158,6 +175,7 @@ def main() -> int:
     log_path = Path(args.log)
     compile_root = Path(args.compile_root).resolve() if args.compile_root else None
     display_root = Path(args.display_root).resolve() if args.display_root else None
+    actionable_root = Path(args.actionable_root).resolve() if args.actionable_root else display_root
     output_path = Path(args.output)
 
     if not log_path.exists():
@@ -193,17 +211,17 @@ def main() -> int:
             line_no = int(overfull_match.group("line"))
             key = (overfull_match.group("amount"), current_tex, line_no, line_no)
             if key not in seen_actionable:
-                seen_actionable.add(key)
-                actionable_overfulls.append(
-                    build_warning(
-                        current_tex,
-                        overfull_match.group("amount"),
-                        line_no,
-                        line_no,
-                        compile_root,
-                        display_root,
-                    )
+                item = build_warning(
+                    current_tex,
+                    overfull_match.group("amount"),
+                    line_no,
+                    line_no,
+                    compile_root,
+                    display_root,
                 )
+                if is_under_root(item.file_path, actionable_root):
+                    seen_actionable.add(key)
+                    actionable_overfulls.append(item)
             continue
 
         overfull_paragraph_match = OVERFULL_PARAGRAPH_RE.match(line)
@@ -212,17 +230,17 @@ def main() -> int:
             line_end = int(overfull_paragraph_match.group("end") or line_start)
             key = (overfull_paragraph_match.group("amount"), current_tex, line_start, line_end)
             if key not in seen_actionable:
-                seen_actionable.add(key)
-                actionable_overfulls.append(
-                    build_warning(
-                        current_tex,
-                        overfull_paragraph_match.group("amount"),
-                        line_start,
-                        line_end,
-                        compile_root,
-                        display_root,
-                    )
+                item = build_warning(
+                    current_tex,
+                    overfull_paragraph_match.group("amount"),
+                    line_start,
+                    line_end,
+                    compile_root,
+                    display_root,
                 )
+                if is_under_root(item.file_path, actionable_root):
+                    seen_actionable.add(key)
+                    actionable_overfulls.append(item)
             continue
 
         underfull_match = UNDERFULL_PARAGRAPH_RE.match(line)
@@ -231,17 +249,17 @@ def main() -> int:
             line_end = int(underfull_match.group("end") or line_start)
             key = (underfull_match.group("amount"), current_tex, line_start, line_end)
             if key not in seen_underfull:
-                seen_underfull.add(key)
-                underfulls.append(
-                    build_warning(
-                        current_tex,
-                        underfull_match.group("amount"),
-                        line_start,
-                        line_end,
-                        compile_root,
-                        display_root,
-                    )
+                item = build_warning(
+                    current_tex,
+                    underfull_match.group("amount"),
+                    line_start,
+                    line_end,
+                    compile_root,
+                    display_root,
                 )
+                if is_under_root(item.file_path, actionable_root):
+                    seen_underfull.add(key)
+                    underfulls.append(item)
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
 

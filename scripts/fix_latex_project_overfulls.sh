@@ -15,6 +15,9 @@ Options:
   --main-tex <file>          Main TeX file relative to project root (required)
   --compile-command <cmd>    Custom shell build command run inside project root
   --work-dir <path>          Working directory for logs and reports
+  --report-compile-root <p>  Root path used to resolve compile-log file paths
+  --display-root <path>      Canonical source root to show in the report
+  --actionable-root <path>   Root path used to filter actionable source files
   --model <name>             Codex model (default: gpt-5.4)
   --reasoning <level>        low|medium|high|xhigh (default: high)
   --max-iterations <n>       Max Codex edit passes (default: 4)
@@ -29,6 +32,9 @@ project_root=""
 main_tex=""
 compile_command=""
 work_dir=""
+report_compile_root=""
+display_root=""
+actionable_root=""
 model="${NOTE_MODEL:-gpt-5.4}"
 reasoning="${NOTE_REASONING:-high}"
 max_iterations=4
@@ -54,6 +60,18 @@ while [[ $# -gt 0 ]]; do
       ;;
     --work-dir)
       work_dir="${2:-}"
+      shift 2
+      ;;
+    --report-compile-root)
+      report_compile_root="${2:-}"
+      shift 2
+      ;;
+    --display-root)
+      display_root="${2:-}"
+      shift 2
+      ;;
+    --actionable-root)
+      actionable_root="${2:-}"
       shift 2
       ;;
     --model)
@@ -91,6 +109,18 @@ fi
 
 if [[ -z "$work_dir" ]]; then
   work_dir="$repo_root/.latex-overflow-fix"
+fi
+
+if [[ -z "$report_compile_root" ]]; then
+  report_compile_root="$project_root"
+fi
+
+if [[ -z "$display_root" ]]; then
+  display_root="$project_root"
+fi
+
+if [[ -z "$actionable_root" ]]; then
+  actionable_root="$display_root"
 fi
 
 mkdir -p "$work_dir"
@@ -157,8 +187,9 @@ run_compile() {
 run_report() {
   python3 "$module_root/scripts/report_latex_overfulls.py" \
     --log "$logs_dir/compile_iteration_$1.log" \
-    --compile-root "$project_root" \
-    --display-root "$project_root" \
+    --compile-root "$report_compile_root" \
+    --display-root "$display_root" \
+    --actionable-root "$actionable_root" \
     --output "$report_path" \
     --variant-label "$(basename "$project_root")"
 }
@@ -182,7 +213,7 @@ On this iteration, edit only:
 
 Rules:
 1. Preserve meaning and notation.
-2. Prefer local fixes: split wide equations, wrap or scale wide figures, move long inline math to display, and shorten unbreakable lines.
+2. Prefer local fixes: split wide equations, wrap or scale wide flowcharts, TikZ blocks, figures, and tables to \`\linewidth\`, move long inline math to display, and shorten unbreakable lines.
 3. Do not edit generated PDFs or unrelated files.
 4. Do not run git commands.
 

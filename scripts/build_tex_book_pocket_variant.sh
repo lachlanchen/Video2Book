@@ -3,73 +3,57 @@ set -euo pipefail
 
 usage() {
   cat <<'USAGE'
-Usage: scripts/export_tex_book_pocket_pdf.sh --repo-root <path> --project-root <path> --main-tex <file> [options]
+Usage: scripts/build_tex_book_pocket_variant.sh --source-root <path> --main-tex <file> --compile-root <path> --build-dir <path> --log-path <path> [options]
 
-Export a standalone LaTeX book/article into a compact pocket-size PDF.
+Build a standalone TeX book into a pocket-size variant inside a disposable
+compile tree, while keeping source files in the original project untouched.
 
 Options:
-  --repo-root <path>         Host repo root (required)
-  --project-root <path>      Project root containing the TeX sources and relative assets (required)
-  --main-tex <file>          Main TeX file relative to project root; may live in a subdirectory such as zh/book_zh.tex (required)
-  --output-pdf <path>        Destination PDF in the host repo (default: <project-root>/<base>_<suffix>.pdf)
-  --docs-output-pdf <path>   Optional docs mirror PDF path
-  --overflow-report <path>   Optional Markdown overflow report path
-  --size <preset>            penguin (6x9, default), a5, or custom
+  --source-root <path>       Canonical source project root (required)
+  --main-tex <file>          Main TeX file relative to source root (required)
+  --compile-root <path>      Disposable compile root (required)
+  --build-dir <path>         Build/output directory inside compile root (required)
+  --log-path <path>          Path to combined compiler log (required)
   --font-mode <mode>         normal (default) or onepointtwo
-  --paper-width <size>       Custom width for --size custom, e.g. 6in
-  --paper-height <size>      Custom height for --size custom, e.g. 9in
-  --margin <size>            Custom geometry margin for --size custom, e.g. 0.55in
-  --suffix <suffix>          Output suffix (default: pocket)
+  --paper-width <size>       Custom width, e.g. 6in
+  --paper-height <size>      Custom height, e.g. 9in
+  --margin <size>            Geometry margin, e.g. 0.55in
   --compile-engine <name>    xelatex (default), lualatex, or pdflatex
-  --nutstore-pdf <path>      Optional extra sync target PDF path
-  -h, --help                 Show this help text
+  -h, --help                 Show this help
 USAGE
 }
 
-module_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-repo_root=""
-project_root=""
+source_root=""
 main_tex=""
-output_pdf=""
-docs_output_pdf=""
-overflow_report=""
-nutstore_pdf=""
-size_preset="penguin"
+compile_root=""
+build_dir=""
+log_path=""
 font_mode="normal"
 paper_width="6in"
 paper_height="9in"
 geometry_margin="0.55in"
-suffix="pocket"
 compile_engine="xelatex"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --repo-root)
-      repo_root="${2:-}"
-      shift 2
-      ;;
-    --project-root)
-      project_root="${2:-}"
+    --source-root)
+      source_root="${2:-}"
       shift 2
       ;;
     --main-tex)
       main_tex="${2:-}"
       shift 2
       ;;
-    --output-pdf)
-      output_pdf="${2:-}"
+    --compile-root)
+      compile_root="${2:-}"
       shift 2
       ;;
-    --docs-output-pdf)
-      docs_output_pdf="${2:-}"
+    --build-dir)
+      build_dir="${2:-}"
       shift 2
       ;;
-    --overflow-report)
-      overflow_report="${2:-}"
-      shift 2
-      ;;
-    --size)
-      size_preset="${2:-}"
+    --log-path)
+      log_path="${2:-}"
       shift 2
       ;;
     --font-mode)
@@ -88,16 +72,8 @@ while [[ $# -gt 0 ]]; do
       geometry_margin="${2:-}"
       shift 2
       ;;
-    --suffix)
-      suffix="${2:-}"
-      shift 2
-      ;;
     --compile-engine)
       compile_engine="${2:-}"
-      shift 2
-      ;;
-    --nutstore-pdf)
-      nutstore_pdf="${2:-}"
       shift 2
       ;;
     -h|--help)
@@ -112,36 +88,15 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-if [[ -z "$repo_root" || -z "$project_root" || -z "$main_tex" ]]; then
-  echo "--repo-root, --project-root, and --main-tex are required." >&2
+if [[ -z "$source_root" || -z "$main_tex" || -z "$compile_root" || -z "$build_dir" || -z "$log_path" ]]; then
+  echo "--source-root, --main-tex, --compile-root, --build-dir, and --log-path are required." >&2
   exit 1
 fi
 
-repo_root="$(cd "$repo_root" && pwd)"
-project_root="$(cd "$project_root" && pwd)"
-
-case "$size_preset" in
-  penguin)
-    paper_width="6in"
-    paper_height="9in"
-    geometry_margin="0.55in"
-    ;;
-  a5)
-    paper_width="5.83in"
-    paper_height="8.27in"
-    geometry_margin="0.52in"
-    ;;
-  custom)
-    if [[ -z "$paper_width" || -z "$paper_height" || -z "$geometry_margin" ]]; then
-      echo "Custom size requires --paper-width, --paper-height, and --margin." >&2
-      exit 1
-    fi
-    ;;
-  *)
-    echo "Unknown size preset: $size_preset" >&2
-    exit 1
-    ;;
-esac
+source_root="$(cd "$source_root" && pwd)"
+compile_root="$(mkdir -p "$compile_root" && cd "$compile_root" && pwd)"
+build_dir="$(mkdir -p "$build_dir" && cd "$build_dir" && pwd)"
+mkdir -p "$(dirname "$log_path")"
 
 case "$font_mode" in
   normal|onepointtwo)
@@ -161,65 +116,24 @@ case "$compile_engine" in
     ;;
 esac
 
-for command in "$compile_engine" python3; do
-  if ! command -v "$command" >/dev/null 2>&1; then
-    echo "Required command not found: $command" >&2
-    exit 1
-  fi
-done
-
-if [[ ! -f "$project_root/$main_tex" ]]; then
-  echo "Main TeX file not found: $project_root/$main_tex" >&2
+if [[ ! -f "$source_root/$main_tex" ]]; then
+  echo "Main TeX file not found: $source_root/$main_tex" >&2
   exit 1
 fi
 
-base_name="$(basename "${main_tex%.tex}")"
 main_dir_rel="$(dirname "$main_tex")"
 if [[ "$main_dir_rel" == "." ]]; then
   main_dir_rel=""
 fi
-project_compile_root="$project_root"
+
+rsync -a --delete "$source_root"/ "$compile_root"/
+
+tmp_tex="$compile_root/$main_tex"
+tmp_compile_root="$compile_root"
 if [[ -n "$main_dir_rel" ]]; then
-  project_compile_root="$project_root/$main_dir_rel"
+  tmp_compile_root="$compile_root/$main_dir_rel"
 fi
-
-if [[ -z "$output_pdf" ]]; then
-  output_pdf="$project_root/${base_name}_${suffix}.pdf"
-fi
-
-if [[ -z "$docs_output_pdf" ]]; then
-  repo_investment_root="$repo_root/investment_pdfs"
-  if [[ "$project_root" == "$repo_investment_root"* ]]; then
-    rel_dir="${project_root#"$repo_investment_root"/}"
-    docs_output_pdf="$repo_root/docs/investment_pdfs/$rel_dir/${base_name}_${suffix}.pdf"
-  fi
-fi
-
-if [[ -z "$overflow_report" ]]; then
-  overflow_report="$project_root/${base_name}_${suffix}_overflow.md"
-fi
-
-mkdir -p "$(dirname "$output_pdf")"
-if [[ -n "$docs_output_pdf" ]]; then
-  mkdir -p "$(dirname "$docs_output_pdf")"
-fi
-if [[ -n "$nutstore_pdf" ]]; then
-  mkdir -p "$(dirname "$nutstore_pdf")"
-fi
-mkdir -p "$(dirname "$overflow_report")"
-
-tmp_dir="$(mktemp -d)"
-trap 'rm -rf "$tmp_dir"' EXIT
-
-cp -a "$project_root"/. "$tmp_dir"/
-tmp_tex="$tmp_dir/$main_tex"
-tmp_compile_root="$tmp_dir"
-if [[ -n "$main_dir_rel" ]]; then
-  tmp_compile_root="$tmp_dir/$main_dir_rel"
-fi
-tmp_main_basename="$(basename "$main_tex")"
-build_dir="$tmp_compile_root/build"
-mkdir -p "$build_dir"
+tmp_main_argument="$(basename "$main_tex")"
 
 python3 - "$tmp_tex" "$font_mode" "$paper_width" "$paper_height" "$geometry_margin" <<'PY'
 from pathlib import Path
@@ -390,10 +304,7 @@ if "\\usepackage{fancyhdr}" in text or "\\pagestyle{fancy}" in text:
         tuning_block += header_block
     text = re.sub(r"\\setlength\{\\headheight\}\{[^}]*\}", rf"\\setlength{{\\headheight}}{{{headheight}}}", text, count=1)
 
-if "\\bookpocketoddheadbox" not in text:
-    text = text.replace("\\begin{document}", tuning_block + "\n\\begin{document}", 1)
-else:
-    text = text.replace("\\begin{document}", tuning_block + "\n\\begin{document}", 1)
+text = text.replace("\\begin{document}", tuning_block + "\n\\begin{document}", 1)
 
 lines = text.splitlines()
 patched_lines = []
@@ -452,50 +363,9 @@ text = text.replace("\\mainmatter", "\\tikzset{every picture/.append style={scal
 path.write_text(text, encoding="utf-8")
 PY
 
-compile_log="$build_dir/${base_name}.log"
-if ! (
+: > "$log_path"
+(
   cd "$tmp_compile_root"
-  "$compile_engine" -interaction=nonstopmode -halt-on-error -file-line-error -output-directory="$build_dir" "$tmp_main_basename" >/tmp/export_tex_book_pocket_pdf.out 2>&1
-); then
-  cat /tmp/export_tex_book_pocket_pdf.out >&2
-  exit 1
-fi
-if ! (
-  cd "$tmp_compile_root"
-  "$compile_engine" -interaction=nonstopmode -halt-on-error -file-line-error -output-directory="$build_dir" "$tmp_main_basename" >/tmp/export_tex_book_pocket_pdf.out 2>&1
-); then
-  cat /tmp/export_tex_book_pocket_pdf.out >&2
-  exit 1
-fi
-
-compiled_pdf="$build_dir/${base_name}.pdf"
-if [[ ! -f "$compiled_pdf" ]]; then
-  echo "Expected compiled PDF not found: $compiled_pdf" >&2
-  exit 1
-fi
-
-cp "$compiled_pdf" "$output_pdf"
-if [[ -n "$docs_output_pdf" ]]; then
-  cp "$compiled_pdf" "$docs_output_pdf"
-fi
-if [[ -n "$nutstore_pdf" ]]; then
-  cp "$compiled_pdf" "$nutstore_pdf"
-fi
-
-if [[ -f "$compile_log" ]]; then
-  python3 "$module_root/scripts/report_latex_overfulls.py" \
-    --log "$compile_log" \
-    --compile-root "$tmp_compile_root" \
-    --display-root "$project_compile_root" \
-    --actionable-root "$project_root" \
-    --output "$overflow_report" \
-    --variant-label "$(basename "$output_pdf")" >/dev/null
-fi
-
-printf 'exported %s\n' "$output_pdf"
-if [[ -n "$docs_output_pdf" ]]; then
-  printf 'synced docs %s\n' "$docs_output_pdf"
-fi
-if [[ -n "$nutstore_pdf" ]]; then
-  printf 'synced nutstore %s\n' "$nutstore_pdf"
-fi
+  "$compile_engine" -interaction=nonstopmode -halt-on-error -file-line-error -output-directory="$build_dir" "$tmp_main_argument" >>"$log_path" 2>&1
+  "$compile_engine" -interaction=nonstopmode -halt-on-error -file-line-error -output-directory="$build_dir" "$tmp_main_argument" >>"$log_path" 2>&1
+)
