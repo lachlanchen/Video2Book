@@ -53,6 +53,12 @@ Writing rules:
 - for every selected asset in the list, include the original screenshot in the chapter with `\includegraphics`
 - when the screenshot shows an equation or diagram worth reconstructing, keep the screenshot and place the cleaned LaTeX equation or TikZ redraw nearby rather than replacing the screenshot
 - center figure environments, screenshots, TikZ diagrams, and standalone visual reconstructions unless there is a specific local reason not to
+- when you create a flowchart, diagram, or table, design it for later pocket-size export:
+  - wrap long node labels manually with line breaks
+  - prefer narrow vertical layouts over wide horizontal sprawl
+  - keep the final TikZ picture or tabular block within `\linewidth`
+  - if there is a tradeoff, slightly larger readable labels are better than a wide overflowing figure
+- avoid giant matrix-style flowcharts or overly wide tables unless the lecture absolutely requires them
 
 Content requirements:
 - open with a short overview paragraph after the chapter heading

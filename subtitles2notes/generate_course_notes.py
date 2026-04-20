@@ -291,6 +291,7 @@ def build_task_context(lecture: LectureInfo, course_config: CourseConfig) -> str
         f"- Analytical standard: {course_config.mathematical_standard}",
         f"- Style target: {course_config.style_target}",
         "- Structural target: when the lecture naturally raises and resolves a local conceptual obstacle, preserve that rhythm with a standalone `Question & Answer` subsection inside the chapter rather than flattening it away.",
+        "- Pocket-layout target: any flowchart, table, or standalone diagram should survive later 6x9 pocket export; wrap long node text, prefer taller/narrower layouts over sprawling wide ones, keep visuals within `\\linewidth`, and favor readable labels over dense tiny text.",
         f"- Credit target: {course_config.credit_target}",
         "- Output discipline: each prompt stage should solve only its local subtask, but keep the full end goal in mind so downstream stages remain coherent.",
     ]

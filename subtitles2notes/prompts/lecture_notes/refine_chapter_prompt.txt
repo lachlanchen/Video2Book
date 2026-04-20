@@ -47,6 +47,12 @@ Required improvements:
 - keep every selected screenshot asset visible in the refined chapter, not just the redrawn interpretation
 - when a screenshot carries a board equation or diagram, pair it with the cleaned LaTeX equation or TikZ redraw nearby
 - keep figures, TikZ diagrams, and standalone reconstructed equations centered unless an asymmetric layout is genuinely better
+- make any flowchart, diagram, or table robust for later pocket-size export:
+  - wrap long labels
+  - compress width before compressing readability
+  - prefer taller/narrower layouts over sprawling wide ones
+  - keep diagrams and tables within `\linewidth`
+  - if needed, accept slightly larger local text and a taller figure rather than a wide overflowing one
 
 Chapter plan:
 
