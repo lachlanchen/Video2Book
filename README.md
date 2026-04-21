@@ -20,43 +20,43 @@
 These previews use the extracted first page of each published PDF from `LazyEarn`
 and `LazyLearn`.
 
-<table>
+<table width="100%">
   <tr>
-    <td align="center">
+    <td align="center" width="25%" valign="top">
       <a href="https://github.com/lachlanchen/LazyEarn/blob/main/investment_pdfs/wealth-from-first-principles/wealth-from-first-principles.pdf">
         <img src="https://raw.githubusercontent.com/lachlanchen/LazyEarn/main/docs/publications/wealth-from-first-principles/cover-page-1.png" width="180" alt="Wealth from First Principles cover" />
       </a>
     </td>
-    <td align="center">
+    <td align="center" width="25%" valign="top">
       <a href="https://github.com/lachlanchen/LazyEarn/blob/main/generated_course_notes/lazyearn/school-of-hard-knocks/hard-knocks-interviews/dynamic_book/how-you-got-rich.pdf">
         <img src="https://raw.githubusercontent.com/lachlanchen/LazyEarn/main/docs/publications/how-you-got-rich/cover-page-1.png" width="180" alt="How You Got Rich cover" />
       </a>
     </td>
-    <td align="center">
+    <td align="center" width="25%" valign="top">
       <a href="https://github.com/lachlanchen/LazyEarn/blob/main/generated_course_notes/lazyearn/jim-rohn-originals-no-ai/course.pdf">
         <img src="https://raw.githubusercontent.com/lachlanchen/LazyEarn/main/docs/publications/how-you-got-successful/cover-page-1.png" width="180" alt="How You Got Successful cover" />
       </a>
     </td>
-    <td align="center">
+    <td align="center" width="25%" valign="top">
       <a href="https://github.com/lachlanchen/LazyEarn/blob/main/how-you-got-happiness-publication/how-you-got-happiness.pdf">
         <img src="https://raw.githubusercontent.com/lachlanchen/LazyEarn/main/docs/publications/how-you-got-happiness/cover-page-1.png" width="180" alt="How You Got Happiness cover" />
       </a>
     </td>
   </tr>
   <tr>
-    <td align="center">
+    <td align="center" width="25%" valign="top">
       <a href="https://github.com/lachlanchen/LazyEarn/blob/main/investment_pdfs/wealth-from-first-principles/wealth-from-first-principles.pdf"><strong>Wealth from First Principles</strong></a><br />
       money, ownership, claims, and compounding
     </td>
-    <td align="center">
+    <td align="center" width="25%" valign="top">
       <a href="https://github.com/lachlanchen/LazyEarn/blob/main/generated_course_notes/lazyearn/school-of-hard-knocks/hard-knocks-interviews/dynamic_book/how-you-got-rich.pdf"><strong>How You Got Rich?</strong></a><br />
       a nonlinear wealth book built from interview evidence
     </td>
-    <td align="center">
+    <td align="center" width="25%" valign="top">
       <a href="https://github.com/lachlanchen/LazyEarn/blob/main/generated_course_notes/lazyearn/jim-rohn-originals-no-ai/course.pdf"><strong>How You Got Successful?</strong></a><br />
       Jim Rohn success lectures reordered into a smoother book arc
     </td>
-    <td align="center">
+    <td align="center" width="25%" valign="top">
       <a href="https://github.com/lachlanchen/LazyEarn/blob/main/how-you-got-happiness-publication/how-you-got-happiness.pdf"><strong>How You Got Happiness?</strong></a><br />
       Krishnamurti talks shaped into a book on attention, fear, meditation, and freedom
     </td>
@@ -66,43 +66,43 @@ and `LazyLearn`.
 `LazyLearn` also publishes a multilingual writing book plus a finished justice
 course book:
 
-<table>
+<table width="100%">
   <tr>
-    <td align="center">
+    <td align="center" width="25%" valign="top">
       <a href="https://github.com/lachlanchen/LazyLearn/blob/main/how-to-speak-and-write/how-to-speak-and-write.pdf">
         <img src="https://raw.githubusercontent.com/lachlanchen/LazyLearn/main/docs/publications/how-to-speak-and-write/cover-page-1.png" width="180" alt="How to Speak and Write English cover" />
       </a>
     </td>
-    <td align="center">
+    <td align="center" width="25%" valign="top">
       <a href="https://github.com/lachlanchen/LazyLearn/blob/main/how-to-speak-and-write/how-to-speak-and-write-zh.pdf">
         <img src="https://raw.githubusercontent.com/lachlanchen/LazyLearn/main/docs/publications/how-to-speak-and-write-zh/cover-page-1.png" width="180" alt="How to Speak and Write Traditional Chinese cover" />
       </a>
     </td>
-    <td align="center">
+    <td align="center" width="25%" valign="top">
       <a href="https://github.com/lachlanchen/LazyLearn/blob/main/how-to-speak-and-write/how-to-speak-and-write-jp.pdf">
         <img src="https://raw.githubusercontent.com/lachlanchen/LazyLearn/main/docs/publications/how-to-speak-and-write-jp/cover-page-1.png" width="180" alt="How to Speak and Write Japanese cover" />
       </a>
     </td>
-    <td align="center">
+    <td align="center" width="25%" valign="top">
       <a href="https://github.com/lachlanchen/LazyLearn/blob/main/justice-with-michael-sandel/justice-with-michael-sandel.pdf">
         <img src="https://raw.githubusercontent.com/lachlanchen/LazyLearn/main/docs/publications/justice-with-michael-sandel/cover-page-1.png" width="180" alt="Justice with Michael Sandel cover" />
       </a>
     </td>
   </tr>
   <tr>
-    <td align="center">
+    <td align="center" width="25%" valign="top">
       <a href="https://github.com/lachlanchen/LazyLearn/blob/main/how-to-speak-and-write/how-to-speak-and-write.pdf"><strong>How to Speak and Write</strong></a><br />
       reordered English edition
     </td>
-    <td align="center">
+    <td align="center" width="25%" valign="top">
       <a href="https://github.com/lachlanchen/LazyLearn/blob/main/how-to-speak-and-write/how-to-speak-and-write-zh.pdf"><strong>如何說話與寫作</strong></a><br />
       繁體中文版
     </td>
-    <td align="center">
+    <td align="center" width="25%" valign="top">
       <a href="https://github.com/lachlanchen/LazyLearn/blob/main/how-to-speak-and-write/how-to-speak-and-write-jp.pdf"><strong>話し方と書き方</strong></a><br />
       日本語版
     </td>
-    <td align="center">
+    <td align="center" width="25%" valign="top">
       <a href="https://github.com/lachlanchen/LazyLearn/blob/main/justice-with-michael-sandel/justice-with-michael-sandel.pdf"><strong>Justice with Michael Sandel</strong></a><br />
       Michael Sandel political philosophy course book
     </td>
@@ -111,43 +111,43 @@ course book:
 
 `leonardsusskind` also publishes core Theoretical Minimum physics books:
 
-<table>
+<table width="100%">
   <tr>
-    <td align="center">
+    <td align="center" width="25%" valign="top">
       <a href="https://github.com/lachlanchen/leonardsusskind/blob/main/core_quantum_mechanics/2012_winter_theoretical_minimum/quantum_mechanics_theoretical_minimum.pdf">
         <img src="https://raw.githubusercontent.com/lachlanchen/leonardsusskind/main/figs/readme-covers/quantum_mechanics_theoretical_minimum.png" width="180" alt="Quantum Mechanics Theoretical Minimum cover" />
       </a>
     </td>
-    <td align="center">
+    <td align="center" width="25%" valign="top">
       <a href="https://github.com/lachlanchen/leonardsusskind/blob/main/core_general_relativity/2012_fall_theoretical_minimum/general_relativity_theoretical_minimum.pdf">
         <img src="https://raw.githubusercontent.com/lachlanchen/leonardsusskind/main/figs/readme-covers/general_relativity_theoretical_minimum.png" width="180" alt="General Relativity Theoretical Minimum cover" />
       </a>
     </td>
-    <td align="center">
+    <td align="center" width="25%" valign="top">
       <a href="https://github.com/lachlanchen/leonardsusskind/blob/main/core_statistical_mechanics/2013_spring_theoretical_minimum/statistical_mechanics_theoretical_minimum.pdf">
         <img src="https://raw.githubusercontent.com/lachlanchen/leonardsusskind/main/figs/readme-covers/statistical_mechanics_theoretical_minimum_first_page.png" width="180" alt="Statistical Mechanics Theoretical Minimum cover" />
       </a>
     </td>
-    <td align="center">
+    <td align="center" width="25%" valign="top">
       <a href="https://github.com/lachlanchen/leonardsusskind/blob/main/core_cosmology/2013_winter_theoretical_minimum/cosmology_theoretical_minimum.pdf">
         <img src="https://raw.githubusercontent.com/lachlanchen/leonardsusskind/main/figs/readme-covers/cosmology_theoretical_minimum_first_page.png" width="180" alt="Cosmology Theoretical Minimum cover" />
       </a>
     </td>
   </tr>
   <tr>
-    <td align="center">
+    <td align="center" width="25%" valign="top">
       <a href="https://github.com/lachlanchen/leonardsusskind/blob/main/core_quantum_mechanics/2012_winter_theoretical_minimum/quantum_mechanics_theoretical_minimum.pdf"><strong>Quantum Mechanics</strong></a><br />
       Theoretical Minimum core book
     </td>
-    <td align="center">
+    <td align="center" width="25%" valign="top">
       <a href="https://github.com/lachlanchen/leonardsusskind/blob/main/core_general_relativity/2012_fall_theoretical_minimum/general_relativity_theoretical_minimum.pdf"><strong>General Relativity</strong></a><br />
       Theoretical Minimum core book
     </td>
-    <td align="center">
+    <td align="center" width="25%" valign="top">
       <a href="https://github.com/lachlanchen/leonardsusskind/blob/main/core_statistical_mechanics/2013_spring_theoretical_minimum/statistical_mechanics_theoretical_minimum.pdf"><strong>Statistical Mechanics</strong></a><br />
       Theoretical Minimum core book
     </td>
-    <td align="center">
+    <td align="center" width="25%" valign="top">
       <a href="https://github.com/lachlanchen/leonardsusskind/blob/main/core_cosmology/2013_winter_theoretical_minimum/cosmology_theoretical_minimum.pdf"><strong>Cosmology</strong></a><br />
       Theoretical Minimum core book
     </td>

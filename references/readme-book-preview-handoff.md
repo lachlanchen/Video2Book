@@ -99,6 +99,8 @@ Current `Video2Book` usage:
 Important implementation details:
 
 - use `width="180"` or another fixed width for even alignment
+- use `<table width="100%">` for four-item preview strips
+- use `<td align="center" width="25%" valign="top">` so titles and covers align across repos
 - link the image directly to the canonical PDF
 - keep the descriptions short
 - do not overload the top strip with too many books
