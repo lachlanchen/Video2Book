@@ -43,26 +43,67 @@ The third stage is already producing real book-like outputs in host repos:
 - per-lecture PDFs under `generated_course_notes/.../chapters/`
 - transcript trees in `markdown/` and subtitle trees in `subtitles/`
 
-Representative tracked outputs:
+The flagship `LazyEarn` books below use the extracted first page of each published PDF as the preview image.
 
-- [LazyEarn: Yale Financial Markets course book](https://github.com/lachlanchen/LazyEarn/blob/main/generated_course_notes/lazyearn/yale-financial-markets/course.pdf)
-- [LazyLearn: How You Speak and Write course book](https://github.com/lachlanchen/LazyLearn/blob/main/generated_course_notes/lazylearn/how-you-speak-and-write/course.pdf)
-- [LazyLearn: Justice with Michael Sandel course book](https://github.com/lachlanchen/LazyLearn/blob/main/generated_course_notes/lazylearn/justice-with-michael-sandel/course.pdf)
-- [Leonard Susskind: Classical Mechanics (Stanford partial)](https://github.com/lachlanchen/leonardsusskind/blob/main/core_classical_mechanics/2011_fall_modern_physics_stanford_partial/classical_mechanics_stanford_partial.pdf)
-- [Leonard Susskind: Classical Mechanics (Theoretical Minimum)](https://github.com/lachlanchen/leonardsusskind/blob/main/all_notes/classical_mechanics_theoretical_minimum.pdf)
-- [Leonard Susskind: Advanced Quantum Mechanics](https://github.com/lachlanchen/leonardsusskind/blob/main/supplemental_advanced_quantum/advanced_quantum_mechanics.pdf)
-- [Leonard Susskind: Topics in String Theory](https://github.com/lachlanchen/leonardsusskind/blob/main/supplemental_cosmology_and_black_holes/topics_in_string_theory.pdf)
-- [Leonard Susskind: Cosmology Legacy](https://github.com/lachlanchen/leonardsusskind/blob/main/all_notes/cosmology_legacy.pdf)
-- [Leonard Susskind: Cosmology Theoretical Minimum](https://github.com/lachlanchen/leonardsusskind/blob/main/all_notes/cosmology_theoretical_minimum.pdf)
-- [Leonard Susskind: Demystifying the Higgs Boson](https://github.com/lachlanchen/leonardsusskind/blob/main/supplemental_higgs_boson/demystifying_the_higgs_boson.pdf)
-- [Leonard Susskind: Particle Physics 1](https://github.com/lachlanchen/leonardsusskind/blob/main/supplemental_particle_physics_1/particle_physics_1_basic_concepts.pdf)
-- [Leonard Susskind: Particle Physics 2](https://github.com/lachlanchen/leonardsusskind/blob/main/supplemental_particle_physics_2/particle_physics_2_standard_model.pdf)
-- [Leonard Susskind: Particle Physics 3](https://github.com/lachlanchen/leonardsusskind/blob/main/supplemental_particle_physics_3/particle_physics_3_supersymmetry_and_grand_unification.pdf)
-- [Leonard Susskind: Quantum Entanglement Part 1](https://github.com/lachlanchen/leonardsusskind/blob/main/supplemental_quantum_entanglement/quantum_entanglement_part_1.pdf)
-- [Leonard Susskind: Quantum Entanglement Part 3](https://github.com/lachlanchen/leonardsusskind/blob/main/supplemental_quantum_entanglement/quantum_entanglement_part_3.pdf)
-- [Leonard Susskind: String Theory and M-Theory](https://github.com/lachlanchen/leonardsusskind/blob/main/supplemental_string_theory/string_theory_and_m_theory.pdf)
+<table>
+  <tr>
+    <td align="center">
+      <a href="https://github.com/lachlanchen/LazyEarn/blob/main/investment_pdfs/wealth-from-first-principles/wealth-from-first-principles.pdf">
+        <img src="https://raw.githubusercontent.com/lachlanchen/LazyEarn/main/docs/publications/wealth-from-first-principles/cover-page-1.png" width="180" alt="Wealth from First Principles cover" />
+      </a>
+    </td>
+    <td align="center">
+      <a href="https://github.com/lachlanchen/LazyEarn/blob/main/investment_pdfs/financial_freedom/financial_freedom.pdf">
+        <img src="https://raw.githubusercontent.com/lachlanchen/LazyEarn/main/docs/publications/financial-freedom/cover-page-1.png" width="180" alt="Financial Freedom Playbook cover" />
+      </a>
+    </td>
+    <td align="center">
+      <a href="https://github.com/lachlanchen/LazyEarn/blob/main/generated_course_notes/lazyearn/school-of-hard-knocks/hard-knocks-interviews/dynamic_book/how-you-got-rich.pdf">
+        <img src="https://raw.githubusercontent.com/lachlanchen/LazyEarn/main/docs/publications/how-you-got-rich/cover-page-1.png" width="180" alt="How You Got Rich cover" />
+      </a>
+    </td>
+    <td align="center">
+      <a href="https://github.com/lachlanchen/LazyEarn/blob/main/generated_course_notes/lazyearn/jim-rohn-originals-no-ai/course.pdf">
+        <img src="https://raw.githubusercontent.com/lachlanchen/LazyEarn/main/docs/publications/how-you-got-successful/cover-page-1.png" width="180" alt="How You Got Successful cover" />
+      </a>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <a href="https://github.com/lachlanchen/LazyEarn/blob/main/investment_pdfs/wealth-from-first-principles/wealth-from-first-principles.pdf"><strong>Wealth from First Principles</strong></a><br />
+      money, ownership, claims, and compounding
+    </td>
+    <td align="center">
+      <a href="https://github.com/lachlanchen/LazyEarn/blob/main/investment_pdfs/financial_freedom/financial_freedom.pdf"><strong>Financial Freedom Playbook</strong></a><br />
+      budgeting, optionality, and durable cashflow
+    </td>
+    <td align="center">
+      <a href="https://github.com/lachlanchen/LazyEarn/blob/main/generated_course_notes/lazyearn/school-of-hard-knocks/hard-knocks-interviews/dynamic_book/how-you-got-rich.pdf"><strong>How You Got Rich?</strong></a><br />
+      a nonlinear wealth book built from interview evidence
+    </td>
+    <td align="center">
+      <a href="https://github.com/lachlanchen/LazyEarn/blob/main/generated_course_notes/lazyearn/jim-rohn-originals-no-ai/course.pdf"><strong>How You Got Successful?</strong></a><br />
+      Jim Rohn success lectures reordered into a smoother book arc
+    </td>
+  </tr>
+</table>
 
-Other Susskind consolidated titles are available in `[all_notes](https://github.com/lachlanchen/leonardsusskind/tree/main/all_notes)` (for example `classical_mechanics_stanford_partial.pdf`, `classical_mechanics_theoretical_minimum.pdf`, `cosmology_legacy.pdf`, `cosmology_theoretical_minimum.pdf`, and more).
+Other published books and course outputs:
+
+| Host repo | Title | Main PDF | Notes |
+| --- | --- | --- | --- |
+| [LazyEarn](https://github.com/lachlanchen/LazyEarn) | Yale Financial Markets | [PDF](https://github.com/lachlanchen/LazyEarn/blob/main/generated_course_notes/lazyearn/yale-financial-markets/course.pdf) | Robert J. Shiller lecture book with full-size and pocket variants |
+| [LazyEarn](https://github.com/lachlanchen/LazyEarn) | Hard Knocks Interviews | [PDF](https://github.com/lachlanchen/LazyEarn/blob/main/generated_course_notes/lazyearn/school-of-hard-knocks/hard-knocks-interviews/course.pdf) | direct lecture-by-lecture compilation |
+| [LazyEarn](https://github.com/lachlanchen/LazyEarn) | High-Growth Dossier | [PDF](https://github.com/lachlanchen/LazyEarn/blob/main/investment_pdfs/high-growth-stocks/high-growth-stocks.pdf) | legacy research book with pocket exports |
+| [LazyEarn](https://github.com/lachlanchen/LazyEarn) | Quod Tango Muto | [PDF](https://github.com/lachlanchen/LazyEarn/blob/main/investment_pdfs/quod-tango-muto/quod-tango-muto.pdf) | Latin-motto research book with pocket exports |
+| [LazyEarn](https://github.com/lachlanchen/LazyEarn) | Financial Freedom Playbook (Chinese) | [PDF](https://github.com/lachlanchen/LazyEarn/blob/main/investment_pdfs/financial_freedom/zh/financial_freedom_zh.pdf) | translated sibling edition |
+| [LazyLearn](https://github.com/lachlanchen/LazyLearn) | How You Speak and Write | [PDF](https://github.com/lachlanchen/LazyLearn/blob/main/generated_course_notes/lazylearn/how-you-speak-and-write/course.pdf) | writing-course adaptation |
+| [LazyLearn](https://github.com/lachlanchen/LazyLearn) | Justice with Michael Sandel | [PDF](https://github.com/lachlanchen/LazyLearn/blob/main/generated_course_notes/lazylearn/justice-with-michael-sandel/course.pdf) | political philosophy course book |
+| [leonardsusskind](https://github.com/lachlanchen/leonardsusskind) | Classical Mechanics (Theoretical Minimum) | [PDF](https://github.com/lachlanchen/leonardsusskind/blob/main/all_notes/classical_mechanics_theoretical_minimum.pdf) | consolidated book in `all_notes/` |
+| [leonardsusskind](https://github.com/lachlanchen/leonardsusskind) | Advanced Quantum Mechanics | [PDF](https://github.com/lachlanchen/leonardsusskind/blob/main/supplemental_advanced_quantum/advanced_quantum_mechanics.pdf) | supplemental physics title |
+| [leonardsusskind](https://github.com/lachlanchen/leonardsusskind) | Topics in String Theory | [PDF](https://github.com/lachlanchen/leonardsusskind/blob/main/supplemental_cosmology_and_black_holes/topics_in_string_theory.pdf) | supplemental cosmology / string title |
+
+Other Susskind consolidated titles are available in [all_notes](https://github.com/lachlanchen/leonardsusskind/tree/main/all_notes).
 
 ### Local Sibling Repo Pointers
 
