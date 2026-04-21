@@ -342,7 +342,7 @@ Critical output rule:
 Book title: {args.title}
 Book subtitle: {args.subtitle}
 Output language: {args.language}
-Current source note: {item.index}/{len(sources)}
+Current source material: {item.index}/{len(sources)}
 Current source title: {item.title}
 Current source path: {item.source_path}
 
@@ -372,12 +372,13 @@ Required output:
 - Use conservative restructuring only when it makes the new source easier to place in the full book.
 - If an image is genuinely useful, include it with a pocket-safe command such as `\\includegraphics[width=\\linewidth]{{assets/source-img/FILENAME}}`; do not invent captions for images you did not inspect.
 - Keep tables, diagrams, and equations narrow enough for a 6x9 pocket book.
-- End with `\\sourcenote{{Material source: {item.rel_path}.}}`
+- Do not add source-note footers, material-source labels, or production metadata. The reader should experience this as a continuous book.
 Invalid examples:
 - "The chapter has been written to ..."
 - "It starts with ..."
 - "I also checked ..."
 - Any output path such as `generated_course_notes/.../content.tex`
+- `\\sourcenote{{Material source: ...}}`
 """
     write_text(prompt_path, prompt)
     return prompt_path
@@ -417,8 +418,8 @@ def validate_tex_body(text: str, rel_path: str, output_dir: Path) -> None:
         raise ValueError("missing \\chapter{...}")
     if text.count(r"\chapter") != 1:
         raise ValueError("chapter output must contain exactly one \\chapter")
-    if rf"\sourcenote{{Material source: {rel_path}.}}" not in text:
-        raise ValueError("missing exact source note")
+    if r"\sourcenote" in text:
+        raise ValueError("chapter output must not contain source-note footers")
     if len(text) < 2000:
         raise ValueError("chapter output is too short to be substantive")
 
