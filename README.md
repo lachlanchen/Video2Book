@@ -15,35 +15,9 @@
 
 `Video2Book` is a practical pipeline for turning long-form video collections into durable study material: downloaded media, timestamped transcripts, and transcript-derived lecture notes with compiled PDFs.
 
-## ✨ What It Covers
+## 📚 Flagship Books
 
-- Download a playlist into a stable external media archive.
-- Transcribe videos into `.srt` subtitles and timestamped Markdown.
-- Convert completed transcript sets into structured TeX notes and merged course PDFs.
-- Run long jobs in `tmux` with queue scripts and monitor/guard scripts.
-- Export compact pocket-format companion PDFs from finished course LaTeX.
-- Reuse the same wrapped-header and figure-refresh workflow for both normal
-  full-size PDFs and pocket PDFs across host repos.
-
-## 🧪 Working Host Repos
-
-`Video2Book` is already being used in multiple host repos with different archive shapes.
-
-| Host repo | Focus | Wrapper example | Current tracked outputs |
-| --- | --- | --- | --- |
-| [LazyEarn](https://github.com/lachlanchen/LazyEarn) | Yale `Financial Markets` course with Robert J. Shiller | [examples/lazyearn/yale-financial-markets/](examples/lazyearn/yale-financial-markets/) | [course PDF](https://github.com/lachlanchen/LazyEarn/blob/main/generated_course_notes/lazyearn/yale-financial-markets/course.pdf), [lecture PDFs](https://github.com/lachlanchen/LazyEarn/tree/main/generated_course_notes/lazyearn/yale-financial-markets/chapters), [markdown transcripts](https://github.com/lachlanchen/LazyEarn/tree/main/markdown/lazyearn/yale-financial-markets), [subtitles](https://github.com/lachlanchen/LazyEarn/tree/main/subtitles/lazyearn/yale-financial-markets) |
-| [LazyLearn](https://github.com/lachlanchen/LazyLearn) | Writing-course adaptation for `How You Speak and Write` | [examples/lazylearn/how-you-speak-and-write/](examples/lazylearn/how-you-speak-and-write/), [examples/lazylearn/justice-with-michael-sandel/](examples/lazylearn/justice-with-michael-sandel/) | [How You Speak and Write course PDF](https://github.com/lachlanchen/LazyLearn/blob/main/generated_course_notes/lazylearn/how-you-speak-and-write/course.pdf), [Justice with Michael Sandel course PDF](https://github.com/lachlanchen/LazyLearn/blob/main/generated_course_notes/lazylearn/justice-with-michael-sandel/course.pdf), [local speaker course PDFs](https://github.com/lachlanchen/LazyLearn/tree/main/how-to-speak-and-write), [local justice PDF](https://github.com/lachlanchen/LazyLearn/blob/main/justice-with-michael-sandel/justice-with-michael-sandel.pdf), [lecture PDFs](https://github.com/lachlanchen/LazyLearn/tree/main/generated_course_notes/lazylearn/how-you-speak-and-write/chapters), [markdown transcripts](https://github.com/lachlanchen/LazyLearn/tree/main/markdown/lazylearn), [subtitles](https://github.com/lachlanchen/LazyLearn/tree/main/subtitles/lazylearn) |
-| [leonardsusskind](https://github.com/lachlanchen/leonardsusskind) | Full Leonard Susskind lecture archive, transcript pipeline, and published note books | [examples/leonardsusskind/susskind-physics-archive/](examples/leonardsusskind/susskind-physics-archive/) | [published books folder](https://github.com/lachlanchen/leonardsusskind/tree/main), [advanced quantum PDF](https://github.com/lachlanchen/leonardsusskind/blob/main/supplemental_advanced_quantum/advanced_quantum_mechanics.pdf), [topics in string theory PDF](https://github.com/lachlanchen/leonardsusskind/blob/main/supplemental_cosmology_and_black_holes/topics_in_string_theory.pdf), [particle physics 3 PDF](https://github.com/lachlanchen/leonardsusskind/blob/main/supplemental_particle_physics_3/particle_physics_3_supersymmetry_and_grand_unification.pdf), [markdown transcripts](https://github.com/lachlanchen/leonardsusskind/tree/main/markdown), [subtitles](https://github.com/lachlanchen/leonardsusskind/tree/main/subtitles) |
-
-## 📘 Books And PDFs
-
-The third stage is already producing real book-like outputs in host repos:
-
-- merged course books such as `course.pdf` or a host-published canonical name
-- per-lecture PDFs under `generated_course_notes/.../chapters/`
-- transcript trees in `markdown/` and subtitle trees in `subtitles/`
-
-The flagship `LazyEarn` books below use the extracted first page of each published PDF as the preview image.
+These previews use the extracted first page of each published PDF from `LazyEarn`.
 
 <table>
   <tr>
@@ -87,6 +61,34 @@ The flagship `LazyEarn` books below use the extracted first page of each publish
     </td>
   </tr>
 </table>
+
+## ✨ What It Covers
+
+- Download a playlist into a stable external media archive.
+- Transcribe videos into `.srt` subtitles and timestamped Markdown.
+- Convert completed transcript sets into structured TeX notes and merged course PDFs.
+- Run long jobs in `tmux` with queue scripts and monitor/guard scripts.
+- Export compact pocket-format companion PDFs from finished course LaTeX.
+- Reuse the same wrapped-header and figure-refresh workflow for both normal
+  full-size PDFs and pocket PDFs across host repos.
+
+## 🧪 Working Host Repos
+
+`Video2Book` is already being used in multiple host repos with different archive shapes.
+
+| Host repo | Focus | Wrapper example | Current tracked outputs |
+| --- | --- | --- | --- |
+| [LazyEarn](https://github.com/lachlanchen/LazyEarn) | Yale `Financial Markets` course with Robert J. Shiller | [examples/lazyearn/yale-financial-markets/](examples/lazyearn/yale-financial-markets/) | [course PDF](https://github.com/lachlanchen/LazyEarn/blob/main/generated_course_notes/lazyearn/yale-financial-markets/course.pdf), [lecture PDFs](https://github.com/lachlanchen/LazyEarn/tree/main/generated_course_notes/lazyearn/yale-financial-markets/chapters), [markdown transcripts](https://github.com/lachlanchen/LazyEarn/tree/main/markdown/lazyearn/yale-financial-markets), [subtitles](https://github.com/lachlanchen/LazyEarn/tree/main/subtitles/lazyearn/yale-financial-markets) |
+| [LazyLearn](https://github.com/lachlanchen/LazyLearn) | Writing-course adaptation for `How You Speak and Write` | [examples/lazylearn/how-you-speak-and-write/](examples/lazylearn/how-you-speak-and-write/), [examples/lazylearn/justice-with-michael-sandel/](examples/lazylearn/justice-with-michael-sandel/) | [How You Speak and Write course PDF](https://github.com/lachlanchen/LazyLearn/blob/main/generated_course_notes/lazylearn/how-you-speak-and-write/course.pdf), [Justice with Michael Sandel course PDF](https://github.com/lachlanchen/LazyLearn/blob/main/generated_course_notes/lazylearn/justice-with-michael-sandel/course.pdf), [local speaker course PDFs](https://github.com/lachlanchen/LazyLearn/tree/main/how-to-speak-and-write), [local justice PDF](https://github.com/lachlanchen/LazyLearn/blob/main/justice-with-michael-sandel/justice-with-michael-sandel.pdf), [lecture PDFs](https://github.com/lachlanchen/LazyLearn/tree/main/generated_course_notes/lazylearn/how-you-speak-and-write/chapters), [markdown transcripts](https://github.com/lachlanchen/LazyLearn/tree/main/markdown/lazylearn), [subtitles](https://github.com/lachlanchen/LazyLearn/tree/main/subtitles/lazylearn) |
+| [leonardsusskind](https://github.com/lachlanchen/leonardsusskind) | Full Leonard Susskind lecture archive, transcript pipeline, and published note books | [examples/leonardsusskind/susskind-physics-archive/](examples/leonardsusskind/susskind-physics-archive/) | [published books folder](https://github.com/lachlanchen/leonardsusskind/tree/main), [advanced quantum PDF](https://github.com/lachlanchen/leonardsusskind/blob/main/supplemental_advanced_quantum/advanced_quantum_mechanics.pdf), [topics in string theory PDF](https://github.com/lachlanchen/leonardsusskind/blob/main/supplemental_cosmology_and_black_holes/topics_in_string_theory.pdf), [particle physics 3 PDF](https://github.com/lachlanchen/leonardsusskind/blob/main/supplemental_particle_physics_3/particle_physics_3_supersymmetry_and_grand_unification.pdf), [markdown transcripts](https://github.com/lachlanchen/leonardsusskind/tree/main/markdown), [subtitles](https://github.com/lachlanchen/leonardsusskind/tree/main/subtitles) |
+
+## 📘 Books And PDFs
+
+The third stage is already producing real book-like outputs in host repos:
+
+- merged course books such as `course.pdf` or a host-published canonical name
+- per-lecture PDFs under `generated_course_notes/.../chapters/`
+- transcript trees in `markdown/` and subtitle trees in `subtitles/`
 
 Other published books and course outputs:
 
