@@ -161,7 +161,7 @@ def prepare_project(args: argparse.Namespace, sources: list[SourceItem]) -> None
     plan = [
         f"# {args.title} - Material Book Plan",
         "",
-        "This book is written one source note at a time, but each chapter must keep the full corpus arc in view.",
+        "This book is written one reference entry at a time, but each chapter must keep the full corpus arc in view.",
         "",
         "## Whole-Corpus Context",
         "",
@@ -170,7 +170,7 @@ def prepare_project(args: argparse.Namespace, sources: list[SourceItem]) -> None
         f"- README path: `{readme_ref}`",
         "- Before writing a chapter, inspect the full ordered source list and the already generated chapters.",
         "- Preserve the source sequence as evidence, but write the book as a coherent wealth-freedom argument.",
-        "- Repetition across source notes can become reinforcing evidence; do not delete prior substance just to avoid repetition.",
+        "- Repetition across reference entries can become reinforcing evidence; do not delete prior substance just to avoid repetition.",
         "- Structural moves are allowed only when they clearly improve the reader's route through the whole book.",
         "",
         "## Ordered Source Notes",
@@ -223,7 +223,6 @@ def common_preamble() -> str:
 \setlength{\headheight}{42pt}
 
 \newenvironment{sourceinsight}{\begin{quote}\small\itshape}{\end{quote}}
-\newcommand{\sourcenote}[1]{\par\smallskip{\footnotesize\color{black!60}Source note: #1}\par}
 \newcommand{\chapterdivider}{\par\medskip\hrule\medskip}
 
 \makeatletter
@@ -269,9 +268,17 @@ def write_course_tex(args: argparse.Namespace, sources: list[SourceItem]) -> Non
         cover_art = r"\fcolorbox{black!15}{black!3}{\rule{0pt}{0.72\paperheight}\rule{0.82\paperwidth}{0pt}}"
 
     title = tex_escape(args.title)
-    subtitle = tex_escape(args.subtitle)
-    source_credit = tex_escape(args.source_credit)
+    subtitle = tex_escape(args.subtitle.strip())
+    source_credit = tex_escape(args.source_credit.strip())
     curator = tex_escape(args.curator)
+    subtitle_line = rf"{{\large\color{{black!70}} {subtitle}}}" if subtitle else ""
+    if source_credit:
+        credit_block = (
+            rf"{{\small\color{{black!72}} {source_credit}\\[0.35em]}}" + "\n"
+            rf"    {{\footnotesize\color{{black!68}} Curated by {curator}.}}"
+        )
+    else:
+        credit_block = rf"{{\footnotesize\color{{black!68}} Curated by {curator}.}}"
 
     tex = rf"""\documentclass[oneside]{{book}}
 \input{{common_preamble.tex}}
@@ -295,7 +302,7 @@ def write_course_tex(args: argparse.Namespace, sources: list[SourceItem]) -> Non
     inner ysep=8pt
   ] at ([xshift=0.08\paperwidth,yshift=-0.07\paperheight]current page.north west) {{%
     {{\fontsize{{24}}{{28}}\selectfont\bfseries {title}\\[0.5em]}}
-    {{\large\color{{black!70}} {subtitle}}}
+    {subtitle_line}
   }};
   \node[
     anchor=south west,
@@ -307,8 +314,7 @@ def write_course_tex(args: argparse.Namespace, sources: list[SourceItem]) -> Non
     rounded corners=6pt,
     inner sep=10pt
   ] at ([xshift=0.08\paperwidth,yshift=0.08\paperheight]current page.south west) {{%
-    {{\small\color{{black!72}} {source_credit}\\[0.35em]}}
-    {{\footnotesize\color{{black!68}} Book edition organized by {curator} with Video2Book.}}
+    {credit_block}
   }};
 \end{{tikzpicture}}
 \mbox{{}}
@@ -342,9 +348,9 @@ Critical output rule:
 Book title: {args.title}
 Book subtitle: {args.subtitle}
 Output language: {args.language}
-Current source material: {item.index}/{len(sources)}
-Current source title: {item.title}
-Current source path: {item.source_path}
+Current reference entry: {item.index}/{len(sources)}
+Current reference title: {item.title}
+Current reference path: {item.source_path}
 
 Whole-corpus context paths:
 - Summary: {args.material_root / "SUMMARY.md"}
@@ -353,7 +359,7 @@ Whole-corpus context paths:
 - Source manifest: {args.output_dir / "source_manifest.tsv"}
 - Existing chapter directory: {args.output_dir / "chapters"}
 
-Important: although this worker writes one source note at a time, keep the overview and big picture in mind. Read the full source order in SUMMARY.md / source_manifest.tsv and inspect existing generated chapters when useful. The chapter should fit the larger arc of a book about wealth freedom, attention, time, capital, personal business models, investing discipline, and execution.
+Important: although this worker writes one reference entry at a time, keep the overview and big picture in mind. Read the full source order in SUMMARY.md / source_manifest.tsv and inspect existing generated chapters when useful. The chapter should fit the larger arc of a book about wealth freedom, attention, time, capital, personal business models, investing discipline, and execution.
 
 Current related images you may inspect:
 {image_lines}
