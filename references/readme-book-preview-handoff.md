@@ -45,9 +45,9 @@ The current convention is:
 For the current `LazyEarn` examples used by the `Video2Book` README:
 
 - `docs/publications/wealth-from-first-principles/cover-page-1.png`
-- `docs/publications/financial-freedom/cover-page-1.png`
 - `docs/publications/how-you-got-rich/cover-page-1.png`
 - `docs/publications/how-you-got-successful/cover-page-1.png`
+- `docs/publications/how-you-got-happiness/cover-page-1.png`
 
 ## How To Generate The Preview PNG
 
@@ -92,9 +92,9 @@ The structure is:
 Current `Video2Book` usage:
 
 - `Wealth from First Principles`
-- `Financial Freedom Playbook`
 - `How You Got Rich?`
 - `How You Got Successful?`
+- `How You Got Happiness?`
 
 Important implementation details:
 
