@@ -107,8 +107,6 @@ cmd=(
   --material-root "$material_root"
   --output-dir "$output_dir"
   --title "$title"
-  --subtitle "$subtitle"
-  --source-credit "$source_credit"
   --curator "$curator"
   --language "$language"
   --model "$model"
@@ -116,6 +114,12 @@ cmd=(
   --max-items "$max_items"
   --compile-engine "$compile_engine"
 )
+if [[ -n "$subtitle" ]]; then
+  cmd+=(--subtitle "$subtitle")
+fi
+if [[ -n "$source_credit" ]]; then
+  cmd+=(--source-credit "$source_credit")
+fi
 if [[ "$no_compile" -eq 1 ]]; then
   cmd+=(--no-compile)
 fi
