@@ -17,7 +17,8 @@
 
 ## 📚 Flagship Books
 
-These previews use the extracted first page of each published PDF from `LazyEarn`.
+These previews use the extracted first page of each published PDF from `LazyEarn`
+and `LazyLearn`.
 
 <table>
   <tr>
@@ -58,6 +59,52 @@ These previews use the extracted first page of each published PDF from `LazyEarn
     <td align="center">
       <a href="https://github.com/lachlanchen/LazyEarn/blob/main/generated_course_notes/lazyearn/jim-rohn-originals-no-ai/course.pdf"><strong>How You Got Successful?</strong></a><br />
       Jim Rohn success lectures reordered into a smoother book arc
+    </td>
+  </tr>
+</table>
+
+`LazyLearn` also publishes a multilingual writing book plus a finished justice
+course book:
+
+<table>
+  <tr>
+    <td align="center">
+      <a href="https://github.com/lachlanchen/LazyLearn/blob/main/how-to-speak-and-write/how-to-speak-and-write.pdf">
+        <img src="https://raw.githubusercontent.com/lachlanchen/LazyLearn/main/docs/publications/how-to-speak-and-write/cover-page-1.png" width="180" alt="How to Speak and Write English cover" />
+      </a>
+    </td>
+    <td align="center">
+      <a href="https://github.com/lachlanchen/LazyLearn/blob/main/how-to-speak-and-write/how-to-speak-and-write-zh.pdf">
+        <img src="https://raw.githubusercontent.com/lachlanchen/LazyLearn/main/docs/publications/how-to-speak-and-write-zh/cover-page-1.png" width="180" alt="How to Speak and Write Traditional Chinese cover" />
+      </a>
+    </td>
+    <td align="center">
+      <a href="https://github.com/lachlanchen/LazyLearn/blob/main/how-to-speak-and-write/how-to-speak-and-write-jp.pdf">
+        <img src="https://raw.githubusercontent.com/lachlanchen/LazyLearn/main/docs/publications/how-to-speak-and-write-jp/cover-page-1.png" width="180" alt="How to Speak and Write Japanese cover" />
+      </a>
+    </td>
+    <td align="center">
+      <a href="https://github.com/lachlanchen/LazyLearn/blob/main/justice-with-michael-sandel/justice-with-michael-sandel.pdf">
+        <img src="https://raw.githubusercontent.com/lachlanchen/LazyLearn/main/docs/publications/justice-with-michael-sandel/cover-page-1.png" width="180" alt="Justice with Michael Sandel cover" />
+      </a>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <a href="https://github.com/lachlanchen/LazyLearn/blob/main/how-to-speak-and-write/how-to-speak-and-write.pdf"><strong>How to Speak and Write</strong></a><br />
+      reordered English edition
+    </td>
+    <td align="center">
+      <a href="https://github.com/lachlanchen/LazyLearn/blob/main/how-to-speak-and-write/how-to-speak-and-write-zh.pdf"><strong>How to Speak and Write</strong></a><br />
+      Traditional Chinese sibling edition
+    </td>
+    <td align="center">
+      <a href="https://github.com/lachlanchen/LazyLearn/blob/main/how-to-speak-and-write/how-to-speak-and-write-jp.pdf"><strong>How to Speak and Write</strong></a><br />
+      Japanese sibling edition
+    </td>
+    <td align="center">
+      <a href="https://github.com/lachlanchen/LazyLearn/blob/main/justice-with-michael-sandel/justice-with-michael-sandel.pdf"><strong>Justice with Michael Sandel</strong></a><br />
+      Michael Sandel political philosophy course book
     </td>
   </tr>
 </table>
