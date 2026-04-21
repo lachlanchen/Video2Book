@@ -8,6 +8,13 @@ source_subdir="${SOURCE_SUBDIR:-}"
 transcribe_model="${TRANSCRIBE_MODEL:-large-v3}"
 transcription_git_paths="${TRANSCRIPTION_GIT_PATHS:-subtitles markdown}"
 git_lock="${TRANSCRIPTION_GIT_LOCK_FILE:-$repo_root/.git/video2book-main.lock}"
+selected_gpu_id=""
+
+if [[ -n "${TRANSCRIBE_CUDA_VISIBLE_DEVICES:-}" ]]; then
+  selected_gpu_id="${TRANSCRIBE_CUDA_VISIBLE_DEVICES%%,*}"
+elif [[ -n "${CUDA_VISIBLE_DEVICES:-}" ]]; then
+  selected_gpu_id="${CUDA_VISIBLE_DEVICES%%,*}"
+fi
 
 if [[ -n "${MIN_FREE_GPU_MIB:-}" ]]; then
   min_free_gpu_mib="${MIN_FREE_GPU_MIB}"
@@ -30,11 +37,17 @@ read -r -a git_add_paths <<<"$transcription_git_paths"
 
 wait_for_gpu_memory() {
   while true; do
-    free_mib="$(nvidia-smi --query-gpu=memory.free --format=csv,noheader,nounits | head -n 1 | tr -d ' ')"
+    if [[ -n "$selected_gpu_id" ]]; then
+      free_mib="$(nvidia-smi --id="$selected_gpu_id" --query-gpu=memory.free --format=csv,noheader,nounits | head -n 1 | tr -d ' ')"
+      gpu_label="GPU $selected_gpu_id"
+    else
+      free_mib="$(nvidia-smi --query-gpu=memory.free --format=csv,noheader,nounits | head -n 1 | tr -d ' ')"
+      gpu_label="first visible GPU"
+    fi
     if [[ -n "$free_mib" ]] && (( free_mib >= min_free_gpu_mib )); then
       return
     fi
-    echo "Waiting for GPU memory: ${free_mib:-unknown} MiB free, need ${min_free_gpu_mib} MiB"
+    echo "Waiting for GPU memory on ${gpu_label}: ${free_mib:-unknown} MiB free, need ${min_free_gpu_mib} MiB"
     sleep 60
   done
 }
@@ -51,7 +64,11 @@ while true; do
   fi
 
   wait_for_gpu_memory
-  echo "Processing $next_video with model $transcribe_model"
+  if [[ -n "$selected_gpu_id" ]]; then
+    echo "Processing $next_video with model $transcribe_model on GPU $selected_gpu_id"
+  else
+    echo "Processing $next_video with model $transcribe_model"
+  fi
   transcribe_cmd=(
     python3
     "$module_root/videos2subtitles/transcribe_video.py"
