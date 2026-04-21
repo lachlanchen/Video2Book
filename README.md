@@ -259,6 +259,7 @@ That default is just a working example. The code is structured so other host rep
 - [scripts](scripts)
 - [Pocket export handoff](references/pocket-size-course-pdfs-handoff.md)
 - [A4 and pocket layout handoff](references/a4-and-pocket-pdf-layout-handoff.md)
+- [README book preview handoff](references/readme-book-preview-handoff.md)
 - [LaTeX overflow fixer handoff](references/latex-overflow-fixer-handoff.md)
 - [EPUB export handoff](references/tex-to-epub-handoff.md)
 
@@ -267,6 +268,7 @@ That default is just a working example. The code is structured so other host rep
 - [references/lazylearn-course-adaptation.md](references/lazylearn-course-adaptation.md)
 - [references/lazyearn-yale-financial-markets-adaptation.md](references/lazyearn-yale-financial-markets-adaptation.md)
 - [references/nanobanana-2-book-cover-handoff.md](references/nanobanana-2-book-cover-handoff.md)
+- [references/readme-book-preview-handoff.md](references/readme-book-preview-handoff.md)
 - [references/a4-and-pocket-pdf-layout-handoff.md](references/a4-and-pocket-pdf-layout-handoff.md)
 - [references/latex-overflow-fixer-handoff.md](references/latex-overflow-fixer-handoff.md)
 - [references/tex-book-translation-workflow.md](references/tex-book-translation-workflow.md)
