@@ -41,6 +41,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--model", default="gpt-5.4")
     parser.add_argument("--reasoning", default="high")
     parser.add_argument("--max-items", type=int, default=0)
+    parser.add_argument("--max-retries", type=int, default=3)
     parser.add_argument("--no-compile", action="store_true")
     parser.add_argument("--commit-each", action="store_true")
     parser.add_argument("--compile-engine", default="xelatex", choices=["xelatex", "lualatex", "pdflatex"])
@@ -329,6 +330,15 @@ def make_prompt(args: argparse.Namespace, item: SourceItem, sources: list[Source
     existing_lines = "\n".join(f"- `{path}`" for path in existing[-12:]) or "- No prior generated chapters yet."
     prompt = f"""You are writing one chapter of a pocket-size TeX book.
 
+Critical output rule:
+- Your final answer is captured directly into a `.tex` file.
+- Do not use tools to edit files.
+- Do not report that a file was written.
+- Do not mention output paths.
+- Do not say you checked anything.
+- Do not wrap the answer in Markdown fences.
+- Return only the LaTeX body content that should be saved in the chapter file.
+
 Book title: {args.title}
 Book subtitle: {args.subtitle}
 Output language: {args.language}
@@ -363,21 +373,54 @@ Required output:
 - If an image is genuinely useful, include it with a pocket-safe command such as `\\includegraphics[width=\\linewidth]{{assets/source-img/FILENAME}}`; do not invent captions for images you did not inspect.
 - Keep tables, diagrams, and equations narrow enough for a 6x9 pocket book.
 - End with `\\sourcenote{{Material source: {item.rel_path}.}}`
+Invalid examples:
+- "The chapter has been written to ..."
+- "It starts with ..."
+- "I also checked ..."
+- Any output path such as `generated_course_notes/.../content.tex`
 """
     write_text(prompt_path, prompt)
     return prompt_path
 
 
-def sanitize_tex(path: Path, fallback_title: str) -> None:
+def sanitize_tex(path: Path, fallback_title: str, rel_path: str, output_dir: Path) -> None:
     text = read_text(path).strip()
     text = re.sub(r"^```(?:tex|latex)?\s*", "", text)
     text = re.sub(r"\s*```$", "", text)
     text = re.sub(r"\\documentclass(?:.|\n)*?\\begin\{document\}", "", text)
     text = text.replace(r"\end{document}", "")
     text = text.strip()
+    validate_tex_body(text, rel_path, output_dir)
     if r"\chapter" not in text[:500]:
         text = rf"\chapter{{{tex_escape(fallback_title)}}}" + "\n\n" + text
+    validate_tex_body(text, rel_path, output_dir)
     write_text(path, text + "\n")
+
+
+def validate_tex_body(text: str, rel_path: str, output_dir: Path) -> None:
+    lowered = text.lower()
+    invalid_phrases = [
+        "the chapter has been written",
+        "has been written to",
+        "passes the requested",
+        "i also checked",
+        "it starts with",
+        "it ends with",
+        "generated_course_notes",
+        "content.tex",
+        str(output_dir).lower(),
+    ]
+    for phrase in invalid_phrases:
+        if phrase and phrase in lowered:
+            raise ValueError(f"invalid agent status prose found: {phrase}")
+    if not re.search(r"\\chapter\s*\{", text):
+        raise ValueError("missing \\chapter{...}")
+    if text.count(r"\chapter") != 1:
+        raise ValueError("chapter output must contain exactly one \\chapter")
+    if rf"\sourcenote{{Material source: {rel_path}.}}" not in text:
+        raise ValueError("missing exact source note")
+    if len(text) < 2000:
+        raise ValueError("chapter output is too short to be substantive")
 
 
 def compile_book(args: argparse.Namespace) -> None:
@@ -401,8 +444,15 @@ def compile_book(args: argparse.Namespace) -> None:
 
 
 def commit_step(args: argparse.Namespace, item: SourceItem) -> None:
+    rel_output = args.output_dir.relative_to(args.repo_root)
     pathspecs = [
-        str(args.output_dir.relative_to(args.repo_root)),
+        str(rel_output / "assets" / "source-img"),
+        str(rel_output / "book_plan.md"),
+        str(rel_output / "source_manifest.tsv"),
+        str(rel_output / "common_preamble.tex"),
+        str(rel_output / "course.tex"),
+        str(rel_output / "course_pocket_1_2x.pdf"),
+        str(rel_output / "chapters"),
     ]
     run(
         [
@@ -439,17 +489,30 @@ def main() -> int:
         images = referenced_images(item, args.material_root)
         prompt_path = make_prompt(args, item, sources, images)
         output_tmp = item.chapter_dir / "content.raw.tex"
-        cmd = [
-            str(MODULE_ROOT / "scripts" / "codex_prompt_to_file.sh"),
-            str(args.repo_root),
-            str(prompt_path),
-            str(output_tmp),
-            args.model,
-            args.reasoning,
-            *[str(path) for path in images],
-        ]
-        run(cmd, cwd=args.repo_root)
-        sanitize_tex(output_tmp, item.title)
+        for attempt in range(1, max(args.max_retries, 1) + 1):
+            cmd = [
+                str(MODULE_ROOT / "scripts" / "codex_prompt_to_file.sh"),
+                str(args.repo_root),
+                str(prompt_path),
+                str(output_tmp),
+                args.model,
+                args.reasoning,
+                *[str(path) for path in images],
+            ]
+            try:
+                run(cmd, cwd=args.repo_root)
+                sanitize_tex(output_tmp, item.title, item.rel_path, args.output_dir)
+                break
+            except (subprocess.CalledProcessError, ValueError) as exc:
+                print(f"Attempt {attempt} failed for {item.rel_path}: {exc}", file=sys.stderr, flush=True)
+                output_tmp.unlink(missing_ok=True)
+                if attempt >= max(args.max_retries, 1):
+                    raise
+                with prompt_path.open("a", encoding="utf-8") as handle:
+                    handle.write(
+                        "\nRetry correction: the previous answer was invalid because it looked like an agent status "
+                        "message or was not substantive TeX. Return only the full LaTeX chapter body now.\n"
+                    )
         output_tmp.replace(content_path)
         write_course_tex(args, sources)
         if not args.no_compile:
