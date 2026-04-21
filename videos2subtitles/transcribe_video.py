@@ -38,6 +38,8 @@ DEFAULT_WHISPER_SCRIPT = resolve_primary_whisper_script()
 DEFAULT_FALLBACK_SCRIPT = Path(__file__).with_name("fallback_whisper_transcribe.py")
 DEFAULT_CONDA_ENV = "whisper"
 DEFAULT_MODEL = "large-v3"
+DEFAULT_TRANSCRIPTION_ENGINE = os.environ.get("TRANSCRIPTION_ENGINE", "auto")
+DEFAULT_PRIMARY_TIMEOUT_SECONDS = int(os.environ.get("TRANSCRIPTION_PRIMARY_TIMEOUT_SECONDS", "0") or "0")
 VIDEO_EXTENSIONS = {".mp4", ".mkv", ".webm", ".m4a", ".mp3"}
 YT_DLP_FRAGMENT_STEM_RE = re.compile(r"\.f\d+$")
 
@@ -100,6 +102,22 @@ def build_parser() -> argparse.ArgumentParser:
         "--force",
         action="store_true",
         help="Rebuild outputs even if subtitle and Markdown files already exist.",
+    )
+    parser.add_argument(
+        "--engine",
+        default=DEFAULT_TRANSCRIPTION_ENGINE,
+        choices=["auto", "primary", "fallback"],
+        help=(
+            "Transcription engine. auto tries the VAD/language-aware primary "
+            "engine and falls back on failure/timeout; fallback skips directly "
+            "to plain Whisper."
+        ),
+    )
+    parser.add_argument(
+        "--primary-timeout-seconds",
+        type=int,
+        default=DEFAULT_PRIMARY_TIMEOUT_SECONDS,
+        help="Timeout for the primary VAD/language-aware engine. 0 disables the timeout.",
     )
     return parser
 
@@ -267,6 +285,8 @@ def transcribe_video(
     conda_env: str,
     model: str,
     force: bool,
+    engine: str,
+    primary_timeout_seconds: int,
 ) -> tuple[Path, Path]:
     video_path = video_path.expanduser()
     if not video_path.is_absolute():
@@ -343,9 +363,7 @@ def transcribe_video(
 
     try:
         entries: list[dict] | None = None
-        try:
-            subprocess.run(command, check=True)
-        except subprocess.CalledProcessError as exc:
+        if engine == "fallback":
             run_fallback_transcription(
                 source_rel=source_rel,
                 conda_env=conda_env,
@@ -354,12 +372,18 @@ def transcribe_video(
                 work_wav=work_wav,
                 work_json=work_json,
                 work_srt=work_srt,
-                reason=f"the primary subtitle engine exited with code {exc.returncode}",
+                reason="the fallback engine was requested",
             )
         else:
             try:
-                entries = validate_outputs(work_srt, work_json, source_rel)
-            except (FileNotFoundError, json.JSONDecodeError, RuntimeError) as exc:
+                subprocess.run(
+                    command,
+                    check=True,
+                    timeout=primary_timeout_seconds if primary_timeout_seconds > 0 else None,
+                )
+            except subprocess.TimeoutExpired:
+                if engine == "primary":
+                    raise
                 run_fallback_transcription(
                     source_rel=source_rel,
                     conda_env=conda_env,
@@ -368,8 +392,37 @@ def transcribe_video(
                     work_wav=work_wav,
                     work_json=work_json,
                     work_srt=work_srt,
-                    reason=str(exc),
+                    reason=f"the primary subtitle engine exceeded {primary_timeout_seconds}s",
                 )
+            except subprocess.CalledProcessError as exc:
+                if engine == "primary":
+                    raise
+                run_fallback_transcription(
+                    source_rel=source_rel,
+                    conda_env=conda_env,
+                    model=model,
+                    work_video=work_video,
+                    work_wav=work_wav,
+                    work_json=work_json,
+                    work_srt=work_srt,
+                    reason=f"the primary subtitle engine exited with code {exc.returncode}",
+                )
+            else:
+                try:
+                    entries = validate_outputs(work_srt, work_json, source_rel)
+                except (FileNotFoundError, json.JSONDecodeError, RuntimeError) as exc:
+                    if engine == "primary":
+                        raise
+                    run_fallback_transcription(
+                        source_rel=source_rel,
+                        conda_env=conda_env,
+                        model=model,
+                        work_video=work_video,
+                        work_wav=work_wav,
+                        work_json=work_json,
+                        work_srt=work_srt,
+                        reason=str(exc),
+                    )
 
         if entries is None:
             entries = validate_outputs(work_srt, work_json, source_rel)
@@ -404,6 +457,8 @@ def main() -> int:
         conda_env=args.conda_env,
         model=args.model,
         force=args.force,
+        engine=args.engine,
+        primary_timeout_seconds=args.primary_timeout_seconds,
     )
     return 0
 

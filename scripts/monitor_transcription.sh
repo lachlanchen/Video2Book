@@ -11,6 +11,8 @@ source_subdir="${SOURCE_SUBDIR:-}"
 transcribe_model="${TRANSCRIBE_MODEL:-large-v3}"
 min_free_gpu_mib="${MIN_FREE_GPU_MIB:-}"
 transcribe_cuda_visible_devices="${TRANSCRIBE_CUDA_VISIBLE_DEVICES:-${CUDA_VISIBLE_DEVICES:-}}"
+transcription_engine="${TRANSCRIPTION_ENGINE:-}"
+primary_timeout_seconds="${TRANSCRIPTION_PRIMARY_TIMEOUT_SECONDS:-}"
 log_dir="$repo_root/transcription_logs"
 
 mkdir -p "$log_dir"
@@ -39,7 +41,7 @@ pending_video() {
 }
 
 restart_worker() {
-  TRANSCRIPTION_REPO_ROOT="$repo_root" SOURCE_ROOT="$source_root" SOURCE_SUBDIR="$source_subdir" TRANSCRIPTION_GIT_PATHS="${TRANSCRIPTION_GIT_PATHS:-}" TRANSCRIBE_MODEL="$transcribe_model" MIN_FREE_GPU_MIB="$min_free_gpu_mib" TRANSCRIBE_CUDA_VISIBLE_DEVICES="$transcribe_cuda_visible_devices" CUDA_VISIBLE_DEVICES="$transcribe_cuda_visible_devices" \
+  TRANSCRIPTION_REPO_ROOT="$repo_root" SOURCE_ROOT="$source_root" SOURCE_SUBDIR="$source_subdir" TRANSCRIPTION_GIT_PATHS="${TRANSCRIPTION_GIT_PATHS:-}" TRANSCRIBE_MODEL="$transcribe_model" MIN_FREE_GPU_MIB="$min_free_gpu_mib" TRANSCRIBE_CUDA_VISIBLE_DEVICES="$transcribe_cuda_visible_devices" CUDA_VISIBLE_DEVICES="$transcribe_cuda_visible_devices" TRANSCRIPTION_ENGINE="$transcription_engine" TRANSCRIPTION_PRIMARY_TIMEOUT_SECONDS="$primary_timeout_seconds" \
     bash "$module_root/scripts/start_transcription_tmux.sh" "$session_name"
 }
 

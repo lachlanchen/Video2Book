@@ -8,6 +8,8 @@ worker_session_name="${2:-susskind-transcribe}"
 transcribe_model="${TRANSCRIBE_MODEL:-large-v3}"
 min_free_gpu_mib="${MIN_FREE_GPU_MIB:-}"
 transcribe_cuda_visible_devices="${TRANSCRIBE_CUDA_VISIBLE_DEVICES:-${CUDA_VISIBLE_DEVICES:-}}"
+transcription_engine="${TRANSCRIPTION_ENGINE:-}"
+primary_timeout_seconds="${TRANSCRIPTION_PRIMARY_TIMEOUT_SECONDS:-}"
 
 cd "$repo_root"
 mkdir -p transcription_logs
@@ -34,6 +36,12 @@ fi
 if [[ -n "$transcribe_cuda_visible_devices" ]]; then
   tmux_command+="export TRANSCRIBE_CUDA_VISIBLE_DEVICES='$transcribe_cuda_visible_devices'; "
   tmux_command+="export CUDA_VISIBLE_DEVICES='$transcribe_cuda_visible_devices'; "
+fi
+if [[ -n "$transcription_engine" ]]; then
+  tmux_command+="export TRANSCRIPTION_ENGINE='$transcription_engine'; "
+fi
+if [[ -n "$primary_timeout_seconds" ]]; then
+  tmux_command+="export TRANSCRIPTION_PRIMARY_TIMEOUT_SECONDS='$primary_timeout_seconds'; "
 fi
 tmux_command+="cd '$repo_root' && bash '$module_root/scripts/monitor_transcription.sh' '$worker_session_name' 2>&1 | tee '$log_file'"
 

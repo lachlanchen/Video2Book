@@ -7,6 +7,8 @@ session_name="${1:-susskind-transcribe}"
 transcribe_model="${TRANSCRIBE_MODEL:-${2:-large-v3}}"
 min_free_gpu_mib="${MIN_FREE_GPU_MIB:-${3:-}}"
 transcribe_cuda_visible_devices="${TRANSCRIBE_CUDA_VISIBLE_DEVICES:-${CUDA_VISIBLE_DEVICES:-}}"
+transcription_engine="${TRANSCRIPTION_ENGINE:-}"
+primary_timeout_seconds="${TRANSCRIPTION_PRIMARY_TIMEOUT_SECONDS:-}"
 
 cd "$repo_root"
 mkdir -p transcription_logs
@@ -34,6 +36,12 @@ if [[ -n "$transcribe_cuda_visible_devices" ]]; then
   tmux_command+="export TRANSCRIBE_CUDA_VISIBLE_DEVICES='$transcribe_cuda_visible_devices'; "
   tmux_command+="export CUDA_VISIBLE_DEVICES='$transcribe_cuda_visible_devices'; "
 fi
+if [[ -n "$transcription_engine" ]]; then
+  tmux_command+="export TRANSCRIPTION_ENGINE='$transcription_engine'; "
+fi
+if [[ -n "$primary_timeout_seconds" ]]; then
+  tmux_command+="export TRANSCRIPTION_PRIMARY_TIMEOUT_SECONDS='$primary_timeout_seconds'; "
+fi
 tmux_command+="cd '$repo_root' && bash '$module_root/scripts/process_videos_one_by_one.sh' 2>&1 | tee '$log_file'"
 
 tmux new-session -d -s "$session_name" "$tmux_command"
@@ -45,6 +53,12 @@ if [[ -n "$min_free_gpu_mib" ]]; then
 fi
 if [[ -n "$transcribe_cuda_visible_devices" ]]; then
   echo "CUDA_VISIBLE_DEVICES: $transcribe_cuda_visible_devices"
+fi
+if [[ -n "$transcription_engine" ]]; then
+  echo "Transcription engine: $transcription_engine"
+fi
+if [[ -n "$primary_timeout_seconds" ]]; then
+  echo "Primary timeout: $primary_timeout_seconds seconds"
 fi
 echo "Log file: $log_file"
 echo "Attach with: tmux attach -t $session_name"
