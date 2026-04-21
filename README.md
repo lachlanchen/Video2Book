@@ -159,6 +159,7 @@ course book:
 - Download a playlist into a stable external media archive.
 - Transcribe videos into `.srt` subtitles and timestamped Markdown.
 - Convert completed transcript sets into structured TeX notes and merged course PDFs.
+- Convert ordered Markdown material folders into pocket-size TeX/PDF books.
 - Run long jobs in `tmux` with queue scripts and monitor/guard scripts.
 - Export compact pocket-format companion PDFs from finished course LaTeX.
 - Reuse the same wrapped-header and figure-refresh workflow for both normal
@@ -220,13 +221,15 @@ If you are running these repos from a shared parent directory (for example `/hom
 | 1 | `playlist2videos/` | Download or refresh a playlist with `yt-dlp`, keep logs, and skip already archived items. |
 | 2 | `videos2subtitles/` | Transcribe the archived media into `subtitles/` and `markdown/`. |
 | 3 | `subtitles2notes/` | Turn completed transcripts into chapter TeX, lecture PDFs, and merged course PDFs. |
-| 4 | `scripts/export_course_pocket_pdfs.sh` | Rebuild finished `course.tex` outputs into pocket/A5 variants for publishing packages and emit mapped overfull reports. |
-| 5 | `scripts/export_tex_book_pocket_pdf.sh` | Rebuild one standalone TeX book/article into a pocket-size companion PDF and sync it into the host repo docs tree. |
-| 6 | `subtitles2notes/templates/lecture_notes_common_preamble.tex` | Shared normal-size course-PDF header/layout source used by generated books. |
-| 7 | `scripts/fix_course_pocket_overfulls.sh` | Iterate on one course variant: export, report, Codex patch, and re-export until actionable overfulls drop. |
-| 8 | `scripts/fix_latex_project_overfulls.sh` | Generic LaTeX overflow fixer for any repo/project that can build with `pdflatex` or a custom compile command. |
-| 9 | `scripts/recheck_course_figures.py` | Re-audit screenshot-like lecture figures against transcript context and replacement video frames. |
-| 10 | `scripts/export_course_epubs.sh` | Rebuild finished `course.tex` outputs directly into EPUB3. |
+| 4 | `scripts/process_markdown_material_book.py` | Turn ordered source Markdown folders into generated pocket-size TeX/PDF books while passing related images to Codex. |
+| 5 | `scripts/start_markdown_material_book_tmux.sh` | Run the Markdown-material book writer in `tmux`, with resume-safe one-source-at-a-time processing. |
+| 6 | `scripts/export_course_pocket_pdfs.sh` | Rebuild finished `course.tex` outputs into pocket/A5 variants for publishing packages and emit mapped overfull reports. |
+| 7 | `scripts/export_tex_book_pocket_pdf.sh` | Rebuild one standalone TeX book/article into a pocket-size companion PDF and sync it into the host repo docs tree. |
+| 8 | `subtitles2notes/templates/lecture_notes_common_preamble.tex` | Shared normal-size course-PDF header/layout source used by generated books. |
+| 9 | `scripts/fix_course_pocket_overfulls.sh` | Iterate on one course variant: export, report, Codex patch, and re-export until actionable overfulls drop. |
+| 10 | `scripts/fix_latex_project_overfulls.sh` | Generic LaTeX overflow fixer for any repo/project that can build with `pdflatex` or a custom compile command. |
+| 11 | `scripts/recheck_course_figures.py` | Re-audit screenshot-like lecture figures against transcript context and replacement video frames. |
+| 12 | `scripts/export_course_epubs.sh` | Rebuild finished `course.tex` outputs directly into EPUB3. |
 
 ## 🚀 Quick Start
 

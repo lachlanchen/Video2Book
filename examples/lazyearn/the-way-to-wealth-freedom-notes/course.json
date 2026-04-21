@@ -1,0 +1,11 @@
+{
+  "course_rel": "lazyearn/the-way-to-wealth-freedom-notes",
+  "book_title": "The Way to Wealth Freedom",
+  "material_root": "materials/the-way-to-wealth-freedom-notes",
+  "output_root": "generated_course_notes/lazyearn/the-way-to-wealth-freedom-notes",
+  "source_kind": "ordered markdown material corpus",
+  "writing_target": "a coherent pocket-size wealth-freedom book that processes the source markdown notes one by one while keeping the whole corpus arc in view",
+  "big_picture_rule": "Every chapter prompt points to SUMMARY.md, README.md, source_manifest.tsv, book_plan.md, and the existing generated chapters so the current note is written as part of the full book rather than as an isolated summary.",
+  "visual_rule": "Referenced images are passed to Codex for inspection when available; include them only when they clarify the source idea, and always use pocket-safe width commands.",
+  "pocket_rule": "The canonical generated TeX is already configured as a 6x9 pocket book with 1.2x typography."
+}
