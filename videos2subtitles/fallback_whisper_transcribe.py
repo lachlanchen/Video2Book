@@ -19,6 +19,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--srt-output", required=True, help="Output SRT path.")
     parser.add_argument("--model", default="large-v3", help="Whisper model name.")
     parser.add_argument("--language", default="en", help="Whisper language code.")
+    parser.add_argument(
+        "--quiet",
+        action="store_true",
+        help="Suppress Whisper segment progress output.",
+    )
     return parser
 
 
@@ -48,12 +53,14 @@ def main() -> int:
     json_output = Path(args.json_output)
     srt_output = Path(args.srt_output)
 
+    print(f"Loading direct Whisper model: {args.model}", flush=True)
     model = whisper.load_model(args.model)
+    print(f"Transcribing with direct Whisper: {input_path}", flush=True)
     result = model.transcribe(
         str(input_path),
         language=args.language,
         fp16=torch.cuda.is_available(),
-        verbose=False,
+        verbose=not args.quiet,
     )
 
     entries: list[dict] = []
@@ -73,8 +80,8 @@ def main() -> int:
     srt_output.parent.mkdir(parents=True, exist_ok=True)
     json_output.write_text(json.dumps(entries, indent=4, ensure_ascii=False), encoding="utf-8")
     srt_output.write_text(render_srt(entries), encoding="utf-8")
-    print(f"Wrote fallback JSON to {json_output}")
-    print(f"Wrote fallback SRT to {srt_output}")
+    print(f"Wrote fallback JSON to {json_output}", flush=True)
+    print(f"Wrote fallback SRT to {srt_output}", flush=True)
     return 0
 
 

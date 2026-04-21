@@ -252,7 +252,8 @@ def run_fallback_transcription(
     fallback_input = work_wav if work_wav.exists() else work_video
     print(
         "Falling back to direct Whisper for "
-        f"{source_rel.as_posix()} because {reason}."
+        f"{source_rel.as_posix()} because {reason}.",
+        flush=True,
     )
     cleanup_paths([work_srt, work_json])
     fallback_command = [

@@ -80,7 +80,7 @@ while true; do
   if [[ -n "$source_subdir" ]]; then
     transcribe_cmd+=(--source-subdir "$source_subdir")
   fi
-  PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True "${transcribe_cmd[@]}"
+  PYTHONUNBUFFERED=1 PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True "${transcribe_cmd[@]}"
 
   existing_git_add_paths=()
   for path in "${git_add_paths[@]}"; do
