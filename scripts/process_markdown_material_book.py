@@ -202,6 +202,7 @@ def common_preamble() -> str:
 \usepackage{float}
 \usepackage{adjustbox}
 \usepackage{tikz}
+\usetikzlibrary{arrows.meta,calc,positioning,shapes.geometric}
 
 \setmainfont{Latin Modern Roman}
 \newfontfamily\cjkfont{Noto Serif CJK SC}
@@ -224,6 +225,10 @@ def common_preamble() -> str:
 
 \newenvironment{sourceinsight}{\begin{quote}\small\itshape}{\end{quote}}
 \newcommand{\chapterdivider}{\par\medskip\hrule\medskip}
+\tikzset{
+  materialbox/.style={draw=black!18, rounded corners=5pt, fill=blue!4, inner sep=6pt, align=center},
+  materialarrow/.style={-{Latex[length=2.5mm]}, line width=0.55pt, draw=black!55}
+}
 
 \makeatletter
 \newcommand{\material@headerfont}{\normalfont\footnotesize\itshape}
@@ -261,8 +266,11 @@ def write_course_tex(args: argparse.Namespace, sources: list[SourceItem]) -> Non
         if content.exists() and content.stat().st_size > 0:
             inputs.append(rf"\input{{chapters/{item.chapter_slug}/content.tex}}")
 
+    cover_art_path = args.output_dir / "assets" / "cover-art.png"
     cover_path = args.output_dir / "assets" / "source-img" / "cover1.jpeg"
-    if cover_path.exists():
+    if cover_art_path.exists():
+        cover_art = r"\includegraphics[width=\paperwidth,height=\paperheight,keepaspectratio]{assets/cover-art.png}"
+    elif cover_path.exists():
         cover_art = r"\includegraphics[width=\paperwidth,height=\paperheight,keepaspectratio]{assets/source-img/cover1.jpeg}"
     else:
         cover_art = r"\fcolorbox{black!15}{black!3}{\rule{0pt}{0.72\paperheight}\rule{0.82\paperwidth}{0pt}}"
@@ -361,7 +369,7 @@ Whole-corpus context paths:
 
 Important: although this worker writes one reference entry at a time, keep the overview and big picture in mind. Read the full source order in SUMMARY.md / source_manifest.tsv and inspect existing generated chapters when useful. The chapter should fit the larger arc of a book about wealth freedom, attention, time, capital, personal business models, investing discipline, and execution.
 
-Current related images you may inspect:
+Current related images you may inspect only as rough references:
 {image_lines}
 
 Recently generated chapters for continuity:
@@ -376,7 +384,9 @@ Required output:
 - Connect the current source to the whole-book arc when useful.
 - If ideas repeat from earlier notes, treat repetition as reinforcing evidence instead of deleting substance.
 - Use conservative restructuring only when it makes the new source easier to place in the full book.
-- If an image is genuinely useful, include it with a pocket-safe command such as `\\includegraphics[width=\\linewidth]{{assets/source-img/FILENAME}}`; do not invent captions for images you did not inspect.
+- Do not embed material images or assets with `\\includegraphics`; the source images are low-resolution reference material, not publishable book art.
+- If a visual idea from a source image is genuinely useful, redraw it as a clean pocket-safe LaTeX/TikZ diagram, table, equation block, or enumerated model.
+- Keep TikZ diagrams simple: use a few boxes, arrows, loops, and labels; wrap wider diagrams in `\\begin{{adjustbox}}{{max width=\\linewidth}} ... \\end{{adjustbox}}`.
 - Keep tables, diagrams, and equations narrow enough for a 6x9 pocket book.
 - Do not add source-note footers, material-source labels, or production metadata. The reader should experience this as a continuous book.
 Invalid examples:
@@ -426,6 +436,8 @@ def validate_tex_body(text: str, rel_path: str, output_dir: Path) -> None:
         raise ValueError("chapter output must contain exactly one \\chapter")
     if r"\sourcenote" in text:
         raise ValueError("chapter output must not contain source-note footers")
+    if r"\includegraphics" in text:
+        raise ValueError("material-book chapters must redraw visuals in TeX/TikZ, not embed image files")
     if len(text) < 2000:
         raise ValueError("chapter output is too short to be substantive")
 
@@ -454,6 +466,7 @@ def commit_step(args: argparse.Namespace, item: SourceItem) -> None:
     rel_output = args.output_dir.relative_to(args.repo_root)
     pathspecs = [
         str(rel_output / "assets" / "source-img"),
+        str(rel_output / "assets" / "cover-art.png"),
         str(rel_output / "book_plan.md"),
         str(rel_output / "source_manifest.tsv"),
         str(rel_output / "common_preamble.tex"),
@@ -518,7 +531,9 @@ def main() -> int:
                 with prompt_path.open("a", encoding="utf-8") as handle:
                     handle.write(
                         "\nRetry correction: the previous answer was invalid because it looked like an agent status "
-                        "message or was not substantive TeX. Return only the full LaTeX chapter body now.\n"
+                        "message, embedded source images, or was not substantive TeX. Return only the full LaTeX "
+                        "chapter body now, and redraw any useful visual material as TeX/TikZ rather than using "
+                        "\\includegraphics.\n"
                     )
         output_tmp.replace(content_path)
         write_course_tex(args, sources)
