@@ -190,6 +190,7 @@ def common_preamble() -> str:
 \usepackage[paperwidth=6in,paperheight=9in,margin=0.55in]{geometry}
 \usepackage{scrextend}
 \changefontsizes[16pt]{13.2pt}
+\usepackage{amsmath}
 \usepackage{graphicx}
 \usepackage{xcolor}
 \usepackage{booktabs}
