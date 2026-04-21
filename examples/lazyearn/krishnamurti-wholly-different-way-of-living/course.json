@@ -1,0 +1,16 @@
+{
+  "course_rel": "lazyearn/jiddu-krishnamurti/wholly-different-way-of-living",
+  "course_title": "A Wholly Different Way of Living",
+  "course_descriptor": "J. Krishnamurti in dialogue with Allan W. Anderson, San Diego 1974",
+  "lecturer_name": "J. Krishnamurti",
+  "deliverable_target": "a faithful, source-conscious chapter sequence for A Wholly Different Way of Living, preserving the themes of knowledge, pleasure, love, meditation, and the possibility of a fundamentally different life.",
+  "visual_target": "selected frames are supporting evidence for speaker identity, conversation setting, on-screen titling, and dialogue structure; do not let them override the spoken content.",
+  "mathematical_standard": "preserve conceptual precision and distinctions, but do not invent formal philosophy or psychology exposition beyond the source.",
+  "style_target": "notes should read like a serious companion text on attention, fear, pleasure, love, thought, and inner freedom, with explicit separation between observation, claim, and interpretation.",
+  "credit_target": "keep explicit credit to J. Krishnamurti, Allan W. Anderson, the Krishnamurti Foundation Trust, and curation by LazyingArt LLC.",
+  "front_matter_single": "Original dialogue by J. Krishnamurti with Allan W. Anderson. Lecture notes organized by \\href{https://lazying.art}{LazyingArt LLC}.",
+  "front_matter_plural": "Original dialogues by J. Krishnamurti with Allan W. Anderson. Lecture notes organized by \\href{https://lazying.art}{LazyingArt LLC}.",
+  "reference_missing_text": "No directly matching reference PDF is available for this course.",
+  "reference_no_match_text": "Matching course reference PDFs were found, but no strong topical excerpt was automatically matched for this dialogue.",
+  "reference_budget_text": "Matching course reference PDFs were found, but no excerpt fit within the current prompt budget."
+}

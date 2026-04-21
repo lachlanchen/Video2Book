@@ -1,0 +1,16 @@
+{
+  "course_rel": "lazyearn/jiddu-krishnamurti/ending-all-fear",
+  "course_title": "Ending All Fear",
+  "course_descriptor": "J. Krishnamurti, San Diego 1970",
+  "lecturer_name": "J. Krishnamurti",
+  "deliverable_target": "a faithful, source-conscious chapter sequence for Ending All Fear, preserving Krishnamurti's inquiry into fear, meditation, violence, pleasure, and freedom from psychological dependence.",
+  "visual_target": "selected frames are supporting evidence for speaker identity, audience setting, and official titling; do not let them override the spoken content.",
+  "mathematical_standard": "preserve conceptual precision and distinctions, but avoid invented formal psychology or philosophy beyond the source.",
+  "style_target": "notes should read like a careful companion text on fear, disorder, pleasure, meditation, and freedom, with explicit separation between direct claim, question, and interpretation.",
+  "credit_target": "keep explicit credit to J. Krishnamurti, the Krishnamurti Foundation Trust, and curation by LazyingArt LLC.",
+  "front_matter_single": "Original talk by J. Krishnamurti. Lecture notes organized by \\href{https://lazying.art}{LazyingArt LLC}.",
+  "front_matter_plural": "Original talks by J. Krishnamurti. Lecture notes organized by \\href{https://lazying.art}{LazyingArt LLC}.",
+  "reference_missing_text": "No directly matching reference PDF is available for this course.",
+  "reference_no_match_text": "Matching course reference PDFs were found, but no strong topical excerpt was automatically matched for this talk.",
+  "reference_budget_text": "Matching course reference PDFs were found, but no excerpt fit within the current prompt budget."
+}
