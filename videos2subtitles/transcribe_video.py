@@ -259,6 +259,7 @@ def run_fallback_transcription(
     fallback_command = [
         "conda",
         "run",
+        "--no-capture-output",
         "-n",
         conda_env,
         "python",
@@ -352,6 +353,7 @@ def transcribe_video(
     command = [
         "conda",
         "run",
+        "--no-capture-output",
         "-n",
         conda_env,
         "python",
