@@ -130,6 +130,7 @@ class CourseConfig:
     course_title: str | None = None
     course_descriptor: str | None = None
     lecture_order: list[int] = field(default_factory=list)
+    lecture_order_strict: bool = False
     dynamic_book_enabled: bool = False
     dynamic_book_title: str | None = None
     dynamic_book_descriptor: str | None = None
@@ -210,6 +211,9 @@ def load_course_config(path: Path | None) -> CourseConfig:
             if number > 0 and number not in ordered_numbers:
                 ordered_numbers.append(number)
         config.lecture_order = ordered_numbers
+    config.lecture_order_strict = parse_bool(
+        raw.get("lecture_order_strict"), config.lecture_order_strict
+    )
     for key in (
         "course_rel",
         "course_title",
@@ -456,6 +460,10 @@ def ordered_transcripts_for_course(md_dir: Path, course_config: CourseConfig) ->
         return transcripts
 
     rank_map = lecture_order_rank_map(course_config)
+    if course_config.lecture_order_strict:
+        transcripts = [
+            path for path in transcripts if parse_lecture_number(path.stem) in rank_map
+        ]
     fallback_base = len(rank_map)
 
     def sort_key(path: Path) -> tuple[int, int, str]:
