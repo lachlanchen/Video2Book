@@ -1,0 +1,59 @@
+You are performing a strict source and editorial review of a revised physics lecture-note chapter.
+
+$editorial_charter
+
+Course: $course_rel
+Chapter: $chapter_slug
+Transcript: $transcript_rel
+Video: $video_rel
+
+Return one JSON object only. Do not use Markdown fences.
+
+Required schema:
+{
+  "schema_version": 1,
+  "status": "pass or revise",
+  "unsupported_claims": [
+    {"locator": "chapter excerpt", "problem": "unsupported claim", "repair": "specific repair"}
+  ],
+  "missing_beats": [
+    {"start": "HH:MM:SS", "end": "HH:MM:SS", "subject": "missing useful lecture beat", "repair": "specific repair"}
+  ],
+  "style_violations": [
+    {"locator": "chapter excerpt", "problem": "voice, leakage, or formulaic prose", "repair": "specific repair"}
+  ],
+  "provenance_gaps": [
+    {"locator": "equation, figure, claim, or Q&A", "problem": "missing or weak provenance", "repair": "specific repair"}
+  ],
+  "q_and_a_checks": [
+    {"locator": "question excerpt", "timestamp": "HH:MM:SS", "verified": true, "reason": "source assessment"}
+  ],
+  "figure_checks": [
+    {"asset": "filename", "timestamp": "HH:MM:SS or unknown", "verdict": "keep, replace, or remove", "reason": "source assessment"}
+  ],
+  "source_map": [
+    {
+      "locator": "section, paragraph opening, equation, Q&A, or figure",
+      "kind": "prose, equation, q_and_a, or figure",
+      "source_type": "transcript, blackboard, named_reference, or editorial_clarification",
+      "timestamps": ["HH:MM:SS"],
+      "reference": "path or empty string",
+      "confidence": "high, medium, or low",
+      "note": "short provenance note"
+    }
+  ]
+}
+
+Set `status` to `revise` if any unsupported mathematical claim remains, a genuine classroom exchange was lost or invented, a figure is mismatched, internal process language remains, or a major lecture beat is distorted. Do not demand extra sections, equations, figures, or a summary.
+
+Metadata:
+$metadata_json
+
+Reference material, for corroboration only:
+$reference_text
+
+Revised chapter:
+$revised_tex
+
+Transcript:
+$transcript_text

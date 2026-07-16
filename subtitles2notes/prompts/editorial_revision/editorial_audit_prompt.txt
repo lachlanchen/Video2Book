@@ -1,0 +1,83 @@
+You are the source-fidelity editor for an existing physics lecture-note chapter.
+
+$editorial_charter
+
+Course: $course_rel
+Chapter: $chapter_slug
+Transcript: $transcript_rel
+Video: $video_rel
+
+Return one JSON object only. Do not use Markdown fences.
+
+Required schema:
+{
+  "schema_version": 1,
+  "chapter": "chapter slug",
+  "overall_status": "pass or revise",
+  "findings": [
+    {
+      "severity": "critical, high, medium, or low",
+      "category": "leakage, voice, structure, fidelity, mathematics, q_and_a, figure, provenance, title, or front_matter",
+      "locator": "short exact excerpt or structural location",
+      "evidence": "what is wrong and why",
+      "action": "specific repair"
+    }
+  ],
+  "lecture_beats": [
+    {
+      "start": "HH:MM:SS",
+      "end": "HH:MM:SS",
+      "subject": "short description",
+      "chapter_status": "present, compressed, missing, distorted, or uncertain"
+    }
+  ],
+  "classroom_exchanges": [
+    {
+      "start": "HH:MM:SS",
+      "end": "HH:MM:SS",
+      "question": "audience question",
+      "answer_summary": "lecturer response",
+      "verified": true
+    }
+  ],
+  "figure_checks": [
+    {
+      "asset": "filename",
+      "timestamp": "HH:MM:SS or unknown",
+      "verdict": "keep, replace, or remove",
+      "reason": "content and timestamp assessment",
+      "caption_guidance": "physics-only caption"
+    }
+  ],
+  "uncertain_sources": [
+    {
+      "locator": "transcript timestamp or chapter excerpt",
+      "problem": "ASR, equation, attribution, or unsupported addition",
+      "required_check": "audio, frame, or named reference"
+    }
+  ]
+}
+
+Audit rules:
+- Compare the chapter with the complete transcript, not merely with its topic.
+- Identify useful repetitions or transitions that the chapter compressed away.
+- Treat an exchange as classroom Q&A only when the transcript supports an audience question and a lecturer response.
+- Inspect every attached chapter figure. Reject irrelevant, unreadable, mistimed, or redundant images.
+- Flag standard textbook additions when the supplied evidence does not support them.
+- Flag workflow language even when it has been paraphrased into polished prose.
+- Do not rewrite the chapter in this step.
+
+Metadata:
+$metadata_json
+
+Existing figure notes:
+$figures_markdown_text
+
+Reference material, for corroboration only:
+$reference_text
+
+Current chapter:
+$content_tex
+
+Transcript:
+$transcript_text

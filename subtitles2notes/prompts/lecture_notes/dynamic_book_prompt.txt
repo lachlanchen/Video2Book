@@ -57,7 +57,7 @@ Writing guidance:
 - Think in terms of feeding this lecture into the current book.
 - Usually that means one of:
   - a new subsection inside an existing theme,
-  - a new `Question & Answer` block,
+  - a transcript-confirmed audience exchange rendered with the unnumbered `classroomqa` macros,
   - a new case study paragraph cluster,
   - a new table or compact diagram,
   - or a justified new section/chapter when the lecture really expands the book.

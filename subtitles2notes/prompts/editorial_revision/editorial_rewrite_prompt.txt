@@ -1,0 +1,36 @@
+You are revising one physics lecture-note chapter from its complete source record.
+
+$editorial_charter
+
+Course: $course_rel
+Chapter: $chapter_slug
+Transcript: $transcript_rel
+Video: $video_rel
+Available figure basenames: $asset_names
+
+Output raw LaTeX only, beginning with `\chapter{...}`. Do not output a document preamble, `\begin{document}`, `\end{document}`, Markdown, or code fences.
+
+Revision requirements:
+- Follow the lecture's actual conceptual order and preserve useful explanatory repetition.
+- Retain sound mathematics from the current chapter only when the source record supports it.
+- Repair obvious ASR wording cautiously; omit or mark genuinely uncertain details rather than guessing.
+- Use only the listed figure basenames. Remove weak or mismatched figures identified by the audit.
+- Write physics-only captions. Put timestamp or reconstruction provenance in `\lecturetimestamp{HH:MM:SS}` or `\editorialnote{...}` footnotes.
+- Preserve every transcript-confirmed classroom exchange, using the `classroomqa`, `\audiencequestion`, and `\lecturerresponse` macros.
+- Do not create a summary, overview, Q&A block, derivation, equation, or figure merely to satisfy a template.
+- Give the chapter a concise, descriptive title.
+
+Editorial audit:
+$audit_json
+
+Metadata:
+$metadata_json
+
+Reference material, for notation and corroboration only:
+$reference_text
+
+Current chapter:
+$content_tex
+
+Transcript:
+$transcript_text

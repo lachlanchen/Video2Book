@@ -155,19 +155,19 @@ class CourseConfig:
         "reconstruct cautiously when the lecture is partial, but avoid generic textbook filler that was not motivated by the lecture."
     )
     style_target: str = (
-        "notes should read like polished companion notes in a Susskind-like register, as though the mathematical "
-        "argument is being unfolded by the lecturer on the page; allow a natural mix of first-person plural, "
-        "occasional broader third-person or god-view framing, and direct explanatory prose without forcing a rigid persona."
+        "write direct, restrained, mathematically serious companion notes; preserve the lecture's useful repetition "
+        "and explanatory order, use first-person plural only when it naturally guides an argument, and do not "
+        "impersonate the lecturer or speculate about his intentions."
     )
     credit_target: str = (
-        "keep explicit credit to Leonard Susskind, LazyingArt LLC, and Video2Book; reserve the website and GitHub "
-        "URLs for the generated front-matter credit, not the prose body."
+        "identify the lecturer and editors accurately in front matter only; never place credits, tooling, or curation "
+        "language in chapter prose."
     )
     front_matter_single: str = (
-        "Original lecture by Leonard Susskind. Lecture notes organized by \\href{https://lazying.art}{LazyingArt LLC} with \\href{https://github.com/lachlanchen/Video2Book}{Video2Book}."
+        "Lecture by Leonard Susskind. Independently edited companion notes prepared by \\href{https://lazying.art}{LazyingArt LLC} with \\href{https://github.com/lachlanchen/Video2Book}{Video2Book}; not reviewed or endorsed by the lecturer."
     )
     front_matter_plural: str = (
-        "Original lectures by Leonard Susskind. Lecture notes organized by \\href{https://lazying.art}{LazyingArt LLC} with \\href{https://github.com/lachlanchen/Video2Book}{Video2Book}."
+        "Lectures by Leonard Susskind. Independently edited companion notes prepared by \\href{https://lazying.art}{LazyingArt LLC} with \\href{https://github.com/lachlanchen/Video2Book}{Video2Book}; not reviewed or endorsed by the lecturer."
     )
     reference_pdf_hints: list[str] = field(default_factory=list)
     reference_missing_text: str = "No directly matching Susskind-authored PDF reference is available for this course."
@@ -294,7 +294,8 @@ def build_task_context(lecture: LectureInfo, course_config: CourseConfig) -> str
         f"- Visual evidence: {course_config.visual_target}",
         f"- Analytical standard: {course_config.mathematical_standard}",
         f"- Style target: {course_config.style_target}",
-        "- Structural target: when the lecture naturally raises and resolves a local conceptual obstacle, preserve that rhythm with a standalone `Question & Answer` subsection inside the chapter rather than flattening it away.",
+        "- Structural target: let the lecture determine the section count and shape; do not force an overview, summary, equation quota, figure quota, or Question & Answer block.",
+        "- Classroom target: preserve a real audience exchange only when the transcript supports both the question and response; render it with the unnumbered classroom Q&A macros and a timestamp.",
         "- Pocket-layout target: any flowchart, table, or standalone diagram should survive later 6x9 pocket export; wrap long node text, prefer taller/narrower layouts over sprawling wide ones, keep visuals within `\\linewidth`, and favor readable labels over dense tiny text.",
         f"- Credit target: {course_config.credit_target}",
         "- Output discipline: each prompt stage should solve only its local subtask, but keep the full end goal in mind so downstream stages remain coherent.",
@@ -1380,12 +1381,12 @@ def dynamic_book_shell(
 \\begin{{document}}
 \\frontmatter
 \\title{{{title}}}
-\\author{{{lecturer}}}
-\\date{{{descriptor} \\\\ Lecture notes organized by \\href{{https://lazying.art}}{{LazyingArt LLC}} with \\href{{https://github.com/lachlanchen/Video2Book}}{{Video2Book}}}}
+\\author{{Lectures by {lecturer} \\\\ Edited companion notes by LazyingArt LLC}}
+\\date{{{descriptor}}}
 \\maketitle
-\\begin{{center}}
-\\small {course_config.front_matter_plural}
-\\end{{center}}
+\\clearpage
+\\chapter*{{About These Notes}}
+{course_config.front_matter_plural} Machine transcripts remain available separately and may contain recognition errors. Editorial clarifications and nontrivial reconstructions are identified in footnotes.
 \\clearpage
 \\tableofcontents
 \\mainmatter
@@ -1529,12 +1530,12 @@ def write_lecture_wrapper(lecture: LectureInfo, lecture_dir: Path, course_config
 \\begin{{document}}
 \\frontmatter
 \\title{{{title_course}: {title_lecture}}}
-\\author{{{lecturer_name}}}
-\\date{{Lecture notes organized by \\href{{https://lazying.art}}{{LazyingArt LLC}} with \\href{{https://github.com/lachlanchen/Video2Book}}{{Video2Book}}}}
+\\author{{Lecture by {lecturer_name} \\\\ Edited companion notes by LazyingArt LLC}}
+\\date{{Prepared with Video2Book}}
 \\maketitle
-\\begin{{center}}
-\\small {course_config.front_matter_single}
-\\end{{center}}
+\\clearpage
+\\chapter*{{About These Notes}}
+{course_config.front_matter_single} Machine transcripts remain available separately and may contain recognition errors.
 \\clearpage
 \\mainmatter
 \\input{{content.tex}}
@@ -1586,8 +1587,8 @@ def build_course_cover_titlepage(
     rounded corners=6pt,
     inner sep=12pt
   ] at ([xshift=0.08\\paperwidth,yshift=0.08\\paperheight]current page.south west) {{%
-    {{\\normalsize\\color{{black!78}} Original lectures by {lecturer_name}\\\\[0.35em]}}
-    {{\\small\\color{{black!72}} {front_matter_plural}}}
+    {{\\normalsize\\color{{black!78}} Lectures by {lecturer_name}\\\\[0.35em]}}
+    {{\\small\\color{{black!72}} Companion edition by \\href{{https://lazying.art}}{{LazyingArt LLC}} with \\href{{https://github.com/lachlanchen/Video2Book}}{{Video2Book}}}}
   }};
 \\end{{tikzpicture}}
 \\mbox{{}}
@@ -1618,13 +1619,10 @@ def write_course_book(course_root: Path, lecture_entries: list[LectureInfo], cou
 {graphics_path}\\begin{{document}}
 \\frontmatter
 {cover_titlepage}
-\\title{{{title_course}}}
-\\author{{{lecturer_name}}}
-\\date{{{descriptor} \\\\ Lecture notes organized by \\href{{https://lazying.art}}{{LazyingArt LLC}} with \\href{{https://github.com/lachlanchen/Video2Book}}{{Video2Book}}}}
-\\maketitle
-\\begin{{center}}
-\\small {course_config.front_matter_plural}
-\\end{{center}}
+\\chapter*{{About These Notes}}
+These independently edited companion notes follow lectures by {lecturer_name}. They were reconstructed from machine transcripts, subtitles, and selected blackboard frames, then checked against available source material. They are not an original manuscript by the lecturer and have not been reviewed or endorsed by him.
+
+The edition was prepared by \\href{{https://lazying.art}}{{LazyingArt LLC}} using \\href{{https://github.com/lachlanchen/Video2Book}}{{Video2Book}}. Machine transcripts remain available separately and may contain recognition errors. Editorial clarifications and nontrivial reconstructions are identified in footnotes.
 \\clearpage
 \\tableofcontents
 \\mainmatter

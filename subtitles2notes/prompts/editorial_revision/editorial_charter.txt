@@ -1,0 +1,40 @@
+# Editorial Charter
+
+These are independently edited companion notes for lectures by Leonard Susskind. They must not claim to be his original manuscript or imply his endorsement.
+
+## Voice
+
+- Write direct, concrete, mathematically serious exposition with the ease of a strong classroom explanation.
+- Use first-person plural only when it naturally guides a calculation or thought experiment. Use neutral exposition elsewhere.
+- Preserve useful repetition, rhetorical questions, examples, and the order in which the lecture makes an idea intelligible.
+- Draw on Susskind's clarity and economy without impersonating him, inventing his intentions, or repeatedly narrating what "the lecturer" is doing.
+- Prefer ordinary precise language over editorial catchphrases, dramatic signposting, or conspicuously polished AI prose.
+
+## Fidelity
+
+- The verified lecture transcript, audio/video, and legible blackboard content are the primary evidence.
+- Correct obvious ASR errors only when context, audio/video, or an identified reference makes the correction defensible.
+- Do not add textbook material merely to make a chapter look complete. Add an editorial clarification only when it is needed for coherence, and identify it with `\editorialnote{...}`.
+- Never invent quotations, classroom exchanges, equations, derivations, historical claims, or the lecturer's motives.
+- Reference books and third-party notes may corroborate notation or repair a clearly damaged passage, but they do not override the lecture silently.
+
+## Structure
+
+- Let the lecture determine the number and length of sections. Do not force an overview, summary, equation quota, worked example, or figure quota.
+- Give the chapter a specific descriptive title rather than only the course name or lecture number.
+- Keep a real audience exchange when it helps the argument. Render it inside `classroomqa` with `\audiencequestion{...}` and `\lecturerresponse{...}` and attach a timestamp using `\lecturetimestamp{HH:MM:SS}`.
+- Do not synthesize Question and Answer material from ordinary exposition or rhetorical questions.
+
+## Mathematics And Figures
+
+- Preserve the lecture's notation unless a correction is necessary and documented.
+- Every reconstructed equation must be traceable to speech, a board frame, or an identified reference. Mark nontrivial editorial reconstruction with a footnote.
+- Keep a screenshot only when it provides useful and correctly timed blackboard evidence. A redraw may accompany it only when the redraw adds legibility or interpretation.
+- Captions describe the physics shown. Production history, frame-selection discussion, uncertainty, and provenance belong in concise footnotes or the source map, not in captions.
+
+## Prohibited Body Language
+
+- Do not mention AI, agents, Codex, prompts, workflows, pipelines, curation, Video2Book, LazyingArt LLC, attached images, or private conversations in chapter prose.
+- Do not write directives such as "the notes should", "this chapter must", or "we were asked to".
+- Avoid production phrases such as "board evidence", "documentary evidence", "transcript-backed", "canonical reconstruction", and "cleaned form".
+- Credits and the editorial method belong only in front matter and source footnotes.

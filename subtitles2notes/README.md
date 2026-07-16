@@ -17,15 +17,23 @@ This module handles the third stage of the pipeline: turning completed subtitle 
   - chapter drafting and refinement
   - LaTeX compile-fix passes
   - per-step commit and push
+- Audits and revises existing books for:
+  - transcript and blackboard fidelity
+  - AI-shaped prose and internal process leakage
+  - verified classroom Q&A and timestamp provenance
+  - figure relevance, source maps, and clean front matter
 
 ## Main entrypoints
 
 - Note generator:
   - [generate_course_notes.py](/home/lachlan/ProjectsLFS/Video2Book/subtitles2notes/generate_course_notes.py)
+- Editorial auditor and reviser:
+  - [editorial_revision.py](/home/lachlan/ProjectsLFS/Video2Book/subtitles2notes/editorial_revision.py)
 - Queue runner:
   - [process_course_notes_one_by_one.sh](/home/lachlan/ProjectsLFS/Video2Book/scripts/process_course_notes_one_by_one.sh)
 - tmux launcher:
   - [start_course_notes_tmux.sh](/home/lachlan/ProjectsLFS/Video2Book/scripts/start_course_notes_tmux.sh)
+  - [start_editorial_revision_tmux.sh](/home/lachlan/ProjectsLFS/Video2Book/scripts/start_editorial_revision_tmux.sh)
 - monitor / guard:
   - [monitor_course_notes.sh](/home/lachlan/ProjectsLFS/Video2Book/scripts/monitor_course_notes.sh)
   - [start_course_notes_monitor_tmux.sh](/home/lachlan/ProjectsLFS/Video2Book/scripts/start_course_notes_monitor_tmux.sh)
@@ -50,3 +58,15 @@ From the archive repo root:
 ```
 
 Or through thin wrappers in `leonardsusskind/scripts/`.
+
+For a source-aware rewrite of an existing course:
+
+```bash
+./Video2Book/scripts/start_editorial_revision_tmux.sh \
+  --course core/cosmology/2009_winter_legacy_cosmology \
+  --reference core_cosmology \
+  --model gpt-5.4 \
+  --reasoning xhigh
+```
+
+See [the editorial revision handoff](../references/editorial-revision-workflow.md) for the provenance schema, acceptance gates, and resumable session behavior.

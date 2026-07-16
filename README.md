@@ -161,11 +161,14 @@ course book:
 - Download a playlist into a stable external media archive.
 - Transcribe videos into `.srt` subtitles and timestamped Markdown.
 - Convert completed transcript sets into structured TeX notes and merged course PDFs.
+- Audit existing notes against transcripts and blackboard frames, remove process leakage, and emit per-chapter provenance maps.
 - Convert ordered Markdown material folders into pocket-size TeX/PDF books.
 - Run long jobs in `tmux` with queue scripts and monitor/guard scripts.
 - Export compact pocket-format companion PDFs from finished course LaTeX.
 - Reuse the same wrapped-header and figure-refresh workflow for both normal
   full-size PDFs and pocket PDFs across host repos.
+
+The source-aware editorial pass is documented in [references/editorial-revision-workflow.md](references/editorial-revision-workflow.md). It keeps initial generation separate from a stricter audit, rewrite, fidelity-review, and repair cycle.
 
 ## 🧪 Working Host Repos
 

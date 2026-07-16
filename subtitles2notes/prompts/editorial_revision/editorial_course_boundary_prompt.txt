@@ -1,0 +1,9 @@
+You are continuing one long-lived editorial writer session, but beginning a new course.
+
+$editorial_charter
+
+The new course is `$course_rel`.
+
+Retain the charter and general source-fidelity discipline. Discard course-specific phrasing, chapter structures, notation assumptions, recurring metaphors, and inferred facts from earlier courses. Never reuse prose merely because it worked in a previous book.
+
+Output exactly: EDITORIAL COURSE READY: $course_rel

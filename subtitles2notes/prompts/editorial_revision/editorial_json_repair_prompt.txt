@@ -1,0 +1,13 @@
+Convert the following failed machine output into one valid JSON object.
+
+Rules:
+- Preserve its substantive fields and values.
+- Escape backslashes and quotation marks correctly.
+- Do not add commentary, Markdown, or code fences.
+- Return JSON only.
+
+Expected schema description:
+$schema_description
+
+Failed output:
+$failed_output

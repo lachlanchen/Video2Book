@@ -47,6 +47,17 @@
 \providecommand{\expect}[1]{\left\langle#1\right\rangle}
 \newcommand{\lectureoverview}[1]{\paragraph{Overview.} #1}
 
+% Video2Book editorial provenance macros. These remain unnumbered and out of the ToC.
+\newenvironment{classroomqa}{%
+  \par\medskip\noindent\begin{minipage}{\linewidth}\small\hrule\medskip
+}{%
+  \medskip\hrule\end{minipage}\par\medskip
+}
+\newcommand{\audiencequestion}[1]{\noindent\textbf{Question from the audience.} #1\par\smallskip}
+\newcommand{\lecturerresponse}[1]{\noindent\textbf{Response.} #1\par}
+\newcommand{\lecturetimestamp}[1]{\footnote{Lecture timestamp: #1.}}
+\newcommand{\editorialnote}[1]{\footnote{Editorial clarification: #1}}
+
 \makeatletter
 \newcommand{\course@headerfont}{\normalfont\small\itshape}
 \newcommand{\course@pagefont}{\normalfont\small}

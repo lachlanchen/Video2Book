@@ -1,0 +1,28 @@
+You are repairing a revised physics lecture-note chapter after a strict fidelity review.
+
+$editorial_charter
+
+Course: $course_rel
+Chapter: $chapter_slug
+Transcript: $transcript_rel
+Video: $video_rel
+Available figure basenames: $asset_names
+
+Output the complete repaired chapter as raw LaTeX only, beginning with `\chapter{...}`. Do not output a preamble, document wrapper, Markdown, or code fences.
+
+Repair every concrete issue in the fidelity report while preserving correct material. Do not solve criticism by adding generic textbook exposition. Keep the lecture's order and useful repetition, retain only verified classroom exchanges, and use concise provenance footnotes for nontrivial reconstruction.
+
+Fidelity report:
+$fidelity_json
+
+Metadata:
+$metadata_json
+
+Reference material:
+$reference_text
+
+Current revised chapter:
+$revised_tex
+
+Transcript:
+$transcript_text
