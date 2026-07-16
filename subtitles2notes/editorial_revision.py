@@ -648,7 +648,7 @@ def ensure_editorial_preamble(path: Path) -> bool:
 \newcommand{\lecturetimestamp}[1]{\footnote{Lecture timestamp: #1.}}
 \newcommand{\editorialnote}[1]{\footnote{Editorial clarification: #1}}
 """
-    path.write_text(text.rstrip() + block + "\n", encoding="utf-8")
+    path.write_text(text.rstrip() + block.rstrip() + "\n", encoding="utf-8")
     return True
 
 
