@@ -17,6 +17,8 @@ Each revised chapter receives:
 
 The source map classifies prose, equations, Q&A, and figures as transcript, blackboard, named-reference, or editorial material. Nontrivial reconstruction is also identified in the PDF with a concise footnote.
 
+Use `\lecturetimestamp{HH:MM:SS}` only inside `classroomqa`; it creates the Q&A timestamp footnote. Put a retained video's frame time in `\lectureframe{HH:MM:SS}` immediately after the figure caption. Do not place `\lecturetimestamp` on its own or nest it inside `\editorialnote`, because either form produces orphan or nested footnote markers. The deterministic scan blocks those placements.
+
 ## Run One Course
 
 ```bash

@@ -364,6 +364,21 @@ def scan_text(path: Path, text: str) -> list[dict]:
                     "excerpt": match.group(0),
                 }
             )
+
+    qa_depth = 0
+    for line_number, line in enumerate(text.splitlines(), 1):
+        qa_depth += line.count(r"\begin{classroomqa}")
+        if r"\lecturetimestamp{" in line and qa_depth == 0:
+            findings.append(
+                {
+                    "rule": "misplaced_lecture_timestamp",
+                    "severity": "error",
+                    "path": str(path),
+                    "line": line_number,
+                    "excerpt": line.strip(),
+                }
+            )
+        qa_depth = max(0, qa_depth - line.count(r"\end{classroomqa}"))
     return findings
 
 
@@ -655,7 +670,16 @@ def ensure_editorial_preamble(path: Path) -> bool:
     text = read_text(path)
     marker = "% Video2Book editorial provenance macros"
     if marker in text:
-        return False
+        if r"\newcommand{\lectureframe}" in text:
+            return False
+        path.write_text(
+            text.rstrip()
+            + "\n"
+            + r"\newcommand{\lectureframe}[1]{\par\smallskip{\centering\footnotesize\itshape Lecture frame: #1.\par}}"
+            + "\n",
+            encoding="utf-8",
+        )
+        return True
     block = r"""
 
 % Video2Book editorial provenance macros
@@ -667,6 +691,7 @@ def ensure_editorial_preamble(path: Path) -> bool:
 \newcommand{\audiencequestion}[1]{\noindent\textbf{Question from the audience.} #1\par\smallskip}
 \newcommand{\lecturerresponse}[1]{\noindent\textbf{Response.} #1\par}
 \newcommand{\lecturetimestamp}[1]{\footnote{Lecture timestamp: #1.}}
+\newcommand{\lectureframe}[1]{\par\smallskip{\centering\footnotesize\itshape Lecture frame: #1.\par}}
 \newcommand{\editorialnote}[1]{\footnote{Editorial clarification: #1}}
 """
     path.write_text(text.rstrip() + block.rstrip() + "\n", encoding="utf-8")

@@ -173,6 +173,21 @@ Old duplicate credit
             self.assertFalse(passed)
             self.assertTrue(any(item["rule"] == "formulaic_choreography" for item in findings))
 
+    def test_timestamp_footnote_outside_classroom_qa_blocks_acceptance(self):
+        with tempfile.TemporaryDirectory() as temp:
+            candidate = Path(temp) / "content.tex"
+            candidate.write_text(
+                "\\chapter{Expansion}\n"
+                "\\lecturetimestamp{00:12:34}\n"
+                "\\begin{figure}\\caption{A board.}\\end{figure}\n",
+                encoding="utf-8",
+            )
+            passed, findings = revision.hard_scan_passes(candidate)
+            self.assertFalse(passed)
+            self.assertTrue(
+                any(item["rule"] == "misplaced_lecture_timestamp" for item in findings)
+            )
+
     def test_verified_qa_is_promoted_into_source_map(self):
         record = type(
             "Record",

@@ -46,6 +46,7 @@ Required improvements:
 - preserve useful repetition and the lecture's conceptual order rather than optimizing only for compression
 - remove selected screenshots that are irrelevant, mistimed, unreadable, or redundant
 - use `\editorialnote{...}` for necessary nontrivial reconstruction and keep figure captions focused on physics
+- put a retained video's frame time in `\lectureframe{HH:MM:SS}` immediately after its caption; never use `\lecturetimestamp` outside `classroomqa` or inside `\editorialnote`
 - keep figures, TikZ diagrams, and standalone reconstructed equations centered unless an asymmetric layout is genuinely better
 - make any flowchart, diagram, or table robust for later pocket-size export:
   - wrap long labels

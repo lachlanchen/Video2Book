@@ -50,7 +50,7 @@ Writing rules:
 - use direct, restrained explanatory prose; use first-person plural only when it naturally guides an argument
 - draw on the lecturer's clarity without impersonating him, repeatedly narrating his actions, or inventing his intentions
 - never mention curation, tooling, AI, agents, prompts, LazyingArt LLC, or Video2Book in chapter prose
-- for every included figure, describe the physics in the caption and put reconstruction or timestamp provenance in a footnote
+- for every included figure, describe the physics in the caption and put its video time in `\lectureframe{HH:MM:SS}` immediately after the caption; reserve `\lecturetimestamp` for `classroomqa`
 - preserve a classroom exchange only when the transcript supports both the audience question and response; use `classroomqa`, `\audiencequestion`, `\lecturerresponse`, and `\lecturetimestamp`
 - use `\editorialnote{...}` for a necessary nontrivial editorial clarification or reconstruction
 - center figure environments, screenshots, TikZ diagrams, and standalone visual reconstructions unless there is a specific local reason not to

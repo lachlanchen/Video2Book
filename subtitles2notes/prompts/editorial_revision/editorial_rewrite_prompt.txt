@@ -16,7 +16,7 @@ Revision requirements:
 - Retain sound mathematics from the current chapter only when the source record supports it.
 - Repair obvious ASR wording cautiously; omit or mark genuinely uncertain details rather than guessing.
 - Use only the listed figure basenames. Remove weak or mismatched figures identified by the audit.
-- Write physics-only captions. Put timestamp or reconstruction provenance in `\lecturetimestamp{HH:MM:SS}` or `\editorialnote{...}` footnotes.
+- Write physics-only captions. Put `\lectureframe{HH:MM:SS}` immediately after the caption of a retained video frame. Reserve `\lecturetimestamp{HH:MM:SS}` for a verified `classroomqa`; never use it as a standalone line or inside `\editorialnote{...}`.
 - Preserve every transcript-confirmed classroom exchange, using the `classroomqa`, `\audiencequestion`, and `\lecturerresponse` macros.
 - Do not create a summary, overview, Q&A block, derivation, equation, or figure merely to satisfy a template.
 - Give the chapter a concise, descriptive title.

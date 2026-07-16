@@ -23,6 +23,7 @@ These are independently edited companion notes for lectures by Leonard Susskind.
 - Let the lecture determine the number and length of sections. Do not force an overview, summary, equation quota, worked example, or figure quota.
 - Give the chapter a specific descriptive title rather than only the course name or lecture number.
 - Keep a real audience exchange when it helps the argument. Render it inside `classroomqa` with `\audiencequestion{...}` and `\lecturerresponse{...}` and attach a timestamp using `\lecturetimestamp{HH:MM:SS}`.
+- Put a retained video's frame time in `\lectureframe{HH:MM:SS}` immediately after its figure caption. Never use `\lecturetimestamp` outside `classroomqa` or nest it inside `\editorialnote`.
 - Do not synthesize Question and Answer material from ordinary exposition or rhetorical questions.
 
 ## Mathematics And Figures
