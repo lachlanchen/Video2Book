@@ -162,6 +162,17 @@ Old duplicate credit
             self.assertTrue(any("source_map" in problem for problem in problems))
             self.assertTrue(any("Q&A" in problem for problem in problems))
 
+    def test_formulaic_lecture_choreography_blocks_acceptance(self):
+        with tempfile.TemporaryDirectory() as temp:
+            candidate = Path(temp) / "content.tex"
+            candidate.write_text(
+                "\\chapter{Expansion}\nThe lecture begins with geometry.\n",
+                encoding="utf-8",
+            )
+            passed, findings = revision.hard_scan_passes(candidate)
+            self.assertFalse(passed)
+            self.assertTrue(any(item["rule"] == "formulaic_choreography" for item in findings))
+
     def test_prepare_environment_forces_read_only_writer(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)

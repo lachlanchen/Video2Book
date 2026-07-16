@@ -93,6 +93,12 @@ SCAN_RULES = (
     ),
 )
 
+BLOCKING_SCAN_RULES = {
+    "formulaic_choreography",
+    "formulaic_payoff",
+    "legacy_qa_heading",
+}
+
 
 @dataclass
 class ChapterRecord:
@@ -933,7 +939,11 @@ def repair_chapter(
 
 def hard_scan_passes(candidate: Path) -> tuple[bool, list[dict]]:
     findings = scan_text(candidate, read_text(candidate))
-    return not any(item["severity"] == "error" for item in findings), findings
+    blocked = any(
+        item["severity"] == "error" or item["rule"] in BLOCKING_SCAN_RULES
+        for item in findings
+    )
+    return not blocked, findings
 
 
 def fidelity_passes(candidate: Path, report: dict) -> tuple[bool, list[str]]:
@@ -1043,7 +1053,7 @@ def process_chapter(
                     "repair": "remove the internal or production-oriented language",
                 }
                 for item in final_scan
-                if item["severity"] == "error"
+                if item["severity"] == "error" or item["rule"] in BLOCKING_SCAN_RULES
             )
             fidelity["status"] = "revise"
         if not fidelity_ok:
