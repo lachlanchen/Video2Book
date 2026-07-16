@@ -981,6 +981,34 @@ def fidelity_passes(candidate: Path, report: dict) -> tuple[bool, list[str]]:
     return not problems, problems
 
 
+def complete_verified_qa_source_map(record: ChapterRecord, report: dict) -> None:
+    source_map = report.setdefault("source_map", [])
+    mapped_timestamps = {
+        str(timestamp)
+        for entry in source_map
+        if isinstance(entry, dict) and entry.get("kind") == "q_and_a"
+        for timestamp in (entry.get("timestamps") or [])
+    }
+    for check in report.get("q_and_a_checks") or []:
+        if not isinstance(check, dict) or check.get("verified") is not True:
+            continue
+        timestamp = str(check.get("timestamp") or "").strip()
+        if not timestamp or timestamp in mapped_timestamps:
+            continue
+        source_map.append(
+            {
+                "locator": str(check.get("locator") or "Verified classroom exchange"),
+                "kind": "q_and_a",
+                "source_type": "transcript",
+                "timestamps": [timestamp],
+                "reference": record.transcript_rel,
+                "confidence": "high",
+                "note": str(check.get("reason") or "Verified against the timestamped transcript."),
+            }
+        )
+        mapped_timestamps.add(timestamp)
+
+
 def process_chapter(
     record: ChapterRecord,
     repo_root: Path,
@@ -1039,6 +1067,7 @@ def process_chapter(
             reasoning,
             f"editorial_fidelity_{pass_number}",
         )
+        complete_verified_qa_source_map(record, fidelity)
         fidelity_ok, fidelity_problems = fidelity_passes(candidate, fidelity)
         if scan_ok and fidelity_ok:
             final_fidelity = fidelity

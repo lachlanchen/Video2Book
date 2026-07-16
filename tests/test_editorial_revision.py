@@ -173,6 +173,27 @@ Old duplicate credit
             self.assertFalse(passed)
             self.assertTrue(any(item["rule"] == "formulaic_choreography" for item in findings))
 
+    def test_verified_qa_is_promoted_into_source_map(self):
+        record = type(
+            "Record",
+            (),
+            {"transcript_rel": "markdown/course/lecture.md"},
+        )()
+        report = {
+            "source_map": [],
+            "q_and_a_checks": [
+                {
+                    "locator": "Why is the sky dark?",
+                    "timestamp": "00:12:34",
+                    "verified": True,
+                    "reason": "The audience question and response are both present.",
+                }
+            ],
+        }
+        revision.complete_verified_qa_source_map(record, report)
+        self.assertEqual(report["source_map"][0]["timestamps"], ["00:12:34"])
+        self.assertEqual(report["source_map"][0]["source_type"], "transcript")
+
     def test_prepare_environment_forces_read_only_writer(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
