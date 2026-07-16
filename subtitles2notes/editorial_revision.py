@@ -555,18 +555,39 @@ def scan_report_markdown(report: dict) -> str:
 
 
 def reference_pdf_candidates(reference_paths: list[Path], lecture_number: int) -> list[Path]:
-    candidates: list[Path] = []
+    explicit_files: list[Path] = []
+    direct_lessons: list[Path] = []
+    direct_lectures: list[Path] = []
+    nested_lessons: list[Path] = []
+    nested_lectures: list[Path] = []
+    fallback: list[Path] = []
+    lesson_pattern = re.compile(rf"^lesson[_ -]?0*{lecture_number}$", re.IGNORECASE)
+    lecture_pattern = re.compile(rf"^lecture[_ -]?0*{lecture_number}$", re.IGNORECASE)
     for path in reference_paths:
         resolved = path.expanduser().resolve()
         if resolved.is_file() and resolved.suffix.lower() == ".pdf":
-            candidates.append(resolved)
+            explicit_files.append(resolved)
         elif resolved.is_dir():
-            candidates.extend(sorted(resolved.rglob("*.pdf")))
+            for candidate in sorted(resolved.rglob("*.pdf")):
+                direct = candidate.parent == resolved
+                if lesson_pattern.match(candidate.stem):
+                    (direct_lessons if direct else nested_lessons).append(candidate)
+                elif lecture_pattern.match(candidate.stem):
+                    (direct_lectures if direct else nested_lectures).append(candidate)
+                elif direct:
+                    fallback.append(candidate)
 
-    unique = list(dict.fromkeys(candidates))
-    numbered = re.compile(rf"(?:lesson|lecture)[_ -]?0*{lecture_number}(?:\D|$)", re.IGNORECASE)
-    exact = [path for path in unique if numbered.search(path.stem)]
-    return exact if exact else unique[:2]
+    for group in (
+        explicit_files,
+        direct_lessons,
+        direct_lectures,
+        nested_lessons,
+        nested_lectures,
+        fallback,
+    ):
+        if group:
+            return list(dict.fromkeys(group))[:2]
+    return []
 
 
 def extract_pdf_text(path: Path) -> str:

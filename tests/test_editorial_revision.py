@@ -194,6 +194,18 @@ Old duplicate credit
         self.assertEqual(report["source_map"][0]["timestamps"], ["00:12:34"])
         self.assertEqual(report["source_map"][0]["source_type"], "transcript")
 
+    def test_reference_selector_prefers_top_level_human_lesson(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            nested = root / "generated" / "run"
+            nested.mkdir(parents=True)
+            human = root / "lesson_1.pdf"
+            generated = nested / "lecture_01.pdf"
+            human.write_bytes(b"human")
+            generated.write_bytes(b"generated")
+            selected = revision.reference_pdf_candidates([root], 1)
+            self.assertEqual(selected, [human])
+
     def test_prepare_environment_forces_read_only_writer(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
