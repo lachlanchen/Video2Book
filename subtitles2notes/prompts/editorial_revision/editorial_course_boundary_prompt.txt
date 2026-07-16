@@ -6,4 +6,6 @@ The new course is `$course_rel`.
 
 Retain the charter and general source-fidelity discipline. Discard course-specific phrasing, chapter structures, notation assumptions, recurring metaphors, and inferred facts from earlier courses. Never reuse prose merely because it worked in a previous book.
 
+Do not edit repository files or run commands. This is a read-only writer session.
+
 Output exactly: EDITORIAL COURSE READY: $course_rel

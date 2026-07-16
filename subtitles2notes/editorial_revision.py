@@ -998,15 +998,23 @@ def process_chapter(
     reference_text = collect_reference_text(
         reference_paths, record.lecture_number, reference_char_limit
     )
-    audit = audit_chapter(record, repo_root, runtime_dir, reference_text, model, reasoning)
+    audit_artifact = runtime_dir / "editorial_audit.raw.json"
+    if resume and not force and audit_artifact.exists():
+        audit = parse_json_text(read_text(audit_artifact))
+    else:
+        audit = audit_chapter(record, repo_root, runtime_dir, reference_text, model, reasoning)
     if audit_only and not rewrite:
         record.chapter_dir.joinpath("editorial_audit.json").write_text(canonical_json(audit), encoding="utf-8")
         record.chapter_dir.joinpath("editorial_audit.md").write_text(markdown_audit(audit), encoding="utf-8")
         return "audited"
 
-    candidate = rewrite_chapter(
-        record, repo_root, runtime_dir, audit, reference_text, model, reasoning
-    )
+    candidate_artifact = runtime_dir / "content.revised.tex"
+    if resume and not force and candidate_artifact.exists() and not validate_tex(read_text(candidate_artifact)):
+        candidate = candidate_artifact
+    else:
+        candidate = rewrite_chapter(
+            record, repo_root, runtime_dir, audit, reference_text, model, reasoning
+        )
     final_fidelity: dict | None = None
     final_scan: list[dict] = []
     for pass_number in range(max_repair_passes + 1):
@@ -1061,6 +1069,12 @@ def process_chapter(
         )
 
     if final_fidelity is None:
+        backup = runtime_dir / "content.before.tex"
+        if backup.exists():
+            record.content_path.write_text(read_text(backup), encoding="utf-8")
+        pdf_backup = runtime_dir / "lecture.before.pdf"
+        if pdf_backup.exists():
+            shutil.copy2(pdf_backup, record.chapter_dir / "lecture.pdf")
         state_path.write_text(
             canonical_json(
                 {
@@ -1073,9 +1087,13 @@ def process_chapter(
         )
         raise RuntimeError(f"editorial gates did not pass for {record.course_rel}/{record.chapter_slug}")
 
-    original = read_text(record.content_path)
     backup = runtime_dir / "content.before.tex"
-    backup.write_text(original, encoding="utf-8")
+    if not backup.exists():
+        backup.write_text(read_text(record.content_path), encoding="utf-8")
+    original = read_text(backup)
+    pdf_backup = runtime_dir / "lecture.before.pdf"
+    if not pdf_backup.exists() and (record.chapter_dir / "lecture.pdf").exists():
+        shutil.copy2(record.chapter_dir / "lecture.pdf", pdf_backup)
     record.content_path.write_text(read_text(candidate), encoding="utf-8")
     record.metadata_path.write_text(canonical_json(record.metadata), encoding="utf-8")
     normalize_lecture_wrapper(record.chapter_dir / "lecture.tex")
@@ -1091,6 +1109,8 @@ def process_chapter(
             shutil.copy2(pdf, record.chapter_dir / "lecture.pdf")
     except Exception:
         record.content_path.write_text(original, encoding="utf-8")
+        if pdf_backup.exists():
+            shutil.copy2(pdf_backup, record.chapter_dir / "lecture.pdf")
         raise
 
     record.chapter_dir.joinpath("editorial_audit.json").write_text(canonical_json(audit), encoding="utf-8")
@@ -1156,6 +1176,7 @@ def prepare_environment(args: argparse.Namespace) -> tuple[Path, Path, Path, Pat
     os.environ["CODEX_SHARED_SESSION_FILE"] = str(session_file)
     os.environ["CODEX_SHARED_SESSION_DOC_FILE"] = str(session_doc)
     os.environ["NOTE_CODEX_SESSION_SCOPE"] = "global"
+    os.environ["CODEX_PROMPT_ACCESS"] = "read-only"
     os.environ.setdefault("NOTE_TMUX_SESSION_NAME", "susskind-editorial")
     return repo_root, markdown_root, output_root, runtime_root
 

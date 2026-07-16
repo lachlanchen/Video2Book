@@ -31,6 +31,8 @@ The source map classifies prose, equations, Q&A, and figures as transcript, blac
 
 The queue reuses one global writer session and sends an explicit boundary packet before each course. Commit/push calls use their separate helper session, preventing Git or monitoring language from entering the writer context. State under `.editorial-revision-work/` makes the run resumable.
 
+Editorial writer sessions are created with Codex's read-only sandbox. The access mode is recorded next to the session ID, and the wrapper refuses to resume a session created with a different access level. Only the outer Python driver may replace chapter sources or compile PDFs after the audit and fidelity gates pass.
+
 ## Deterministic Audit
 
 Run a local corpus scan without invoking Codex:

@@ -8,6 +8,7 @@ Transcript: $transcript_rel
 Video: $video_rel
 
 Return one JSON object only. Do not use Markdown fences.
+Do not edit repository files or run formatters or compilers. Return the review through your final response only.
 
 Required schema:
 {

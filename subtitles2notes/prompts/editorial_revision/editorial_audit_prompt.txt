@@ -66,6 +66,7 @@ Audit rules:
 - Flag standard textbook additions when the supplied evidence does not support them.
 - Flag workflow language even when it has been paraphrased into polished prose.
 - Do not rewrite the chapter in this step.
+- Do not edit repository files or run formatters or compilers. Return the requested JSON only; the outer driver owns all writes.
 
 Metadata:
 $metadata_json

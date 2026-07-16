@@ -162,6 +162,24 @@ Old duplicate credit
             self.assertTrue(any("source_map" in problem for problem in problems))
             self.assertTrue(any("Q&A" in problem for problem in problems))
 
+    def test_prepare_environment_forces_read_only_writer(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            args = type(
+                "Args",
+                (),
+                {
+                    "repo_root": root,
+                    "markdown_root": None,
+                    "output_root": None,
+                    "runtime_root": None,
+                    "session_file": None,
+                    "session_doc": None,
+                },
+            )()
+            revision.prepare_environment(args)
+            self.assertEqual(revision.os.environ["CODEX_PROMPT_ACCESS"], "read-only")
+
 
 if __name__ == "__main__":
     unittest.main()
