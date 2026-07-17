@@ -318,6 +318,32 @@ Old duplicate credit
                 )
             )
 
+    def test_prepare_environment_uses_separate_full_access_session(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            args = type(
+                "Args",
+                (),
+                {
+                    "repo_root": root,
+                    "markdown_root": None,
+                    "output_root": None,
+                    "runtime_root": None,
+                    "session_file": None,
+                    "session_doc": None,
+                    "prompt_access": "danger-full-access",
+                },
+            )()
+            _, _, _, runtime_root = revision.prepare_environment(args)
+            self.assertEqual(
+                revision.os.environ["CODEX_PROMPT_WORKSPACE"], str(runtime_root)
+            )
+            self.assertTrue(
+                revision.os.environ["CODEX_SHARED_SESSION_FILE"].endswith(
+                    "writer.editable-full.session_id"
+                )
+            )
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -237,6 +237,13 @@ def run_codex_prompt(
         *[str(path) for path in images if path.exists()],
     ]
     if direct_write:
+        workspace = Path(os.environ.get("CODEX_PROMPT_WORKSPACE", runtime_dir)).resolve()
+        try:
+            output_path.resolve().relative_to(workspace)
+        except ValueError as error:
+            raise RuntimeError(
+                f"editable Codex output must stay inside runtime workspace: {output_path}"
+            ) from error
         output_path.unlink(missing_ok=True)
 
     last_error = ""
@@ -1413,7 +1420,11 @@ def prepare_environment(args: argparse.Namespace) -> tuple[Path, Path, Path, Pat
     prompt_access = getattr(args, "prompt_access", "read-only")
     if prompt_access not in PROMPT_ACCESS_LEVELS:
         raise ValueError(f"unsupported Codex prompt access: {prompt_access}")
-    session_stem = "writer.editable" if prompt_access != "read-only" else "writer"
+    session_stem = {
+        "read-only": "writer",
+        "workspace-write": "writer.editable",
+        "danger-full-access": "writer.editable-full",
+    }[prompt_access]
     session_file = (args.session_file or runtime_root / f"{session_stem}.session_id").resolve()
     session_doc = (args.session_doc or runtime_root / f"{session_stem}.session.md").resolve()
     os.environ["CODEX_SHARED_SESSION_FILE"] = str(session_file)
@@ -1421,7 +1432,7 @@ def prepare_environment(args: argparse.Namespace) -> tuple[Path, Path, Path, Pat
     os.environ["NOTE_CODEX_SESSION_SCOPE"] = "global"
     os.environ["CODEX_PROMPT_ACCESS"] = prompt_access
     os.environ["CODEX_PROMPT_WORKSPACE"] = (
-        str(runtime_root) if prompt_access == "workspace-write" else str(repo_root)
+        str(repo_root) if prompt_access == "read-only" else str(runtime_root)
     )
     os.environ.setdefault("NOTE_TMUX_SESSION_NAME", "susskind-editorial")
     return repo_root, markdown_root, output_root, runtime_root
