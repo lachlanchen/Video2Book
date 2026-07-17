@@ -40,6 +40,10 @@ runs `pdflatex` in an isolated temp copy, then moves the resulting compact PDF
 to `pocket_books`. It also writes a Markdown overflow report that maps actionable
 `\hbox` warnings back to the course source lines that triggered them.
 
+Publication workflows should add `--fail-on-overflow`. In that mode the exporter
+returns nonzero and skips Nutstore sync unless actionable overfulls, page-builder
+overflows, and underfull paragraphs are all zero.
+
 ## Defaults Used for Susskind Books
 
 - preset: `penguin` (6x9 in, 0.55in margins)

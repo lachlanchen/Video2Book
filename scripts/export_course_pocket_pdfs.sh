@@ -25,6 +25,7 @@ Options:
   --suffix <suffix>           Output filename suffix (default: pocket)
   --overflow-report-dir <dir> Destination for Markdown overflow reports (default: <output-dir>/overflow_reports)
   --no-overflow-report        Skip LaTeX overflow report generation
+  --fail-on-overflow          Exit nonzero before sync when an overflow report is not clean
   --nutstore-dir <dir>        Destination directory for Nutstore sync (default: /home/lachlan/Nutstore Files/Projects/LazyingArtBooks/pocket_books)
   --no-rsync                  Skip Nutstore sync
   -h, --help                  Show this help text
@@ -46,6 +47,7 @@ geometry_margin="0.55in"
 name_suffix="pocket"
 do_rsync=1
 do_overflow_report=1
+fail_on_overflow=0
 overflow_reporter="$module_root/scripts/report_latex_overfulls.py"
 
 while [[ $# -gt 0 ]]; do
@@ -96,6 +98,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --no-overflow-report)
       do_overflow_report=0
+      shift
+      ;;
+    --fail-on-overflow)
+      fail_on_overflow=1
       shift
       ;;
     --nutstore-dir)
@@ -551,6 +557,7 @@ printf '[pocket] start %s\n' "$(date -Iseconds)" | tee -a "$log_file"
 
 export_count=0
 failed_count=0
+overflow_failure_count=0
 failures=()
 
 while IFS= read -r -d '' tex_path; do
@@ -633,13 +640,19 @@ while IFS= read -r -d '' tex_path; do
         --output "$report_path" \
         --variant-label "$name_suffix (${font_mode}, ${paper_width} x ${paper_height}, margin ${geometry_margin})")"
       printf '[pocket] overflow-report %s\n' "$report_summary" | tee -a "$log_file"
+      if [[ "$fail_on_overflow" -eq 1 ]] && \
+         [[ ! "$report_summary" =~ actionable_overfulls=0[[:space:]]+page_builder_overfulls=0[[:space:]]+underfulls=0 ]]; then
+        ((overflow_failure_count += 1))
+        failures+=("$course_rel: nonzero overflow report")
+        printf '[pocket] ERROR nonzero overflow report for %s\n' "$course_rel" | tee -a "$log_file"
+      fi
     fi
   fi
 
   rm -rf "$tmp_dir"
 done < <(find "$source_dir" -type f -name course.tex -print0 | sort -z)
 
-if [[ "$do_rsync" -eq 1 ]]; then
+if [[ "$do_rsync" -eq 1 && "$overflow_failure_count" -eq 0 ]]; then
   mkdir -p "$nutstore_dir"
   rsync -a "$output_dir/" "$nutstore_dir/" | tee -a "$log_file"
   printf '[pocket] synced to %s\n' "$nutstore_dir" | tee -a "$log_file"
@@ -648,7 +661,7 @@ fi
 printf '[pocket] completed exports=%s failures=%s\n' "$export_count" "$failed_count" | tee -a "$log_file"
 printf '[pocket] done %s\n' "$(date -Iseconds)" | tee -a "$log_file"
 
-if [[ "$failed_count" -gt 0 ]]; then
+if [[ "$failed_count" -gt 0 || "$overflow_failure_count" -gt 0 ]]; then
   printf '[pocket] failures: %s\n' "${failures[*]}" | tee -a "$log_file"
   exit 1
 fi
