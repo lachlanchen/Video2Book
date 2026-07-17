@@ -75,7 +75,7 @@ fallback_commit_push() {
     return 0
   fi
   git -C "$repo_path" commit -m "$commit_message"
-  git -C "$repo_path" push origin main
+  git -C "$repo_path" push origin HEAD:main
 }
 
 if [[ -n "$session_file" ]]; then
@@ -102,7 +102,7 @@ fi
   echo "2. If staging is empty, print: No changes to commit for step: $commit_message"
   echo "3. Otherwise run:"
   echo "   - git commit -m \"$commit_message\""
-  echo "   - git push origin main"
+  echo "   - git push origin HEAD:main"
   echo
   echo "Important constraints:"
   echo "- Do not modify files."
@@ -158,7 +158,10 @@ run_commit_step() {
   cat "$jsonl_file"
   if [[ "$status" -ne 0 ]]; then
     fallback_commit_push
+  elif [[ -n "$(git -C "$repo_path" status --porcelain=v1 -- "${pathspecs[@]}")" ]]; then
+    fallback_commit_push
   fi
+  git -C "$repo_path" push origin HEAD:main
 }
 
 (

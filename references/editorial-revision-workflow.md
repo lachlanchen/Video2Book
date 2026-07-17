@@ -35,6 +35,45 @@ The queue reuses one global writer session and sends an explicit boundary packet
 
 Editorial writer sessions are created with Codex's read-only sandbox. The access mode is recorded next to the session ID, and the wrapper refuses to resume a session created with a different access level. Only the outer Python driver may replace chapter sources or compile PDFs after the audit and fidelity gates pass.
 
+## Run A Manifest Queue
+
+Use `subtitles2notes/editorial_queue.py` for a multi-book run. A schema-1 JSON manifest fixes the course order, expected chapter counts, independent reference paths, model, reasoning effort, and publication command. Generated notes under `generated_course_notes/` are rejected as references so an earlier draft cannot become evidence for its own rewrite.
+
+```json
+{
+  "schema_version": 1,
+  "expected_courses": 1,
+  "expected_chapters": 10,
+  "model": "gpt-5.6-sol",
+  "reasoning": "ultra",
+  "courses": [
+    {
+      "course": "core/classical_mechanics/2011_fall_theoretical_minimum",
+      "expected_chapters": 10,
+      "references": ["susskind-books-and-lecture-notes/Leonard_Susskind-Theoretical_Minimum-Classical_Mechanics-2014.pdf"]
+    }
+  ]
+}
+```
+
+Validate without writing, then start the persistent worker and 30-minute watchdog:
+
+```bash
+python3 Video2Book/subtitles2notes/editorial_queue.py \
+  --repo-root "$PWD" \
+  --manifest references/editorial_revision_queue.json \
+  --dry-run
+
+Video2Book/scripts/start_editorial_revision_queue_tmux.sh \
+  --repo-root "$PWD" \
+  --manifest references/editorial_revision_queue.json \
+  --session susskind-editorial \
+  --model gpt-5.6-sol \
+  --reasoning ultra
+```
+
+The queue processes one chapter at a time, commits and pushes each accepted chapter, retries failed quality gates without bypassing them, skips publication for incomplete courses, and performs one final blocked-chapter sweep. Atomic state, logs, the worker lock, heartbeat, and shared session files live under `.editorial-revision-work/`. The watchdog restarts only a missing or dead worker; it never kills a live long-running Codex call.
+
 ## Deterministic Audit
 
 Run a local corpus scan without invoking Codex:

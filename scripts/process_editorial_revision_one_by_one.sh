@@ -4,8 +4,8 @@ set -euo pipefail
 module_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 repo_root="${NOTES_REPO_ROOT:-$(pwd)}"
 output_root=""
-model="${EDITORIAL_CODEX_MODEL:-gpt-5.4}"
-reasoning="${EDITORIAL_CODEX_REASONING:-xhigh}"
+model="${EDITORIAL_CODEX_MODEL:-gpt-5.6-sol}"
+reasoning="${EDITORIAL_CODEX_REASONING:-ultra}"
 all_courses=0
 no_compile=0
 no_commit=0
@@ -25,8 +25,8 @@ Options:
   --all-courses            Revise every generated course
   --chapter <slug>         Restrict to a chapter; repeatable
   --reference <path>       Reference PDF or directory; repeatable
-  --model <name>           Codex model (default: gpt-5.4)
-  --reasoning <level>      low, medium, high, or xhigh
+  --model <name>           Codex model (default: gpt-5.6-sol)
+  --reasoning <level>      low, medium, high, xhigh, or ultra
   --no-compile             Skip chapter and course PDF builds
   --no-commit              Do not commit and push after each course
   --force                  Ignore completed resume state

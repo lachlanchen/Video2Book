@@ -221,6 +221,14 @@ Old duplicate credit
             selected = revision.reference_pdf_candidates([root], 1)
             self.assertEqual(selected, [human])
 
+    def test_reference_selector_supports_combined_lecture_pdf(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            combined = root / "part_3_lecture_02_03.pdf"
+            combined.write_bytes(b"combined")
+            self.assertEqual(revision.reference_pdf_candidates([root], 2), [combined])
+            self.assertEqual(revision.reference_pdf_candidates([root], 3), [combined])
+
     def test_prepare_environment_forces_read_only_writer(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)

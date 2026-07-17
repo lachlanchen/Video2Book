@@ -22,7 +22,7 @@ Options:
   --paper-height <size>         For --size custom
   --margin <size>               For --size custom
   --model <name>                Codex model (default: gpt-5.4)
-  --reasoning <level>           low|medium|high|xhigh (default: high)
+  --reasoning <level>           low|medium|high|xhigh|ultra (default: high)
   --max-iterations <n>          Maximum Codex edit passes (default: 4)
   --session-file <path>         Shared Codex session id file
   --session-doc <path>          Shared Codex session metadata doc
@@ -130,7 +130,7 @@ if [[ -z "$course" ]]; then
 fi
 
 case "$reasoning" in
-  low|medium|high|xhigh) ;;
+  low|medium|high|xhigh|ultra) ;;
   *)
     echo "Invalid reasoning level: $reasoning" >&2
     exit 1

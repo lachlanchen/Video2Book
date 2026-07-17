@@ -26,7 +26,10 @@ SEGMENT_RE = re.compile(
     r"^- \[(?P<start>\d\d:\d\d:\d\d,\d{3}) - (?P<end>\d\d:\d\d:\d\d,\d{3})\] (?P<text>.*)$"
 )
 SRT_TIMESTAMP_RE = re.compile(r"(?P<start>\d\d:\d\d:\d\d,\d{3})\s*-->\s*(?P<end>\d\d:\d\d:\d\d,\d{3})")
-LECTURE_NUMBER_RE = re.compile(r"\bLecture\s+(\d+)\b", re.IGNORECASE)
+LECTURE_NUMBER_RE = re.compile(
+    r"\bLectures?\s+(\d+)(?:\s*(?:&|and|[-\u2013\u2014,/])\s*(\d+))?\b",
+    re.IGNORECASE,
+)
 PREFIX_NUMBER_RE = re.compile(r"^(\d+)\s*-\s*")
 TEXTTT_RE = re.compile(r"\\texttt\{([^{}]*)\}")
 LATEX_SPECIAL_IN_TEXTTT_RE = re.compile(r"(?<!\\)([_%&#$])")
@@ -122,6 +125,7 @@ class LectureInfo:
     lecture_title: str
     course_title: str
     course_descriptor: str
+    lecture_numbers: tuple[int, ...] = ()
 
 
 @dataclass
@@ -328,14 +332,26 @@ def strip_stem_label(stem: str) -> str:
     return stem
 
 
-def parse_lecture_number(stem: str) -> int:
+def parse_explicit_lecture_numbers(stem: str) -> tuple[int, ...]:
     match = LECTURE_NUMBER_RE.search(stem)
     if match:
-        return int(match.group(1))
+        return tuple(int(value) for value in match.groups() if value)
+    return ()
+
+
+def parse_lecture_numbers(stem: str) -> tuple[int, ...]:
+    explicit = parse_explicit_lecture_numbers(stem)
+    if explicit:
+        return explicit
     prefix = PREFIX_NUMBER_RE.match(stem)
     if prefix:
-        return int(prefix.group(1))
-    return 0
+        return (int(prefix.group(1)),)
+    return ()
+
+
+def parse_lecture_number(stem: str) -> int:
+    numbers = parse_lecture_numbers(stem)
+    return numbers[0] if numbers else 0
 
 
 def lecture_slug_from_number(number: int, stem: str) -> str:
@@ -343,6 +359,12 @@ def lecture_slug_from_number(number: int, stem: str) -> str:
         return f"lecture_{number:02d}"
     fallback = re.sub(r"[^a-z0-9]+", "_", strip_stem_label(stem).lower()).strip("_")
     return fallback or "lecture"
+
+
+def lecture_slug_from_numbers(numbers: tuple[int, ...], stem: str) -> str:
+    if numbers:
+        return "lecture_" + "_".join(f"{number:02d}" for number in numbers)
+    return lecture_slug_from_number(0, stem)
 
 
 def build_course_meta(course_rel: str, course_config: CourseConfig) -> tuple[str, str]:
@@ -554,8 +576,15 @@ def lecture_from_transcript_rel(
     source_rel = source_rel_override or parse_source_rel(md_text)
     course_rel = str(Path(transcript_rel).parent)
     stem = transcript_path.stem
-    lecture_number = parse_lecture_number(stem)
-    lecture_slug = lecture_slug_from_number(lecture_number, stem)
+    lecture_numbers = parse_explicit_lecture_numbers(stem)
+    if not lecture_numbers:
+        sibling_transcripts = sorted(transcript_path.parent.glob("*.md"))
+        if len(sibling_transcripts) == 1:
+            lecture_numbers = (1,)
+        else:
+            lecture_numbers = parse_lecture_numbers(stem)
+    lecture_number = lecture_numbers[0] if lecture_numbers else 0
+    lecture_slug = lecture_slug_from_numbers(lecture_numbers, stem)
     lecture_title = strip_stem_label(stem)
     course_title, course_descriptor = build_course_meta(course_rel, course_config)
 
@@ -573,6 +602,7 @@ def lecture_from_transcript_rel(
         lecture_title=lecture_title,
         course_title=course_title,
         course_descriptor=course_descriptor,
+        lecture_numbers=lecture_numbers,
     )
 
 
@@ -1492,6 +1522,7 @@ def write_metadata(lecture: LectureInfo, lecture_dir: Path, selections: list[Fra
         "transcript_rel": lecture.transcript_rel,
         "video_rel": lecture.video_rel,
         "lecture_number": lecture.lecture_number,
+        "lecture_numbers": list(lecture.lecture_numbers or (lecture.lecture_number,)),
         "lecture_slug": lecture.lecture_slug,
         "lecture_title": lecture.lecture_title,
         "assets": [
@@ -2418,6 +2449,10 @@ def generate_one_lecture(
                 lecture_title=meta["lecture_title"],
                 course_title=lecture.course_title,
                 course_descriptor=lecture.course_descriptor,
+                lecture_numbers=tuple(
+                    int(number)
+                    for number in (meta.get("lecture_numbers") or [meta["lecture_number"]])
+                ),
             )
         )
     lecture_entries = order_lecture_entries(lecture_entries, course_config)
@@ -2479,7 +2514,11 @@ def parser() -> argparse.ArgumentParser:
     parsed.add_argument("--lecture", help="Transcript rel path under markdown/, e.g. core/classical_mechanics/.../114 - ... .md")
     parsed.add_argument("--print-next", action="store_true")
     parsed.add_argument("--model", default="gpt-5.3-codex-spark")
-    parsed.add_argument("--reasoning", default="xhigh", choices=["low", "medium", "high", "xhigh"])
+    parsed.add_argument(
+        "--reasoning",
+        default="xhigh",
+        choices=["low", "medium", "high", "xhigh", "ultra"],
+    )
     parsed.add_argument("--max-frames", type=int, default=6)
     parsed.add_argument("--allow-partial-course", action="store_true")
     parsed.add_argument("--force", action="store_true")

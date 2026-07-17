@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+from collections import Counter
 import hashlib
 import json
 import os
@@ -21,10 +22,28 @@ from typing import Iterable
 MODULE_ROOT = Path(__file__).resolve().parents[1]
 PROMPT_ROOT = Path(__file__).resolve().parent / "prompts" / "editorial_revision"
 TRANSCRIPT_SOURCE_RE = re.compile(r"^Source:\s*(.+)$", re.MULTILINE)
-LECTURE_NUMBER_RE = re.compile(r"\bLecture\s+(\d+)\b", re.IGNORECASE)
-CHAPTER_NUMBER_RE = re.compile(r"lecture_(\d+)$", re.IGNORECASE)
+LECTURE_NUMBER_RE = re.compile(
+    r"\bLectures?\s+(\d+)(?:\s*(?:&|and|[-\u2013\u2014,/])\s*(\d+))?\b",
+    re.IGNORECASE,
+)
+CHAPTER_NUMBER_RE = re.compile(r"lecture_(\d+)(?:_(\d+))?$", re.IGNORECASE)
 CHAPTER_TITLE_RE = re.compile(r"\\chapter\{([^{}]+)\}")
 INCLUDEGRAPHICS_RE = re.compile(r"\\includegraphics(?:\[[^\]]*\])?\{([^{}]+)\}")
+REFERENCE_LECTURE_RE = re.compile(
+    r"(?:^|[_ -])(?:lesson|lecture)[_ -]?(\d+(?:[_ -]\d+)*)$",
+    re.IGNORECASE,
+)
+
+REFERENCE_STOPWORDS = {
+    "about", "after", "again", "against", "almost", "also", "always", "among",
+    "another", "because", "before", "being", "between", "could", "every", "first",
+    "from", "have", "here", "into", "itself", "little", "maybe", "might", "other",
+    "over", "really", "since", "still", "their", "there", "these", "thing", "think",
+    "those", "through", "under", "until", "very", "what", "when", "where", "which",
+    "while", "with", "would", "your", "just", "then", "than", "them", "they", "this",
+    "that", "some", "more", "such", "like", "only", "each", "much", "many", "been",
+    "were", "will", "does", "make", "made", "take",
+}
 
 
 SCAN_RULES = (
@@ -107,6 +126,7 @@ class ChapterRecord:
     chapter_dir: Path
     chapter_slug: str
     lecture_number: int
+    lecture_numbers: tuple[int, ...]
     content_path: Path
     metadata_path: Path
     metadata: dict
@@ -124,12 +144,17 @@ def sha256_text(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
-def parse_lecture_number(value: str) -> int:
+def parse_lecture_numbers(value: str) -> tuple[int, ...]:
     match = LECTURE_NUMBER_RE.search(value)
     if match:
-        return int(match.group(1))
+        return tuple(int(number) for number in match.groups() if number)
     prefix = re.match(r"^(\d+)\s*-", value)
-    return int(prefix.group(1)) if prefix else 0
+    return (int(prefix.group(1)),) if prefix else ()
+
+
+def parse_lecture_number(value: str) -> int:
+    numbers = parse_lecture_numbers(value)
+    return numbers[0] if numbers else 0
 
 
 def parse_json_text(text: str) -> dict:
@@ -295,7 +320,13 @@ def load_chapter(
     metadata_path = chapter_dir / "metadata.json"
     metadata = json.loads(read_text(metadata_path)) if metadata_path.exists() else {}
     slug_match = CHAPTER_NUMBER_RE.search(chapter_dir.name)
-    lecture_number = int(metadata.get("lecture_number") or (slug_match.group(1) if slug_match else 0))
+    metadata_numbers = metadata.get("lecture_numbers") or []
+    lecture_numbers = tuple(int(number) for number in metadata_numbers if int(number) > 0)
+    if not lecture_numbers and slug_match:
+        lecture_numbers = tuple(int(number) for number in slug_match.groups() if number)
+    lecture_number = int(metadata.get("lecture_number") or (lecture_numbers[0] if lecture_numbers else 0))
+    if not lecture_numbers and lecture_number > 0:
+        lecture_numbers = (lecture_number,)
     if lecture_number <= 0:
         raise RuntimeError(f"cannot determine lecture number for {chapter_dir}")
 
@@ -306,7 +337,7 @@ def load_chapter(
         candidates = [
             path
             for path in sorted(markdown_dir.glob("*.md"))
-            if parse_lecture_number(path.stem) == lecture_number
+            if lecture_number in parse_lecture_numbers(path.stem)
         ]
         if len(candidates) != 1:
             raise RuntimeError(
@@ -325,6 +356,7 @@ def load_chapter(
             "transcript_rel": transcript_rel,
             "video_rel": video_rel,
             "lecture_number": lecture_number,
+            "lecture_numbers": list(lecture_numbers),
             "lecture_slug": chapter_dir.name,
             "lecture_title": str(
                 metadata.get("lecture_title")
@@ -340,6 +372,7 @@ def load_chapter(
         chapter_dir=chapter_dir,
         chapter_slug=chapter_dir.name,
         lecture_number=lecture_number,
+        lecture_numbers=lecture_numbers,
         content_path=content_path,
         metadata_path=metadata_path,
         metadata=metadata,
@@ -569,15 +602,22 @@ def scan_report_markdown(report: dict) -> str:
     return "\n".join(lines) + "\n"
 
 
-def reference_pdf_candidates(reference_paths: list[Path], lecture_number: int) -> list[Path]:
+def reference_lecture_numbers(path: Path) -> tuple[int, ...]:
+    match = REFERENCE_LECTURE_RE.search(path.stem)
+    if not match:
+        return ()
+    return tuple(int(number) for number in re.findall(r"\d+", match.group(1)))
+
+
+def reference_pdf_candidates(
+    reference_paths: list[Path], lecture_number: int
+) -> list[Path]:
     explicit_files: list[Path] = []
     direct_lessons: list[Path] = []
     direct_lectures: list[Path] = []
     nested_lessons: list[Path] = []
     nested_lectures: list[Path] = []
     fallback: list[Path] = []
-    lesson_pattern = re.compile(rf"^lesson[_ -]?0*{lecture_number}$", re.IGNORECASE)
-    lecture_pattern = re.compile(rf"^lecture[_ -]?0*{lecture_number}$", re.IGNORECASE)
     for path in reference_paths:
         resolved = path.expanduser().resolve()
         if resolved.is_file() and resolved.suffix.lower() == ".pdf":
@@ -585,9 +625,12 @@ def reference_pdf_candidates(reference_paths: list[Path], lecture_number: int) -
         elif resolved.is_dir():
             for candidate in sorted(resolved.rglob("*.pdf")):
                 direct = candidate.parent == resolved
-                if lesson_pattern.match(candidate.stem):
+                numbers = reference_lecture_numbers(candidate)
+                kind_match = re.search(r"(?:^|[_ -])(lesson|lecture)", candidate.stem, re.IGNORECASE)
+                kind = kind_match.group(1).lower() if kind_match else ""
+                if lecture_number in numbers and kind == "lesson":
                     (direct_lessons if direct else nested_lessons).append(candidate)
-                elif lecture_pattern.match(candidate.stem):
+                elif lecture_number in numbers and kind == "lecture":
                     (direct_lectures if direct else nested_lectures).append(candidate)
                 elif direct:
                     fallback.append(candidate)
@@ -618,20 +661,84 @@ def extract_pdf_text(path: Path) -> str:
     return completed.stdout if completed.returncode == 0 else ""
 
 
-def collect_reference_text(reference_paths: list[Path], lecture_number: int, char_limit: int) -> str:
+def reference_query_terms(record: ChapterRecord) -> list[str]:
+    title = str(record.metadata.get("lecture_title") or "")
+    source = f"{title}\n{read_text(record.transcript_path)}".lower()
+    title_terms = re.findall(r"[a-z]{4,}", title.lower())
+    counts = Counter(
+        token
+        for token in re.findall(r"[a-z]{4,}", source)
+        if token not in REFERENCE_STOPWORDS
+    )
+    terms: list[str] = []
+    for term in title_terms + [token for token, _count in counts.most_common(24)]:
+        if term not in terms:
+            terms.append(term)
+    return terms[:28]
+
+
+def reference_paragraphs(text: str) -> list[str]:
+    paragraphs: list[str] = []
+    current: list[str] = []
+    for raw_line in text.splitlines():
+        line = raw_line.strip()
+        if not line:
+            if current:
+                paragraphs.append(" ".join(current))
+                current = []
+            continue
+        current.append(line)
+    if current:
+        paragraphs.append(" ".join(current))
+    return [
+        re.sub(r"\s+", " ", paragraph).strip()
+        for paragraph in paragraphs
+        if len(paragraph) > 120
+    ]
+
+
+def topical_reference_excerpt(path: Path, text: str, record: ChapterRecord, limit: int) -> str:
+    terms = reference_query_terms(record)
+    ranked: list[tuple[int, int, str]] = []
+    for index, paragraph in enumerate(reference_paragraphs(text)):
+        lowered = paragraph.lower()
+        score = sum(lowered.count(term) for term in terms)
+        if score > 0:
+            ranked.append((score, -index, paragraph))
+    ranked.sort(reverse=True)
+    selected: list[str] = []
+    used = 0
+    for _score, _index, paragraph in ranked:
+        item = f"REFERENCE: {path}\n{paragraph}"
+        if used + len(item) > limit:
+            continue
+        selected.append(item)
+        used += len(item)
+        if len(selected) >= 8:
+            break
+    return "\n\n".join(selected)
+
+
+def collect_reference_text(
+    reference_paths: list[Path], record: ChapterRecord, char_limit: int
+) -> str:
     if not reference_paths:
         return "No external reference was supplied."
     chunks: list[str] = []
     remaining = char_limit
-    for path in reference_pdf_candidates(reference_paths, lecture_number):
+    for path in reference_pdf_candidates(reference_paths, record.lecture_number):
         if remaining <= 0:
             break
-        text = extract_pdf_text(path).strip()
-        if not text:
+        pdf_text = extract_pdf_text(path).strip()
+        if not pdf_text:
             continue
-        excerpt = text[:remaining]
-        chunks.append(f"REFERENCE: {path}\n{excerpt}")
-        remaining -= len(excerpt)
+        if record.lecture_number in reference_lecture_numbers(path):
+            excerpt = f"REFERENCE: {path}\n{pdf_text[:remaining]}"
+        else:
+            excerpt = topical_reference_excerpt(path, pdf_text, record, min(remaining, 12_000))
+        if excerpt:
+            chunks.append(excerpt)
+            remaining -= len(excerpt)
     return "\n\n".join(chunks) or "Supplied references could not be converted to text."
 
 
@@ -1080,7 +1187,7 @@ def process_chapter(
             return "skipped"
 
     reference_text = collect_reference_text(
-        reference_paths, record.lecture_number, reference_char_limit
+        reference_paths, record, reference_char_limit
     )
     audit_artifact = runtime_dir / "editorial_audit.raw.json"
     if resume and not force and audit_artifact.exists():
@@ -1286,7 +1393,11 @@ def parser() -> argparse.ArgumentParser:
     parsed.add_argument("--audit-only", action="store_true")
     parsed.add_argument("--rewrite", action="store_true")
     parsed.add_argument("--model", default="gpt-5.4")
-    parsed.add_argument("--reasoning", default="xhigh", choices=["low", "medium", "high", "xhigh"])
+    parsed.add_argument(
+        "--reasoning",
+        default="xhigh",
+        choices=["low", "medium", "high", "xhigh", "ultra"],
+    )
     parsed.add_argument("--max-repair-passes", type=int, default=2)
     parsed.add_argument("--resume", action="store_true")
     parsed.add_argument("--force", action="store_true")
