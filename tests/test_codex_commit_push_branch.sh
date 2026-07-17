@@ -27,3 +27,12 @@ PATH="$tmp_dir/bin:$PATH" bash "$module_root/scripts/codex_commit_push.sh" \
 
 test "$(git --git-dir="$tmp_dir/remote.git" show main:result.txt)" = "branch-neutral push"
 test "$(git -C "$tmp_dir/work" branch --show-current)" = "editorial-test"
+
+git -C "$tmp_dir/work" worktree add -b linked-test "$tmp_dir/linked" >/dev/null
+printf 'linked worktree push\n' > "$tmp_dir/linked/linked.txt"
+PATH="$tmp_dir/bin:$PATH" bash "$module_root/scripts/codex_commit_push.sh" \
+  "$tmp_dir/linked" \
+  "Test linked-worktree lock" \
+  linked.txt >/dev/null
+
+test "$(git --git-dir="$tmp_dir/remote.git" show main:linked.txt)" = "linked worktree push"

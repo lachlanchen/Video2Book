@@ -10,7 +10,8 @@ repo_path="$1"
 commit_message="$2"
 shift 2
 pathspecs=("$@")
-git_lock="${CODEX_GIT_LOCK_FILE:-$repo_path/.git/video2book-main.lock}"
+default_git_lock="$(git -C "$repo_path" rev-parse --path-format=absolute --git-path video2book-main.lock)"
+git_lock="${CODEX_GIT_LOCK_FILE:-$default_git_lock}"
 
 model="${CODEX_COMMIT_MODEL:-gpt-5.4-mini}"
 reasoning_effort="${CODEX_COMMIT_REASONING:-low}"
