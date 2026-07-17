@@ -18,6 +18,7 @@ tmux_session_name="${NOTE_TMUX_SESSION_NAME:-susskind-notes}"
 session_scope="${NOTE_CODEX_SESSION_SCOPE:-global}"
 prompt_access="${CODEX_PROMPT_ACCESS:-danger-full-access}"
 disable_shell_snapshot="${CODEX_DISABLE_SHELL_SNAPSHOT:-false}"
+prompt_timeout_seconds="${CODEX_PROMPT_TIMEOUT_SECONDS:-1800}"
 codex_config=(
   -c "model_reasoning_effort=\"$reasoning\""
 )
@@ -75,6 +76,10 @@ EOF
 
 if [[ "$prompt_access" != "danger-full-access" && "$prompt_access" != "read-only" ]]; then
   echo "CODEX_PROMPT_ACCESS must be danger-full-access or read-only" >&2
+  exit 2
+fi
+if [[ ! "$prompt_timeout_seconds" =~ ^[1-9][0-9]*$ ]]; then
+  echo "CODEX_PROMPT_TIMEOUT_SECONDS must be a positive integer" >&2
   exit 2
 fi
 
@@ -139,9 +144,14 @@ else
 fi
 
 set +e
-"${cmd[@]}" < "$prompt_file" > "$jsonl_file"
+timeout --signal=TERM --kill-after=30s "$prompt_timeout_seconds" \
+  "${cmd[@]}" < "$prompt_file" > "$jsonl_file"
 status=$?
 set -e
+
+if [[ "$status" -eq 124 || "$status" -eq 137 ]]; then
+  echo "Codex prompt timed out after ${prompt_timeout_seconds}s" >&2
+fi
 
 if [[ -n "$session_file" && ! -s "$session_file" ]]; then
   new_session_id="$(extract_session_id "$jsonl_file")"

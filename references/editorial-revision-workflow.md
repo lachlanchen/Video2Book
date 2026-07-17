@@ -75,6 +75,8 @@ Video2Book/scripts/start_editorial_revision_queue_tmux.sh \
 
 The queue processes one chapter at a time, commits and pushes each accepted chapter, retries failed quality gates without bypassing them, skips publication for incomplete courses, and performs one final blocked-chapter sweep. A failed pocket publication invokes the general layout fixer for normal and 1.2x editions, reruns editorial gates for any changed chapters, and retries publication once. Atomic state, logs, the worker lock, heartbeat, and shared session files live under `.editorial-revision-work/`. The watchdog restarts only a missing or dead worker; it never kills a live long-running Codex call.
 
+Each individual Codex prompt has a 30-minute hard timeout by default so a closed transport cannot leave the queue permanently alive but inert. Override it with the positive-integer `CODEX_PROMPT_TIMEOUT_SECONDS` environment variable when a known large prompt needs a wider window.
+
 `chapter_references` may override the course reference list for exceptional chapters. Numbered `lesson_*.pdf` or `lecture_*.pdf` files are selected only for matching lecture numbers; they are never used as generic fallback material for another lecture.
 
 ## Deterministic Audit
