@@ -59,6 +59,7 @@ class EditorialQueueTests(unittest.TestCase):
                             "course": course_rel,
                             "expected_chapters": 1,
                             "references": [],
+                            "chapter_references": {"lecture_01": []},
                             "publish": False,
                         }
                     ],
@@ -76,6 +77,7 @@ class EditorialQueueTests(unittest.TestCase):
             inventory, problems = queue.validate_inventory(config)
             self.assertEqual(config.model, "gpt-5.6-sol")
             self.assertEqual(config.reasoning, "ultra")
+            self.assertEqual(config.courses[0].chapter_references, {"lecture_01": ()})
             self.assertEqual(inventory["supplementary/example/2026"], ["lecture_01"])
             self.assertEqual(problems, [])
 

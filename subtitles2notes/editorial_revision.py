@@ -632,7 +632,7 @@ def reference_pdf_candidates(
                     (direct_lessons if direct else nested_lessons).append(candidate)
                 elif lecture_number in numbers and kind == "lecture":
                     (direct_lectures if direct else nested_lectures).append(candidate)
-                elif direct:
+                elif direct and not numbers:
                     fallback.append(candidate)
 
     for group in (

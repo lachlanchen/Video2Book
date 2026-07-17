@@ -50,7 +50,8 @@ Use `subtitles2notes/editorial_queue.py` for a multi-book run. A schema-1 JSON m
     {
       "course": "core/classical_mechanics/2011_fall_theoretical_minimum",
       "expected_chapters": 10,
-      "references": ["susskind-books-and-lecture-notes/Leonard_Susskind-Theoretical_Minimum-Classical_Mechanics-2014.pdf"]
+      "references": ["susskind-books-and-lecture-notes/Leonard_Susskind-Theoretical_Minimum-Classical_Mechanics-2014.pdf"],
+      "chapter_references": {}
     }
   ]
 }
@@ -73,6 +74,8 @@ Video2Book/scripts/start_editorial_revision_queue_tmux.sh \
 ```
 
 The queue processes one chapter at a time, commits and pushes each accepted chapter, retries failed quality gates without bypassing them, skips publication for incomplete courses, and performs one final blocked-chapter sweep. Atomic state, logs, the worker lock, heartbeat, and shared session files live under `.editorial-revision-work/`. The watchdog restarts only a missing or dead worker; it never kills a live long-running Codex call.
+
+`chapter_references` may override the course reference list for exceptional chapters. Numbered `lesson_*.pdf` or `lecture_*.pdf` files are selected only for matching lecture numbers; they are never used as generic fallback material for another lecture.
 
 ## Deterministic Audit
 

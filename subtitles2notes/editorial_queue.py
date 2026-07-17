@@ -60,6 +60,7 @@ class CourseSpec:
     course_rel: str
     expected_chapters: int
     references: tuple[Path, ...]
+    chapter_references: dict[str, tuple[Path, ...]]
     publish: bool
 
 
@@ -105,13 +106,10 @@ def load_manifest(repo_root: Path, manifest_path: Path, state_root: Path | None 
 
     courses: list[CourseSpec] = []
     seen: set[str] = set()
-    for item in raw.get("courses") or []:
-        course_rel = str(item.get("course") or "").strip("/")
-        if not course_rel or course_rel in seen:
-            raise ValueError(f"missing or duplicate course: {course_rel!r}")
-        seen.add(course_rel)
+
+    def resolve_references(course_rel: str, entries: list[object]) -> tuple[Path, ...]:
         references: list[Path] = []
-        for reference in item.get("references") or []:
+        for reference in entries:
             if isinstance(reference, str):
                 reference_path = reference
                 optional = False
@@ -126,11 +124,24 @@ def load_manifest(repo_root: Path, manifest_path: Path, state_root: Path | None 
             if is_relative_to(resolved, output_root):
                 raise ValueError(f"generated notes cannot be references: {resolved}")
             references.append(resolved)
+        return tuple(references)
+
+    for item in raw.get("courses") or []:
+        course_rel = str(item.get("course") or "").strip("/")
+        if not course_rel or course_rel in seen:
+            raise ValueError(f"missing or duplicate course: {course_rel!r}")
+        seen.add(course_rel)
+        references = resolve_references(course_rel, item.get("references") or [])
+        chapter_references = {
+            str(slug): resolve_references(course_rel, entries or [])
+            for slug, entries in (item.get("chapter_references") or {}).items()
+        }
         courses.append(
             CourseSpec(
                 course_rel=course_rel,
                 expected_chapters=int(item.get("expected_chapters") or 0),
-                references=tuple(references),
+                references=references,
+                chapter_references=chapter_references,
                 publish=bool(item.get("publish", True)),
             )
         )
@@ -337,7 +348,8 @@ def revision_command(
         "--max-repair-passes",
         str(repair_passes),
     ]
-    for reference in spec.references:
+    references = spec.chapter_references.get(slug, spec.references)
+    for reference in references:
         command.extend(("--reference", str(reference)))
     if force:
         command.append("--force")

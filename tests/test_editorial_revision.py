@@ -229,6 +229,12 @@ Old duplicate credit
             self.assertEqual(revision.reference_pdf_candidates([root], 2), [combined])
             self.assertEqual(revision.reference_pdf_candidates([root], 3), [combined])
 
+    def test_reference_selector_does_not_fallback_to_wrong_numbered_lesson(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            (root / "lesson_1.pdf").write_bytes(b"lesson one")
+            self.assertEqual(revision.reference_pdf_candidates([root], 10), [])
+
     def test_prepare_environment_forces_read_only_writer(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
