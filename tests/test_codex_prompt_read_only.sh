@@ -72,3 +72,23 @@ grep -Fx -- "workspace-write" "$temp_dir/codex.args" >/dev/null
 grep -Fx -- "$temp_dir/editable-workspace" "$temp_dir/codex.args" >/dev/null
 grep -Fx -- "workspace-write" "$CODEX_SHARED_SESSION_FILE.access" >/dev/null
 grep -F -- "writable workspace: $temp_dir/editable-workspace" "$CODEX_SHARED_SESSION_DOC_FILE" >/dev/null
+
+rm -f "$CODEX_SHARED_SESSION_FILE" "$CODEX_SHARED_SESSION_FILE.access"
+export CODEX_PROMPT_ACCESS=danger-full-access
+
+bash "$module_root/scripts/codex_prompt_to_file.sh" \
+  "$temp_dir/repo" \
+  "$temp_dir/prompt.txt" \
+  "$temp_dir/output-full-access.txt" \
+  gpt-test \
+  high >/dev/null
+
+bash "$module_root/scripts/codex_prompt_to_file.sh" \
+  "$temp_dir/repo" \
+  "$temp_dir/prompt.txt" \
+  "$temp_dir/output-full-access-resumed.txt" \
+  gpt-test \
+  high >/dev/null
+
+grep -Fx -- "resume" "$temp_dir/codex.args" >/dev/null
+grep -Fx -- "--dangerously-bypass-approvals-and-sandbox" "$temp_dir/codex.args" >/dev/null

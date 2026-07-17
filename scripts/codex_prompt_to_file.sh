@@ -122,6 +122,9 @@ if [[ -n "$session_file" && -s "$session_file" ]]; then
     "${codex_config[@]}"
     -o "$output_file"
   )
+  if [[ "$prompt_access" == "danger-full-access" ]]; then
+    cmd+=(--dangerously-bypass-approvals-and-sandbox)
+  fi
 else
   cmd=(
     codex
