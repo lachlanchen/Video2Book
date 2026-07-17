@@ -77,6 +77,7 @@ class EditorialQueueTests(unittest.TestCase):
             inventory, problems = queue.validate_inventory(config)
             self.assertEqual(config.model, "gpt-5.6-sol")
             self.assertEqual(config.reasoning, "ultra")
+            self.assertEqual(config.prompt_access, "read-only")
             self.assertEqual(config.courses[0].chapter_references, {"lecture_01": ()})
             self.assertEqual(inventory["supplementary/example/2026"], ["lecture_01"])
             self.assertEqual(problems, [])
@@ -102,6 +103,20 @@ class EditorialQueueTests(unittest.TestCase):
             self.assertIn("gpt-5.6-sol", command)
             self.assertIn("ultra", command)
             self.assertIn("--skip-commit", command)
+
+    def test_revision_command_passes_editable_prompt_access(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            manifest = self.build_repo(root)
+            config = queue.load_manifest(root, manifest)
+            config = queue.QueueConfig(
+                **{**config.__dict__, "prompt_access": "workspace-write"}
+            )
+            command = queue.revision_command(
+                config, config.courses[0], "lecture_01", False, 2
+            )
+            access_index = command.index("--prompt-access")
+            self.assertEqual(command[access_index + 1], "workspace-write")
 
 
 if __name__ == "__main__":

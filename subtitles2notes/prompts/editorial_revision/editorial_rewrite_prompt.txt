@@ -9,7 +9,7 @@ Video: $video_rel
 Available figure basenames: $asset_names
 
 Output raw LaTeX only, beginning with `\chapter{...}`. Do not output a document preamble, `\begin{document}`, `\end{document}`, Markdown, or code fences.
-Do not edit repository files or run formatters or compilers. Return the complete candidate through your final response only; the outer driver owns all writes and validation.
+$delivery_instructions
 
 Revision requirements:
 - Follow the lecture's actual conceptual order and preserve useful explanatory repetition.

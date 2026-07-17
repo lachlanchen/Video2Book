@@ -26,6 +26,7 @@ import editorial_revision as revision  # noqa: E402
 COURSE_INPUT_RE = re.compile(r"\\input\{chapters/([^/]+)/content\.tex\}")
 TERMINAL_STATES = {"complete", "complete_with_blocks"}
 REASONING_LEVELS = {"low", "medium", "high", "xhigh", "ultra"}
+PROMPT_ACCESS_LEVELS = {"read-only", "workspace-write", "danger-full-access"}
 
 
 def timestamp() -> str:
@@ -74,6 +75,7 @@ class QueueConfig:
     state_root: Path
     model: str
     reasoning: str
+    prompt_access: str
     max_repair_passes: int
     courses: tuple[CourseSpec, ...]
     publish_script: Path | None
@@ -100,6 +102,9 @@ def load_manifest(repo_root: Path, manifest_path: Path, state_root: Path | None 
     reasoning = str(raw.get("reasoning") or "ultra")
     if reasoning not in REASONING_LEVELS:
         raise ValueError(f"unsupported reasoning level: {reasoning}")
+    prompt_access = str(raw.get("prompt_access") or "read-only")
+    if prompt_access not in PROMPT_ACCESS_LEVELS:
+        raise ValueError(f"unsupported Codex prompt access: {prompt_access}")
     max_repair_passes = int(raw.get("max_repair_passes", 2))
     if max_repair_passes < 0:
         raise ValueError("max_repair_passes must be non-negative")
@@ -162,6 +167,7 @@ def load_manifest(repo_root: Path, manifest_path: Path, state_root: Path | None 
         state_root=runtime,
         model=model,
         reasoning=reasoning,
+        prompt_access=prompt_access,
         max_repair_passes=max_repair_passes,
         courses=tuple(courses),
         publish_script=publish_script,
@@ -230,6 +236,7 @@ def initial_state(config: QueueConfig, inventory: dict[str, list[str]]) -> dict:
         "status": "pending",
         "model": config.model,
         "reasoning": config.reasoning,
+        "prompt_access": config.prompt_access,
         "started_at": timestamp(),
         "updated_at": timestamp(),
         "heartbeat_at": timestamp(),
@@ -345,6 +352,8 @@ def revision_command(
         config.model,
         "--reasoning",
         config.reasoning,
+        "--prompt-access",
+        config.prompt_access,
         "--max-repair-passes",
         str(repair_passes),
     ]
@@ -539,6 +548,7 @@ def run_queue(config: QueueConfig, args: argparse.Namespace) -> int:
         state["status"] = "running"
         state["model"] = config.model
         state["reasoning"] = config.reasoning
+        state["prompt_access"] = config.prompt_access
         checkpoint(config, state, "queue_start")
 
         for spec in config.courses:
@@ -602,6 +612,7 @@ def parser() -> argparse.ArgumentParser:
     parsed.add_argument("--state-root", type=Path)
     parsed.add_argument("--model")
     parsed.add_argument("--reasoning", choices=sorted(REASONING_LEVELS))
+    parsed.add_argument("--prompt-access", choices=sorted(PROMPT_ACCESS_LEVELS))
     parsed.add_argument("--dry-run", action="store_true")
     parsed.add_argument("--force-manifest", action="store_true")
     parsed.add_argument("--no-commit", action="store_true")
@@ -617,12 +628,13 @@ def main() -> int:
         manifest_path = (repo_root / manifest_path).resolve()
     state_root = args.state_root.expanduser().resolve() if args.state_root else None
     config = load_manifest(repo_root, manifest_path, state_root)
-    if args.model or args.reasoning:
+    if args.model or args.reasoning or args.prompt_access:
         config = QueueConfig(
             **{
                 **config.__dict__,
                 "model": args.model or config.model,
                 "reasoning": args.reasoning or config.reasoning,
+                "prompt_access": args.prompt_access or config.prompt_access,
             }
         )
     return run_queue(config, args)

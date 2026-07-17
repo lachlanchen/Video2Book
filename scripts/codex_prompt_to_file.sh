@@ -12,6 +12,7 @@ output_file="$3"
 model="$4"
 reasoning="$5"
 shift 5
+workspace_path="${CODEX_PROMPT_WORKSPACE:-$repo_path}"
 session_file="${CODEX_SHARED_SESSION_FILE:-}"
 session_doc_file="${CODEX_SHARED_SESSION_DOC_FILE:-}"
 tmux_session_name="${NOTE_TMUX_SESSION_NAME:-susskind-notes}"
@@ -69,13 +70,18 @@ write_session_doc() {
 - codex session scope: $session_scope
 - prompt access: $prompt_access
 - repo root: $repo_path
+- writable workspace: $workspace_path
 - model: $model
 - updated at: $(date --iso-8601=seconds)
 EOF
 }
 
-if [[ "$prompt_access" != "danger-full-access" && "$prompt_access" != "read-only" ]]; then
-  echo "CODEX_PROMPT_ACCESS must be danger-full-access or read-only" >&2
+if [[ "$prompt_access" != "danger-full-access" && "$prompt_access" != "workspace-write" && "$prompt_access" != "read-only" ]]; then
+  echo "CODEX_PROMPT_ACCESS must be danger-full-access, workspace-write, or read-only" >&2
+  exit 2
+fi
+if [[ ! -d "$workspace_path" ]]; then
+  echo "Codex prompt workspace does not exist: $workspace_path" >&2
   exit 2
 fi
 if [[ ! "$prompt_timeout_seconds" =~ ^[1-9][0-9]*$ ]]; then
@@ -123,13 +129,13 @@ else
     --json
     -m "$model"
     "${codex_config[@]}"
-    -C "$repo_path"
+    -C "$workspace_path"
     -o "$output_file"
   )
-  if [[ "$prompt_access" == "read-only" ]]; then
-    cmd+=(--sandbox read-only)
-  else
+  if [[ "$prompt_access" == "danger-full-access" ]]; then
     cmd+=(--dangerously-bypass-approvals-and-sandbox)
+  else
+    cmd+=(--sandbox "$prompt_access")
   fi
 fi
 

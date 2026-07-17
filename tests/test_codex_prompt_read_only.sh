@@ -54,3 +54,21 @@ bash "$module_root/scripts/codex_prompt_to_file.sh" \
 status=$?
 set -e
 [[ "$status" -eq 3 ]]
+
+rm -f "$CODEX_SHARED_SESSION_FILE" "$CODEX_SHARED_SESSION_FILE.access"
+mkdir -p "$temp_dir/editable-workspace"
+export CODEX_PROMPT_ACCESS=workspace-write
+export CODEX_PROMPT_WORKSPACE="$temp_dir/editable-workspace"
+
+bash "$module_root/scripts/codex_prompt_to_file.sh" \
+  "$temp_dir/repo" \
+  "$temp_dir/prompt.txt" \
+  "$temp_dir/output-editable.txt" \
+  gpt-test \
+  high >/dev/null
+
+grep -Fx -- "--sandbox" "$temp_dir/codex.args" >/dev/null
+grep -Fx -- "workspace-write" "$temp_dir/codex.args" >/dev/null
+grep -Fx -- "$temp_dir/editable-workspace" "$temp_dir/codex.args" >/dev/null
+grep -Fx -- "workspace-write" "$CODEX_SHARED_SESSION_FILE.access" >/dev/null
+grep -F -- "writable workspace: $temp_dir/editable-workspace" "$CODEX_SHARED_SESSION_DOC_FILE" >/dev/null

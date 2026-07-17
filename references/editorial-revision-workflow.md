@@ -33,7 +33,7 @@ Use `\lecturetimestamp{HH:MM:SS}` only inside `classroomqa`; it creates the Q&A 
 
 The queue reuses one global writer session and sends an explicit boundary packet before each course. Commit/push calls use their separate helper session, preventing Git or monitoring language from entering the writer context. State under `.editorial-revision-work/` makes the run resumable.
 
-Editorial writer sessions are created with Codex's read-only sandbox. The access mode is recorded next to the session ID, and the wrapper refuses to resume a session created with a different access level. Only the outer Python driver may replace chapter sources or compile PDFs after the audit and fidelity gates pass.
+Read-only remains the default. A queue may instead use `--prompt-access workspace-write`, which creates a separate `writer.editable.session_id` rooted at `.editorial-revision-work/`. Rewrite and repair calls then save their candidates directly in that ignored runtime tree. The sandbox cannot write tracked chapter sources, and only the outer Python driver may promote a candidate or compile PDFs after the audit and fidelity gates pass. The access mode is recorded beside every session ID, and the wrapper refuses to resume a session under a different mode. Reserve `danger-full-access` for externally isolated automation.
 
 ## Run A Manifest Queue
 
@@ -70,7 +70,8 @@ Video2Book/scripts/start_editorial_revision_queue_tmux.sh \
   --manifest references/editorial_revision_queue.json \
   --session susskind-editorial \
   --model gpt-5.6-sol \
-  --reasoning ultra
+  --reasoning ultra \
+  --prompt-access workspace-write
 ```
 
 The queue processes one chapter at a time, commits and pushes each accepted chapter, retries failed quality gates without bypassing them, skips publication for incomplete courses, and performs one final blocked-chapter sweep. A failed pocket publication invokes the general layout fixer for normal and 1.2x editions, reruns editorial gates for any changed chapters, and retries publication once. Atomic state, logs, the worker lock, heartbeat, and shared session files live under `.editorial-revision-work/`. The watchdog restarts only a missing or dead worker; it never kills a live long-running Codex call.
@@ -94,4 +95,4 @@ The scan reports body credits, internal tooling, transformed directives, product
 
 ## Safety
 
-Use a clean branch or worktree when the host repository has unrelated edits. Candidate prose is written under the runtime directory first. `content.tex` is replaced only after audit, rewrite, and fidelity gates pass; a failed LaTeX build restores the previous chapter source. Intermediate LaTeX files remain under the runtime `build/` directories.
+Use a clean branch or worktree when the host repository has unrelated edits. In editable mode, Codex can save only inside the runtime workspace; it cannot mutate tracked TeX, run Git publication, or bypass the outer gates. `content.tex` is replaced only after audit, rewrite, and fidelity gates pass; a failed LaTeX build restores the previous chapter source. Intermediate LaTeX files remain under the runtime `build/` directories.

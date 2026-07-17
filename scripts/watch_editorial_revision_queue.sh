@@ -9,6 +9,7 @@ worker_log=""
 interval=1800
 model=""
 reasoning=""
+prompt_access=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -19,6 +20,7 @@ while [[ $# -gt 0 ]]; do
     --interval) interval="$2"; shift 2 ;;
     --model) model="$2"; shift 2 ;;
     --reasoning) reasoning="$2"; shift 2 ;;
+    --prompt-access) prompt_access="$2"; shift 2 ;;
     *) echo "Unknown option: $1" >&2; exit 2 ;;
   esac
 done
@@ -72,6 +74,7 @@ start_worker() {
   )
   [[ -z "$model" ]] || command+=(--model "$model")
   [[ -z "$reasoning" ]] || command+=(--reasoning "$reasoning")
+  [[ -z "$prompt_access" ]] || command+=(--prompt-access "$prompt_access")
   printf -v quoted_command '%q ' "${command[@]}"
   printf -v quoted_log '%q' "$worker_log"
   tmux new-session -d -s "$worker_session" "set -o pipefail; $quoted_command 2>&1 | tee -a $quoted_log"

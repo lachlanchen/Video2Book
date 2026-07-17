@@ -2,6 +2,7 @@ import json
 import sys
 import tempfile
 import unittest
+from unittest import mock
 from pathlib import Path
 
 
@@ -12,6 +13,36 @@ import editorial_revision as revision  # noqa: E402
 
 
 class EditorialRevisionTests(unittest.TestCase):
+    def test_editable_prompt_preserves_directly_saved_candidate(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            runtime = root / "runtime"
+            candidate = runtime / "content.revised.tex"
+
+            def fake_run(*_args, **_kwargs):
+                candidate.write_text("\\chapter{Saved}\nPhysics.\n", encoding="utf-8")
+                (runtime / "editorial_rewrite.output.tmp").write_text(
+                    "SAVED\n", encoding="utf-8"
+                )
+                return type("Completed", (), {"returncode": 0})()
+
+            with mock.patch.object(revision.subprocess, "run", side_effect=fake_run):
+                revision.run_codex_prompt(
+                    root,
+                    "Save the candidate.",
+                    candidate,
+                    runtime,
+                    "editorial_rewrite",
+                    "gpt-test",
+                    "high",
+                    direct_write=True,
+                )
+
+            self.assertEqual(
+                candidate.read_text(encoding="utf-8"),
+                "\\chapter{Saved}\nPhysics.\n",
+            )
+
     def test_parse_json_text_accepts_fenced_output(self):
         parsed = revision.parse_json_text("```json\n{\"status\": \"pass\"}\n```\n")
         self.assertEqual(parsed, {"status": "pass"})
@@ -235,7 +266,7 @@ Old duplicate credit
             (root / "lesson_1.pdf").write_bytes(b"lesson one")
             self.assertEqual(revision.reference_pdf_candidates([root], 10), [])
 
-    def test_prepare_environment_forces_read_only_writer(self):
+    def test_prepare_environment_defaults_to_read_only_writer(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
             args = type(
@@ -252,6 +283,40 @@ Old duplicate credit
             )()
             revision.prepare_environment(args)
             self.assertEqual(revision.os.environ["CODEX_PROMPT_ACCESS"], "read-only")
+            self.assertTrue(
+                revision.os.environ["CODEX_SHARED_SESSION_FILE"].endswith(
+                    "writer.session_id"
+                )
+            )
+
+    def test_prepare_environment_isolates_editable_writer_in_runtime_workspace(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            args = type(
+                "Args",
+                (),
+                {
+                    "repo_root": root,
+                    "markdown_root": None,
+                    "output_root": None,
+                    "runtime_root": None,
+                    "session_file": None,
+                    "session_doc": None,
+                    "prompt_access": "workspace-write",
+                },
+            )()
+            _, _, _, runtime_root = revision.prepare_environment(args)
+            self.assertEqual(
+                revision.os.environ["CODEX_PROMPT_ACCESS"], "workspace-write"
+            )
+            self.assertEqual(
+                revision.os.environ["CODEX_PROMPT_WORKSPACE"], str(runtime_root)
+            )
+            self.assertTrue(
+                revision.os.environ["CODEX_SHARED_SESSION_FILE"].endswith(
+                    "writer.editable.session_id"
+                )
+            )
 
 
 if __name__ == "__main__":

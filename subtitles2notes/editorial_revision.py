@@ -21,6 +21,7 @@ from typing import Iterable
 
 MODULE_ROOT = Path(__file__).resolve().parents[1]
 PROMPT_ROOT = Path(__file__).resolve().parent / "prompts" / "editorial_revision"
+PROMPT_ACCESS_LEVELS = {"read-only", "workspace-write", "danger-full-access"}
 TRANSCRIPT_SOURCE_RE = re.compile(r"^Source:\s*(.+)$", re.MULTILINE)
 LECTURE_NUMBER_RE = re.compile(
     r"\bLectures?\s+(\d+)(?:\s*(?:&|and|[-\u2013\u2014,/])\s*(\d+))?\b",
@@ -186,6 +187,28 @@ def editorial_charter() -> str:
     return read_text(PROMPT_ROOT / "editorial_charter.txt").strip()
 
 
+def editable_prompt_access() -> bool:
+    return os.environ.get("CODEX_PROMPT_ACCESS") in {
+        "workspace-write",
+        "danger-full-access",
+    }
+
+
+def candidate_delivery_instructions(candidate: Path) -> str:
+    if not editable_prompt_access():
+        return (
+            "Do not edit repository files or run formatters or compilers. Return the complete "
+            "candidate through your final response only; the outer driver owns all writes and "
+            "validation."
+        )
+    return (
+        "You have a sandboxed editable workspace. Save the complete raw LaTeX candidate to "
+        f"`{candidate}` and do not modify any other file. Do not run formatters, compilers, git, "
+        "or publishing commands. After saving, return a short confirmation; the outer driver "
+        "will validate the saved candidate before promoting it to the chapter source."
+    )
+
+
 def run_codex_prompt(
     repo_root: Path,
     prompt: str,
@@ -195,6 +218,7 @@ def run_codex_prompt(
     model: str,
     reasoning: str,
     images: Iterable[Path] = (),
+    direct_write: bool = False,
 ) -> None:
     runtime_dir.mkdir(parents=True, exist_ok=True)
     prompt_path = runtime_dir / f"{log_prefix}.prompt.txt"
@@ -212,6 +236,8 @@ def run_codex_prompt(
         reasoning,
         *[str(path) for path in images if path.exists()],
     ]
+    if direct_write:
+        output_path.unlink(missing_ok=True)
 
     last_error = ""
     for attempt in range(1, 4):
@@ -235,7 +261,8 @@ def run_codex_prompt(
                 while lines and lines[-1].strip().startswith("```"):
                     lines.pop()
                 text = "\n".join(lines).strip()
-            output_path.write_text(text.rstrip() + "\n", encoding="utf-8")
+            if not direct_write or not output_path.exists() or not read_text(output_path).strip():
+                output_path.write_text(text.rstrip() + "\n", encoding="utf-8")
             temp_output.unlink(missing_ok=True)
             return
 
@@ -955,6 +982,12 @@ def session_boundary(
     prompt = read_template("editorial_course_boundary_prompt.txt").substitute(
         editorial_charter=editorial_charter(),
         course_rel=course_rel,
+        boundary_access=(
+            "The session has a sandboxed editable workspace for later chapter candidates. "
+            "Do not write files or run commands during this course-boundary acknowledgement."
+            if editable_prompt_access()
+            else "Do not edit repository files or run commands. This is a read-only writer session."
+        ),
     )
     output = runtime_dir / "course_boundary.txt"
     run_codex_prompt(repo_root, prompt, output, runtime_dir, "course_boundary", model, reasoning)
@@ -1012,8 +1045,19 @@ def rewrite_chapter(
         reference_text=reference_text,
         content_tex=read_text(record.content_path),
         transcript_text=read_text(record.transcript_path),
+        delivery_instructions=candidate_delivery_instructions(candidate),
     )
-    run_codex_prompt(repo_root, prompt, candidate, runtime_dir, "editorial_rewrite", model, reasoning, record.assets)
+    run_codex_prompt(
+        repo_root,
+        prompt,
+        candidate,
+        runtime_dir,
+        "editorial_rewrite",
+        model,
+        reasoning,
+        record.assets,
+        direct_write=editable_prompt_access(),
+    )
     errors = validate_tex(read_text(candidate))
     if errors:
         raise RuntimeError("invalid revised chapter: " + "; ".join(errors))
@@ -1073,6 +1117,7 @@ def repair_chapter(
         reference_text=reference_text,
         revised_tex=read_text(candidate),
         transcript_text=read_text(record.transcript_path),
+        delivery_instructions=candidate_delivery_instructions(repaired),
     )
     run_codex_prompt(
         repo_root,
@@ -1083,6 +1128,7 @@ def repair_chapter(
         model,
         reasoning,
         record.assets,
+        direct_write=editable_prompt_access(),
     )
     errors = validate_tex(read_text(repaired))
     if errors:
@@ -1363,12 +1409,20 @@ def prepare_environment(args: argparse.Namespace) -> tuple[Path, Path, Path, Pat
     markdown_root = (args.markdown_root or repo_root / "markdown").resolve()
     output_root = (args.output_root or repo_root / "generated_course_notes").resolve()
     runtime_root = (args.runtime_root or repo_root / ".editorial-revision-work").resolve()
-    session_file = (args.session_file or runtime_root / "writer.session_id").resolve()
-    session_doc = (args.session_doc or runtime_root / "writer.session.md").resolve()
+    runtime_root.mkdir(parents=True, exist_ok=True)
+    prompt_access = getattr(args, "prompt_access", "read-only")
+    if prompt_access not in PROMPT_ACCESS_LEVELS:
+        raise ValueError(f"unsupported Codex prompt access: {prompt_access}")
+    session_stem = "writer.editable" if prompt_access != "read-only" else "writer"
+    session_file = (args.session_file or runtime_root / f"{session_stem}.session_id").resolve()
+    session_doc = (args.session_doc or runtime_root / f"{session_stem}.session.md").resolve()
     os.environ["CODEX_SHARED_SESSION_FILE"] = str(session_file)
     os.environ["CODEX_SHARED_SESSION_DOC_FILE"] = str(session_doc)
     os.environ["NOTE_CODEX_SESSION_SCOPE"] = "global"
-    os.environ["CODEX_PROMPT_ACCESS"] = "read-only"
+    os.environ["CODEX_PROMPT_ACCESS"] = prompt_access
+    os.environ["CODEX_PROMPT_WORKSPACE"] = (
+        str(runtime_root) if prompt_access == "workspace-write" else str(repo_root)
+    )
     os.environ.setdefault("NOTE_TMUX_SESSION_NAME", "susskind-editorial")
     return repo_root, markdown_root, output_root, runtime_root
 
@@ -1383,6 +1437,12 @@ def parser() -> argparse.ArgumentParser:
     parsed.add_argument("--runtime-root", type=Path)
     parsed.add_argument("--session-file", type=Path)
     parsed.add_argument("--session-doc", type=Path)
+    parsed.add_argument(
+        "--prompt-access",
+        default="read-only",
+        choices=sorted(PROMPT_ACCESS_LEVELS),
+        help="Codex sandbox for the persistent writer session.",
+    )
     parsed.add_argument("--course", action="append", default=[])
     parsed.add_argument("--all-courses", action="store_true")
     parsed.add_argument("--chapter", action="append", default=[])

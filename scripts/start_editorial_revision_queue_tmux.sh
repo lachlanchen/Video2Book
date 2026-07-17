@@ -11,6 +11,7 @@ watchdog_log=""
 interval=1800
 model=""
 reasoning=""
+prompt_access=""
 no_watchdog=0
 
 while [[ $# -gt 0 ]]; do
@@ -24,6 +25,7 @@ while [[ $# -gt 0 ]]; do
     --interval) interval="$2"; shift 2 ;;
     --model) model="$2"; shift 2 ;;
     --reasoning) reasoning="$2"; shift 2 ;;
+    --prompt-access) prompt_access="$2"; shift 2 ;;
     --no-watchdog) no_watchdog=1; shift ;;
     *) echo "Unknown option: $1" >&2; exit 2 ;;
   esac
@@ -67,6 +69,7 @@ worker=(
 )
 [[ -z "$model" ]] || worker+=(--model "$model")
 [[ -z "$reasoning" ]] || worker+=(--reasoning "$reasoning")
+[[ -z "$prompt_access" ]] || worker+=(--prompt-access "$prompt_access")
 start_session "$session" "$log_file" "${worker[@]}"
 
 if [[ "$no_watchdog" -eq 0 ]]; then
@@ -80,6 +83,7 @@ if [[ "$no_watchdog" -eq 0 ]]; then
   )
   [[ -z "$model" ]] || watchdog+=(--model "$model")
   [[ -z "$reasoning" ]] || watchdog+=(--reasoning "$reasoning")
+  [[ -z "$prompt_access" ]] || watchdog+=(--prompt-access "$prompt_access")
   start_session "$watchdog_session" "$watchdog_log" "${watchdog[@]}"
 fi
 
