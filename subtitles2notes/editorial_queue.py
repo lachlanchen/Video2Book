@@ -418,7 +418,73 @@ def process_chapter(
     return False
 
 
-def publish_course(config: QueueConfig, spec: CourseSpec, state: dict, no_publish: bool) -> bool:
+def layout_fix_command(config: QueueConfig, spec: CourseSpec, font_mode: str) -> list[str]:
+    return [
+        "bash",
+        str(MODULE_ROOT / "scripts" / "fix_course_pocket_overfulls.sh"),
+        "--host-root",
+        str(config.repo_root),
+        "--course",
+        spec.course_rel,
+        "--font-mode",
+        font_mode,
+        "--model",
+        config.model,
+        "--reasoning",
+        config.reasoning,
+        "--work-dir",
+        str(config.state_root / "layout" / spec.course_rel / font_mode),
+        "--skip-commit",
+    ]
+
+
+def dirty_chapter_slugs(config: QueueConfig, spec: CourseSpec, slugs: list[str]) -> list[str]:
+    base = config.output_root.relative_to(config.repo_root) / spec.course_rel / "chapters"
+    completed = subprocess.run(
+        ["git", "-C", str(config.repo_root), "status", "--porcelain=v1", "--", str(base)],
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+    if completed.returncode != 0:
+        return slugs
+    return [slug for slug in slugs if f"/{slug}/" in completed.stdout]
+
+
+def repair_course_layout(
+    config: QueueConfig,
+    spec: CourseSpec,
+    state: dict,
+    chapter_slugs: list[str],
+    no_commit: bool,
+) -> bool:
+    log_path = config.state_root / "logs" / spec.course_rel / "layout_repair.log"
+    for font_mode in ("normal", "onepointtwo"):
+        checkpoint(config, state, "course_layout_repair", f"{spec.course_rel}/{font_mode}")
+        if run_logged(layout_fix_command(config, spec, font_mode), config.repo_root, log_path) != 0:
+            return False
+    for slug in dirty_chapter_slugs(config, spec, chapter_slugs):
+        if not process_chapter(
+            config,
+            spec,
+            slug,
+            state,
+            no_commit,
+            final_sweep=True,
+        ):
+            return False
+    return True
+
+
+def publish_course(
+    config: QueueConfig,
+    spec: CourseSpec,
+    state: dict,
+    no_publish: bool,
+    no_commit: bool,
+    chapter_slugs: list[str],
+) -> bool:
     if no_publish or not spec.publish or config.publish_script is None:
         return True
     course_state = state["courses"][spec.course_rel]
@@ -437,6 +503,9 @@ def publish_course(config: QueueConfig, spec: CourseSpec, state: dict, no_publis
         spec.course_rel,
     ]
     status = run_logged(command, config.repo_root, log_path, env)
+    if status != 0 and repair_course_layout(config, spec, state, chapter_slugs, no_commit):
+        checkpoint(config, state, "course_publish_retry", spec.course_rel)
+        status = run_logged(command, config.repo_root, log_path, env)
     if status != 0:
         course_state["publish_error"] = f"publish exit {status}"
         checkpoint(config, state, "course_publish_failed", spec.course_rel)
@@ -500,7 +569,14 @@ def run_queue(config: QueueConfig, args: argparse.Namespace) -> int:
                 course_state["blocked_chapters"] = incomplete
                 checkpoint(config, state, "course_blocked", spec.course_rel)
                 continue
-            if not publish_course(config, spec, state, args.no_publish):
+            if not publish_course(
+                config,
+                spec,
+                state,
+                args.no_publish,
+                args.no_commit,
+                inventory[spec.course_rel],
+            ):
                 course_state["status"] = "publish_failed"
                 continue
             course_state["status"] = "complete"

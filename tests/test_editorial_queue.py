@@ -93,6 +93,16 @@ class EditorialQueueTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "generated notes cannot be references"):
                 queue.load_manifest(root, manifest)
 
+    def test_layout_repair_uses_requested_model_and_ultra_reasoning(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            manifest = self.build_repo(root)
+            config = queue.load_manifest(root, manifest)
+            command = queue.layout_fix_command(config, config.courses[0], "onepointtwo")
+            self.assertIn("gpt-5.6-sol", command)
+            self.assertIn("ultra", command)
+            self.assertIn("--skip-commit", command)
+
 
 if __name__ == "__main__":
     unittest.main()
