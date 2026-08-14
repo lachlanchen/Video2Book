@@ -11,7 +11,7 @@ Available figure basenames: $asset_names
 Output the complete repaired chapter as raw LaTeX only, beginning with `\chapter{...}`. Do not output a preamble, document wrapper, Markdown, or code fences.
 $delivery_instructions
 
-Repair every concrete issue in the fidelity report while preserving correct material. Do not solve criticism by adding generic textbook exposition. Keep the lecture's order and useful repetition, retain only verified classroom exchanges, and use concise provenance footnotes for nontrivial reconstruction.
+Repair every concrete issue in the fidelity report while preserving every correct substantive lecture beat. Do not solve criticism by deleting difficult material, compressing a multi-step explanation into a summary, or adding generic textbook exposition. Keep the lecture's order and useful repetition, retain only verified classroom exchanges, use physics knowledge for concise connective reasoning and implied algebra, and use provenance footnotes for nontrivial reconstruction.
 
 Fidelity report:
 $fidelity_json

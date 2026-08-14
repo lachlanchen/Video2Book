@@ -26,6 +26,13 @@ Required schema:
   "provenance_gaps": [
     {"locator": "equation, figure, claim, or Q&A", "problem": "missing or weak provenance", "repair": "specific repair"}
   ],
+  "coverage_summary": {
+    "substantive_beats_total": 0,
+    "substantive_beats_covered": 0,
+    "omitted_substantive_beats": [
+      {"start": "HH:MM:SS", "end": "HH:MM:SS", "subject": "omitted or over-compressed content", "repair": "specific repair"}
+    ]
+  },
   "q_and_a_checks": [
     {"locator": "question excerpt", "timestamp": "HH:MM:SS", "verified": true, "reason": "source assessment"}
   ],
@@ -45,7 +52,7 @@ Required schema:
   ]
 }
 
-Set `status` to `revise` if any unsupported mathematical claim remains, a genuine classroom exchange was lost or invented, a figure is mismatched, internal process language remains, or a major lecture beat is distorted. Do not demand extra sections, equations, figures, or a summary.
+Treat the transcript beat inventory as exhaustive rather than representative. Set `status` to `revise` if any substantive beat is omitted or reduced to the point that its explanation, example, caveat, or reasoning is lost; if any supported blackboard equation or diagram is missing or distorted; if any unsupported mathematical claim remains; if a genuine classroom exchange was lost or invented; if a figure is mismatched; or if internal process language remains. Verbal filler and empty false starts do not count as substantive beats. Do not demand unrelated textbook sections, decorative equations, extra figures, or a summary.
 
 Metadata:
 $metadata_json

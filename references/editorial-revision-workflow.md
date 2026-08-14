@@ -6,7 +6,7 @@ The motivating corpus audit is recorded in [susskind-corpus-audit-2026-07.md](su
 
 ## Editorial Contract
 
-The versioned charter in `subtitles2notes/prompts/editorial_revision/editorial_charter.txt` is injected into every writer, critic, and repair call. It requires direct explanatory prose, preserves useful lecture repetition, keeps only verified classroom exchanges, and prohibits internal process language in chapter bodies.
+The versioned charter in `subtitles2notes/prompts/editorial_revision/editorial_charter.txt` is injected into every writer, critic, and repair call. It requires direct explanatory prose, exhaustive coverage of substantive transcript beats, preservation of useful lecture repetition, reconstruction of supported blackboard mathematics, verified classroom exchanges, and no internal process language in chapter bodies. Physics knowledge may supply concise connective reasoning or logically implied algebra, but not unrelated textbook expansion or a replacement derivation.
 
 Each revised chapter receives:
 
@@ -91,7 +91,7 @@ python3 Video2Book/subtitles2notes/editorial_revision.py \
   --scan-report references/editorial-corpus-scan.md
 ```
 
-The scan reports body credits, internal tooling, transformed directives, production language, formulaic choreography, legacy Q&A headings, forced summaries, and duplicate chapter titles. A rewrite is accepted only when deterministic error rules and the source-fidelity critic both pass.
+The scan reports body credits, internal tooling, transformed directives, production language, formulaic choreography, legacy Q&A headings, forced summaries, and duplicate chapter titles. A rewrite is accepted only when deterministic error rules and the source-fidelity critic both pass; the critic must account for every substantive transcript beat and report no omissions.
 
 ## Safety
 

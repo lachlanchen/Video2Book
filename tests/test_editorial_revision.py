@@ -193,6 +193,46 @@ Old duplicate credit
             self.assertTrue(any("source_map" in problem for problem in problems))
             self.assertTrue(any("Q&A" in problem for problem in problems))
 
+    def test_fidelity_gate_requires_complete_substantive_beat_coverage(self):
+        with tempfile.TemporaryDirectory() as temp:
+            candidate = Path(temp) / "content.tex"
+            candidate.write_text("\\chapter{Spin}\nSymmetry generates dynamics.\n", encoding="utf-8")
+            report = {
+                "status": "pass",
+                "unsupported_claims": [],
+                "missing_beats": [],
+                "style_violations": [],
+                "provenance_gaps": [],
+                "coverage_summary": {
+                    "substantive_beats_total": 2,
+                    "substantive_beats_covered": 1,
+                    "omitted_substantive_beats": [
+                        {"start": "00:10:00", "end": "00:12:00", "subject": "Example"}
+                    ],
+                },
+                "q_and_a_checks": [],
+                "figure_checks": [],
+                "source_map": [
+                    {
+                        "locator": "Spin",
+                        "kind": "prose",
+                        "source_type": "transcript",
+                        "timestamps": ["00:00:00"],
+                    }
+                ],
+            }
+            passed, problems = revision.fidelity_passes(candidate, report)
+            self.assertFalse(passed)
+            self.assertTrue(any("not every substantive" in problem for problem in problems))
+
+            report["coverage_summary"] = {
+                "substantive_beats_total": 2,
+                "substantive_beats_covered": 2,
+                "omitted_substantive_beats": [],
+            }
+            passed, problems = revision.fidelity_passes(candidate, report)
+            self.assertTrue(passed, problems)
+
     def test_formulaic_lecture_choreography_blocks_acceptance(self):
         with tempfile.TemporaryDirectory() as temp:
             candidate = Path(temp) / "content.tex"

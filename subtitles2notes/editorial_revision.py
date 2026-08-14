@@ -1159,6 +1159,19 @@ def fidelity_passes(candidate: Path, report: dict) -> tuple[bool, list[str]]:
     for field in ("unsupported_claims", "missing_beats", "style_violations", "provenance_gaps"):
         if report.get(field):
             problems.append(f"{field} is not empty")
+    coverage = report.get("coverage_summary")
+    if not isinstance(coverage, dict):
+        problems.append("coverage_summary is missing")
+    else:
+        total = coverage.get("substantive_beats_total")
+        covered = coverage.get("substantive_beats_covered")
+        omitted = coverage.get("omitted_substantive_beats")
+        if not isinstance(total, int) or total <= 0:
+            problems.append("coverage_summary has no substantive beat inventory")
+        if not isinstance(covered, int) or covered != total:
+            problems.append("not every substantive lecture beat is covered")
+        if not isinstance(omitted, list) or omitted:
+            problems.append("coverage_summary reports omitted substantive beats")
     source_map = report.get("source_map") or []
     if not source_map:
         problems.append("source_map is empty")

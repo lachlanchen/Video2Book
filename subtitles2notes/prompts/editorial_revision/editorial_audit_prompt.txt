@@ -49,6 +49,15 @@ Required schema:
       "caption_guidance": "physics-only caption"
     }
   ],
+  "blackboard_items": [
+    {
+      "timestamp": "HH:MM:SS",
+      "kind": "equation, derivation, diagram, or label",
+      "content": "mathematical or visual content carried by the board",
+      "chapter_status": "present, incomplete, missing, distorted, or uncertain",
+      "action": "specific reconstruction or verification step"
+    }
+  ],
   "uncertain_sources": [
     {
       "locator": "transcript timestamp or chapter excerpt",
@@ -60,7 +69,9 @@ Required schema:
 
 Audit rules:
 - Compare the chapter with the complete transcript, not merely with its topic.
-- Identify useful repetitions or transitions that the chapter compressed away.
+- Make `lecture_beats` an exhaustive map of every substantive definition, claim, derivation, example, analogy, caveat, classroom exchange, and reasoning-bearing transition in the transcript.
+- Identify every substantive beat, useful repetition, or transition that the chapter omitted or compressed into a summary.
+- Inventory blackboard mathematics and diagrams that carry the argument; flag anything absent, malformed, or unsupported in the chapter.
 - Treat an exchange as classroom Q&A only when the transcript supports an audience question and a lecturer response.
 - Inspect every attached chapter figure. Reject irrelevant, unreadable, mistimed, or redundant images.
 - Flag standard textbook additions when the supplied evidence does not support them.

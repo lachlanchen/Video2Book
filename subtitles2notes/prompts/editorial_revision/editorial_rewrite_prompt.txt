@@ -12,12 +12,15 @@ Output raw LaTeX only, beginning with `\chapter{...}`. Do not output a document 
 $delivery_instructions
 
 Revision requirements:
-- Follow the lecture's actual conceptual order and preserve useful explanatory repetition.
-- Retain sound mathematics from the current chapter only when the source record supports it.
-- Repair obvious ASR wording cautiously; omit or mark genuinely uncertain details rather than guessing.
+- Cover every substantive item in the audit's `lecture_beats` and `blackboard_items`, following the lecture's actual conceptual order and preserving useful explanatory repetition.
+- Retain and repair sound mathematics from the current chapter, reconstructing speech- or board-supported intermediate steps needed to make the argument readable.
+- Repair obvious ASR wording cautiously. Mark genuinely uncertain substantive details instead of silently omitting them.
+- Use physics knowledge for concise connective explanations and logically implied algebra, not for unrelated expansion or a replacement derivation.
+- Write the result as natural, continuous lecture notes rather than a transcript summary or a report about the lecturer.
 - Use only the listed figure basenames. Remove weak or mismatched figures identified by the audit.
 - Write physics-only captions. Put `\lectureframe{HH:MM:SS}` immediately after the caption of a retained video frame. Reserve `\lecturetimestamp{HH:MM:SS}` for a verified `classroomqa`; never use it as a standalone line or inside `\editorialnote{...}`.
 - Preserve every transcript-confirmed classroom exchange, using the `classroomqa`, `\audiencequestion`, and `\lecturerresponse` macros.
+- Remove verbal filler and empty false starts, but do not reduce examples, analogies, caveats, derivation steps, or pedagogically useful restatement.
 - Do not create a summary, overview, Q&A block, derivation, equation, or figure merely to satisfy a template.
 - Give the chapter a concise, descriptive title.
 
