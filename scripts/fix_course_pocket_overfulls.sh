@@ -380,7 +380,7 @@ Also read this rendered-PDF audit:
 Required editing policy:
 1. Edit only \`$focus_file\` on this pass.
 2. Prefer small, local fixes instead of broad global changes.
-3. Preserve the scientific meaning, notation, and narrative flow.
+3. Preserve every scientific point, derivation step, example, caveat, and classroom exchange. Never delete, summarize, or merge away transcript-derived content to make it fit.
 4. Do not edit generated PDFs, build folders, README files, or unrelated courses.
 5. Do not run git commands.
 
@@ -388,7 +388,7 @@ Preferred fix patterns:
 - Split wide display equations into \`align\`, \`split\`, or short consecutive displays.
 - Move wide inline math into display form when that reduces line pressure.
 - Scale TikZ or figures to \`\\linewidth\` when the warning is figure-driven.
-- Shorten or restructure captions and paragraphs that contain unbreakable spans.
+- Reflow captions and paragraphs that contain unbreakable spans without reducing their information; prefer discretionary breaks, display math, or equivalent sentence splitting over shortening.
 - Fix rendered typography artifacts that the PDF audit exposes, including leaked TeX font-size tokens and broken heading text.
 - Avoid introducing visually ugly manual hacks unless they are local and necessary.
 
@@ -435,7 +435,7 @@ Target build:
 Required editing policy:
 1. Fix the compile failure first.
 2. Keep the earlier overflow-oriented intent if possible.
-3. Make the smallest local change that restores compilation.
+3. Make the smallest local change that restores compilation, without deleting or condensing transcript-derived content.
 4. Do not edit generated PDFs, build folders, README files, or unrelated courses.
 5. Do not run git commands.
 
