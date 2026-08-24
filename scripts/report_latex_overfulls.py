@@ -330,6 +330,69 @@ def main() -> int:
             ]
         )
 
+    if underfulls:
+        summary_lines.extend(
+            [
+                "## Underfull Paragraph Warnings",
+                "",
+                "| Badness | File | Line | Kind | Suggestion |",
+                "| --- | --- | --- | --- | --- |",
+            ]
+        )
+        for item in underfulls:
+            line_display = "?"
+            if item.line_start is not None:
+                line_display = (
+                    str(item.line_start)
+                    if item.line_end in (None, item.line_start)
+                    else f"{item.line_start}-{item.line_end}"
+                )
+            summary_lines.append(
+                "| "
+                + " | ".join(
+                    [
+                        markdown_escape(item.amount),
+                        markdown_escape(item.display_path),
+                        line_display,
+                        item.kind,
+                        markdown_escape(item.suggestion),
+                    ]
+                )
+                + " |"
+            )
+        summary_lines.append("")
+
+        summary_lines.append("## Underfull Source Excerpts")
+        summary_lines.append("")
+        for item in underfulls:
+            line_display = "?"
+            if item.line_start is not None:
+                line_display = (
+                    str(item.line_start)
+                    if item.line_end in (None, item.line_start)
+                    else f"{item.line_start}-{item.line_end}"
+                )
+            summary_lines.append(f"### `{item.display_path}:{line_display}`")
+            summary_lines.append("")
+            summary_lines.append(f"- Badness: `{item.amount}`")
+            summary_lines.append(f"- Kind: `{item.kind}`")
+            summary_lines.append(f"- Suggestion: {item.suggestion}")
+            if item.excerpt:
+                summary_lines.append("")
+                summary_lines.append("```tex")
+                summary_lines.append(item.excerpt)
+                summary_lines.append("```")
+            summary_lines.append("")
+    else:
+        summary_lines.extend(
+            [
+                "## Underfull Paragraph Warnings",
+                "",
+                "No source-mapped underfull `\\hbox` warnings were found in this build.",
+                "",
+            ]
+        )
+
     if page_builder_overfulls:
         top_amounts = ", ".join(page_builder_overfulls[:10])
         if len(page_builder_overfulls) > 10:
