@@ -384,7 +384,17 @@ tuning_block = f"""
 \\makeatother
 """
 
-if "\\usepackage{fancyhdr}" in text or "\\pagestyle{fancy}" in text:
+uses_fancy_headers = any(
+    marker in text
+    for marker in (
+        "\\usepackage{fancyhdr}",
+        "\\pagestyle{fancy}",
+        "\\fancyhead[",
+        "\\fancyhf",
+    )
+)
+
+if uses_fancy_headers:
     header_block = f"""
 \\setlength{{\\headheight}}{{{headheight}}}
 \\newlength{{\\bookpocketheaderboxheight}}

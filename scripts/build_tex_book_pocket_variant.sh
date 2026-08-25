@@ -128,6 +128,10 @@ fi
 
 rsync -a --delete "$source_root"/ "$compile_root"/
 
+# The documented build directory may live inside the disposable compile tree.
+# Recreate generated paths after rsync because --delete removes empty paths.
+mkdir -p "$build_dir" "$(dirname "$log_path")"
+
 tmp_tex="$compile_root/$main_tex"
 tmp_compile_root="$compile_root"
 if [[ -n "$main_dir_rel" ]]; then
@@ -298,7 +302,17 @@ tuning_block = f"""
 \\makeatother
 """
 
-if "\\usepackage{fancyhdr}" in text or "\\pagestyle{fancy}" in text:
+uses_fancy_headers = any(
+    marker in text
+    for marker in (
+        "\\usepackage{fancyhdr}",
+        "\\pagestyle{fancy}",
+        "\\fancyhead[",
+        "\\fancyhf",
+    )
+)
+
+if uses_fancy_headers:
     header_block = f"""
 \\setlength{{\\headheight}}{{{headheight}}}
 \\newlength{{\\bookpocketheaderboxheight}}
