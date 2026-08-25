@@ -138,6 +138,8 @@ if [[ -n "$main_dir_rel" ]]; then
   tmp_compile_root="$compile_root/$main_dir_rel"
 fi
 tmp_main_argument="$(basename "$main_tex")"
+output_stem="${tmp_main_argument%.tex}"
+expected_pdf="$build_dir/$output_stem.pdf"
 
 python3 - "$tmp_tex" "$font_mode" "$paper_width" "$paper_height" "$geometry_margin" <<'PY'
 from pathlib import Path
@@ -445,9 +447,28 @@ text = text.replace(
 path.write_text(text, encoding="utf-8")
 PY
 
+# A source project may contain an older build tree. Never let rsync turn that
+# artifact into apparent evidence that the current compile succeeded.
+rm -f "$expected_pdf"
 : > "$log_path"
 (
   cd "$tmp_compile_root"
-  "$compile_engine" -interaction=nonstopmode -halt-on-error -file-line-error -output-directory="$build_dir" "$tmp_main_argument" >>"$log_path" 2>&1
-  "$compile_engine" -interaction=nonstopmode -halt-on-error -file-line-error -output-directory="$build_dir" "$tmp_main_argument" >>"$log_path" 2>&1
+  if ! "$compile_engine" -interaction=nonstopmode -halt-on-error -file-line-error -output-directory="$build_dir" "$tmp_main_argument" >>"$log_path" 2>&1; then
+    echo "Pocket compile failed on pass 1; see $log_path" >&2
+    exit 1
+  fi
+  if ! "$compile_engine" -interaction=nonstopmode -halt-on-error -file-line-error -output-directory="$build_dir" "$tmp_main_argument" >>"$log_path" 2>&1; then
+    echo "Pocket compile failed on pass 2; see $log_path" >&2
+    exit 1
+  fi
 )
+
+if [[ ! -s "$expected_pdf" ]]; then
+  echo "Pocket compile did not produce $expected_pdf" >&2
+  exit 1
+fi
+
+if grep -Eq 'Fatal error occurred|Emergency stop|^!' "$log_path"; then
+  echo "Pocket compile log contains a fatal TeX error; see $log_path" >&2
+  exit 1
+fi

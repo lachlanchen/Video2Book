@@ -42,6 +42,34 @@ TEX
 test -s "$compile_root/build/main.pdf"
 test -s "$compile_root/compile.log"
 
+# A copied historical PDF must never survive a failed current compile and be
+# mistaken for a successful export.
+broken_source="$tmp_dir/broken-source"
+broken_compile="$tmp_dir/broken-compile"
+mkdir -p "$broken_source/build"
+cp "$compile_root/build/main.pdf" "$broken_source/build/main.pdf"
+cp "$source_root/main.tex" "$broken_source/main.tex"
+cat >"$broken_source/common.tex" <<'TEX'
+\input{missing-pocket-regression-file.tex}
+TEX
+
+if "$repo_root/scripts/build_tex_book_pocket_variant.sh" \
+  --source-root "$broken_source" \
+  --main-tex main.tex \
+  --compile-root "$broken_compile" \
+  --build-dir "$broken_compile/build" \
+  --log-path "$broken_compile/compile.log" \
+  --font-mode onepointtwo \
+  --paper-width 6in \
+  --paper-height 9in \
+  --margin 0.55in \
+  --compile-engine pdflatex; then
+  echo "broken pocket source unexpectedly succeeded" >&2
+  exit 1
+fi
+
+test ! -e "$broken_compile/build/main.pdf"
+
 "$repo_root/scripts/export_tex_book_pocket_pdf.sh" \
   --repo-root "$tmp_dir" \
   --project-root "$source_root" \
