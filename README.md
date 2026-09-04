@@ -17,6 +17,8 @@
 
 `Video2Book` is a practical pipeline for turning long-form video collections into durable study material: downloaded media, timestamped transcripts, and transcript-derived lecture notes with compiled PDFs.
 
+Have one rights-cleared English lecture? The [fixed USD 250 Bilingual Lecture Pack](https://lazying.art/lecture-pack/?utm_source=github&utm_medium=repository&utm_campaign=bilingual_lecture_pack_pilot&utm_content=video2book_readme) turns up to 20 minutes into a timestamped transcript, one translated subtitle track, a pocket study companion, and a short captioned preview.
+
 ## 📚 Flagship Books
 
 These previews use the extracted first page of each published PDF from `LazyEarn`
